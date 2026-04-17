@@ -77,28 +77,6 @@
           <a href="#install" class="btn btn--ghost btn--lg">Installation guide</a>
         </div>
 
-        <div class="hero__terminal" aria-label="Terminal preview">
-          <div class="terminal">
-            <div class="terminal__bar">
-              <span class="dot dot--r"></span>
-              <span class="dot dot--y"></span>
-              <span class="dot dot--g"></span>
-              <span class="terminal__title">~/tail-os — boot</span>
-            </div>
-            <pre class="terminal__body"><code><span class="tk-comment"># Boot TAIL OS on QEMU (aarch64, Raspberry Pi 3B profile)</span>
-<span class="tk-prompt">$</span> <span class="tk-cmd">tailos run</span> --target rpi3b --kernel ./build/kernel8.img
-
-<span class="tk-ok">[  0.000 ]</span> tail-os v0.1.0 (rustc 1.86) booting...
-<span class="tk-ok">[  0.002 ]</span> microkernel: scheduler = deterministic-edf
-<span class="tk-ok">[  0.004 ]</span> driver: uart0 @ 0x3F201000  ready
-<span class="tk-ok">[  0.006 ]</span> driver: sdhc  @ 0x3F300000  ready
-<span class="tk-ok">[  0.009 ]</span> ipc: channels=32  latency=1.2µs  jitter=&lt;0.1µs
-<span class="tk-ok">[  0.011 ]</span> init: spawned task <span class="tk-str">"control_loop"</span> prio=0 period=1ms
-<span class="tk-ok">[  0.012 ]</span> ready.
-<span class="tk-prompt">tailos&gt;</span> <span class="tk-caret">▍</span></code></pre>
-          </div>
-        </div>
-
         <ul class="hero__stats">
           <li><strong>&lt; 2µs</strong><span>IPC latency</span></li>
           <li><strong>64 KB</strong><span>kernel footprint</span></li>
