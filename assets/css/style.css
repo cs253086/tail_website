@@ -10,9 +10,9 @@
   --text-dim:  #c9bfa8;
   --text-mute: #928975;
 
-  --accent:    #fbbf24;   /* amber */
-  --accent-2:  #2dd4bf;   /* teal / mint */
-  --accent-3:  #fb7185;   /* coral */
+  --accent:    #fbbf24;   /* amber — complement of navy */
+  --accent-2:  #fcd34d;   /* lighter amber */
+  --accent-3:  #f59e0b;   /* deeper amber */
   --ok:        #34d399;
   --warn:      #f59e0b;
   --err:       #f87171;
@@ -23,7 +23,7 @@
   --shadow:    0 10px 30px -10px rgba(0,0,0,0.5);
 
   --container: 1180px;
-  --grad-brand: linear-gradient(135deg, #2dd4bf 0%, #fbbf24 65%, #fb7185 100%);
+  --grad-brand: linear-gradient(135deg, #fde68a 0%, #fbbf24 50%, #f59e0b 100%);
 }
 
 /* ---------- base ---------- */
@@ -66,11 +66,11 @@ h4 { font-size: 1.05rem; font-weight: 600; }
   font-size: 0.78rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--accent-2);
+  color: var(--accent);
   padding: 6px 12px;
   border: 1px solid var(--border-2);
   border-radius: 999px;
-  background: rgba(45, 212, 191, 0.08);
+  background: rgba(251, 191, 36, 0.08);
   margin-bottom: 18px;
 }
 
@@ -80,8 +80,7 @@ h4 { font-size: 1.05rem; font-weight: 600; }
   background:
     linear-gradient(to right, rgba(245,235,210,0.05) 1px, transparent 1px) 0 0/56px 56px,
     linear-gradient(to bottom, rgba(245,235,210,0.05) 1px, transparent 1px) 0 0/56px 56px,
-    radial-gradient(ellipse at 20% -10%, rgba(45,212,191,0.22), transparent 55%),
-    radial-gradient(ellipse at 80% -10%, rgba(251,191,36,0.20), transparent 55%),
+    radial-gradient(ellipse at 50% -15%, rgba(251,191,36,0.28), transparent 60%),
     linear-gradient(180deg, #122b5c 0%, var(--bg) 60%);
   mask-image: radial-gradient(ellipse 95% 70% at 50% 0%, #000 40%, transparent 92%);
 }
@@ -425,8 +424,8 @@ p code, li code {
   padding: 48px;
   border-radius: 22px;
   background:
-    radial-gradient(600px 200px at 0% 0%, rgba(45,212,191,0.28), transparent 60%),
-    radial-gradient(600px 200px at 100% 100%, rgba(251,191,36,0.26), transparent 60%),
+    radial-gradient(600px 200px at 0% 0%, rgba(251,191,36,0.26), transparent 60%),
+    radial-gradient(600px 200px at 100% 100%, rgba(253,230,138,0.18), transparent 60%),
     rgba(245,235,210,0.04);
   border: 1px solid var(--border-2);
 }
