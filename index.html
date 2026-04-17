@@ -161,32 +161,52 @@
 
         <div class="tab-panels">
           <div class="panel is-active" data-panel="qemu">
+            <p class="muted" style="margin-top: -12px;">Try TAIL OS on your Linux machine in under two minutes — no hardware, no toolchain.</p>
             <ol class="steps">
               <li>
                 <h4>Install prerequisites</h4>
-                <p>You'll need Rust (nightly), QEMU for AArch64, and the <code>tailos</code> CLI.</p>
+                <p>A Linux host (Ubuntu 22.04 / 24.04 tested) with QEMU for AArch64 and <code>curl</code>.</p>
                 <div class="code">
-                  <div class="code__head"><span>macOS / Linux</span><button class="copy" data-copy>Copy</button></div>
-<pre><code>curl --proto '=https' --tlsv1.2 -sSf https://tail-os.com/install.sh | sh
-rustup toolchain install nightly
-rustup component add rust-src llvm-tools-preview --toolchain nightly
-brew install qemu    <span class="tk-comment"># or: sudo apt install qemu-system-arm</span></code></pre>
+                  <div class="code__head"><span>Ubuntu / Debian</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>sudo apt-get install -y qemu-system-aarch64 qemu-utils</code></pre>
                 </div>
               </li>
               <li>
-                <h4>Fetch the latest image</h4>
+                <h4>Run TAIL OS (one command)</h4>
+                <p>The launcher checks your QEMU install, caches the prebuilt images in <code>~/.cache/tailos/</code>, and boots with the correct flags.</p>
                 <div class="code">
                   <div class="code__head"><span>shell</span><button class="copy" data-copy>Copy</button></div>
-<pre><code>tailos pull --target qemu-aarch64</code></pre>
+<pre><code>curl -sSL https://raw.githubusercontent.com/cs253086/tailos/main/scripts/run_tailos_qemu.sh | bash</code></pre>
                 </div>
+                <p class="muted">When you see <code>tsh&gt;</code>, the system is ready. Exit QEMU with <strong>Ctrl-A, then X</strong>.</p>
               </li>
               <li>
-                <h4>Boot it</h4>
+                <h4>Try the shell</h4>
+                <div class="code">
+                  <div class="code__head"><span>tsh&gt;</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>help
+pwd
+ls /usr/bin
+/usr/bin/pidls
+cd /usr/bin
+exit</code></pre>
+                </div>
+                <p class="muted"><code>tsh</code> supports arrow-key history, per-process <code>cwd</code>, and background jobs with <code>&amp;</code>.</p>
+              </li>
+              <li>
+                <h4>Manual launch (alternative)</h4>
+                <p>Prefer not to run a remote script? Grab the two images and boot QEMU yourself:</p>
                 <div class="code">
                   <div class="code__head"><span>shell</span><button class="copy" data-copy>Copy</button></div>
-<pre><code>tailos run --target qemu-aarch64</code></pre>
+<pre><code>wget https://tail-os.com/wp-content/uploads/2025/09/tail.rfs
+wget https://tail-os.com/wp-content/uploads/2025/09/tail_disk.img
+
+qemu-system-aarch64 \
+    -M raspi3b \
+    -kernel tail.rfs \
+    -serial mon:stdio \
+    -drive file=tail_disk.img,format=raw,if=sd</code></pre>
                 </div>
-                <p class="muted">You'll drop into the <code>tailos&gt;</code> shell. Try <code>help</code>.</p>
               </li>
             </ol>
           </div>
