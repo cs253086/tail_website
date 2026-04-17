@@ -82,14 +82,19 @@
 
           <article class="dl-card">
             <div class="dl-card__icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </div>
-            <h3>Source tarball</h3>
-            <p>Build from scratch with Rust nightly. Fully reproducible with <code>cargo</code>.</p>
-            <div class="dl-meta"><span>tail-os-0.1.0.tar.gz</span><span>·</span><span>~1.1 MB</span></div>
-            <a class="btn btn--primary" href="https://releases.tail-os.com/v0.1.0/tail-os-0.1.0.tar.gz">Download</a>
+            <h3>SDK + samples</h3>
+            <p>Headers, prebuilt <code>tail_os</code> crate, and example apps to get your first task running.</p>
+            <div class="dl-meta"><span>tail-os-sdk-0.1.0.zip</span><span>·</span><span>~3.8 MB</span></div>
+            <a class="btn btn--primary" href="https://releases.tail-os.com/v0.1.0/tail-os-sdk-0.1.0.zip">Download</a>
           </article>
         </div>
+
+        <p class="muted" style="text-align:center; margin-top:18px; font-size:0.9rem;">
+          TAIL OS is currently a closed-source preview. Source access is available under evaluation agreement —
+          <a href="mailto:hello@tail-os.com" style="color:var(--accent-2);">contact us</a>.
+        </p>
 
         <div class="section__head" style="margin-top: 80px;">
           <span class="eyebrow">One-line install</span>
@@ -115,8 +120,8 @@
 
         <div class="code code--lg" style="max-width: 760px; margin: 0 auto;">
           <div class="code__head"><span>shell</span><button class="copy" data-copy>Copy</button></div>
-<pre><code>sha256sum -c tail-os-0.1.0.sha256
-gpg --verify tail-os-0.1.0.tar.gz.sig tail-os-0.1.0.tar.gz</code></pre>
+<pre><code>sha256sum -c tail-os-v0.1.0.sha256
+gpg --verify tail-os-rpi3b-v0.1.0.img.zip.sig tail-os-rpi3b-v0.1.0.img.zip</code></pre>
         </div>
       </div>
     </section>
@@ -135,7 +140,7 @@ gpg --verify tail-os-0.1.0.tar.gz.sig tail-os-0.1.0.tar.gz</code></pre>
       </div>
       <div class="footer__cols">
         <div><h5>Product</h5><ul><li><a href="index.html#features">Features</a></li><li><a href="download.html">Download</a></li><li><a href="docs/index.html">Docs</a></li></ul></div>
-        <div><h5>Community</h5><ul><li><a href="https://github.com/tail-os">GitHub</a></li><li><a href="https://discord.gg/tail-os">Discord</a></li><li><a href="mailto:hello@tail-os.com">Contact</a></li></ul></div>
+        <div><h5>Community</h5><ul><li><a href="https://discord.gg/tail-os">Discord</a></li><li><a href="mailto:hello@tail-os.com">Contact</a></li></ul></div>
         <div><h5>Legal</h5><ul><li><a href="#">License</a></li><li><a href="#">Privacy</a></li></ul></div>
       </div>
     </div>

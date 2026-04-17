@@ -88,13 +88,11 @@
 <pre><code>curl --proto '=https' --tlsv1.2 -sSf https://tail-os.com/install.sh | sh</code></pre>
         </div>
 
-        <h3>From source</h3>
-        <div class="code">
-          <div class="code__head"><span>shell</span><button class="copy" data-copy>Copy</button></div>
-<pre><code>git clone https://github.com/tail-os/tail-os.git
-cd tail-os
-cargo +nightly build --release --target aarch64-unknown-none-softfloat</code></pre>
-        </div>
+        <p class="muted">
+          TAIL OS is currently a closed-source preview. The installer fetches signed prebuilt images;
+          source access is available under evaluation agreement —
+          <a href="mailto:hello@tail-os.com" style="color:var(--accent-2);">contact us</a>.
+        </p>
 
         <h2 id="quickstart">Quick start</h2>
         <p>Boot the prebuilt QEMU image:</p>
@@ -176,7 +174,7 @@ COMMANDS
 
         <h2 id="faq">FAQ</h2>
         <h3>Is TAIL OS open source?</h3>
-        <p>Early releases are shared for evaluation. Open-sourcing the core is on the v0.2 roadmap.</p>
+        <p>No — TAIL OS is currently a closed-source preview. Early access is shared for evaluation under agreement; contact us if you'd like to take it for a spin.</p>
 
         <h3>Which boards are supported?</h3>
         <p>Raspberry Pi 3B and QEMU virt (aarch64) today. Cortex-M and RISC-V targets are in progress.</p>
@@ -200,7 +198,7 @@ COMMANDS
       </div>
       <div class="footer__cols">
         <div><h5>Product</h5><ul><li><a href="../index.html#features">Features</a></li><li><a href="../download.html">Download</a></li><li><a href="index.html">Docs</a></li></ul></div>
-        <div><h5>Community</h5><ul><li><a href="https://github.com/tail-os">GitHub</a></li><li><a href="https://discord.gg/tail-os">Discord</a></li><li><a href="mailto:hello@tail-os.com">Contact</a></li></ul></div>
+        <div><h5>Community</h5><ul><li><a href="https://discord.gg/tail-os">Discord</a></li><li><a href="mailto:hello@tail-os.com">Contact</a></li></ul></div>
         <div><h5>Legal</h5><ul><li><a href="#">License</a></li><li><a href="#">Privacy</a></li></ul></div>
       </div>
     </div>
