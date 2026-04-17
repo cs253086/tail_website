@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://tail-os.com/sitemap.xml

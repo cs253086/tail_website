@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Download TAIL OS — prebuilt images for Raspberry Pi 3B and QEMU, plus source archives." />
+  <title>Download — TAIL OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <header class="nav" id="nav">
+    <div class="nav__inner">
+      <a href="index.html" class="brand" aria-label="TAIL OS home">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="28" height="28" fill="none"><path d="M4 8h24M4 16h16M4 24h8" stroke="url(#gd1)" stroke-width="3" stroke-linecap="round"/><defs><linearGradient id="gd1" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs></svg>
+        </span>
+        <span class="brand__text">TAIL<span class="brand__dot">.</span>OS</span>
+      </a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="index.html#features">Features</a>
+        <a href="index.html#install">Install</a>
+        <a href="index.html#usage">Usage</a>
+        <a href="docs/index.html">Docs</a>
+        <a href="index.html#community">Community</a>
+      </nav>
+      <div class="nav__cta">
+        <a href="docs/index.html" class="btn btn--ghost">Docs</a>
+        <a href="#images" class="btn btn--primary">Get images</a>
+        <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" style="padding: 80px 0 30px;">
+      <div class="container">
+        <div class="hero__badge"><span class="pulse"></span> Latest release — v0.1.0 · April 2026</div>
+        <h1 class="hero__title" style="font-size: clamp(2rem, 3vw + 1rem, 3.2rem);">
+          Download <span class="grad-text">TAIL OS</span>
+        </h1>
+        <p class="hero__subtitle">
+          Prebuilt images, source archives, and a one-line installer. Everything is signed, reproducible, and small.
+        </p>
+      </div>
+    </section>
+
+    <section class="section" id="images" style="padding-top: 30px;">
+      <div class="container">
+        <header class="section__head">
+          <span class="eyebrow">Images</span>
+          <h2>Pick your target.</h2>
+          <p>All images are AArch64 (ARMv8-A). Checksums &amp; signatures are published alongside each artifact.</p>
+        </header>
+
+        <div class="dl-grid">
+          <article class="dl-card">
+            <div class="dl-card__icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+            </div>
+            <h3>QEMU (aarch64)</h3>
+            <p>Boot TAIL OS on any machine in seconds. Great for trying it out or CI.</p>
+            <div class="dl-meta"><span>kernel8.img</span><span>·</span><span>~180 KB</span></div>
+            <a class="btn btn--primary" href="https://releases.tail-os.com/v0.1.0/tail-os-qemu-aarch64-v0.1.0.img">Download</a>
+          </article>
+
+          <article class="dl-card">
+            <div class="dl-card__icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8v4h8z"/></svg>
+            </div>
+            <h3>Raspberry Pi 3B</h3>
+            <p>Flashable SD card image. UART + SD drivers included, ready to boot.</p>
+            <div class="dl-meta"><span>rpi3b.img.zip</span><span>·</span><span>~2.4 MB</span></div>
+            <a class="btn btn--primary" href="https://releases.tail-os.com/v0.1.0/tail-os-rpi3b-v0.1.0.img.zip">Download</a>
+          </article>
+
+          <article class="dl-card">
+            <div class="dl-card__icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            </div>
+            <h3>Source tarball</h3>
+            <p>Build from scratch with Rust nightly. Fully reproducible with <code>cargo</code>.</p>
+            <div class="dl-meta"><span>tail-os-0.1.0.tar.gz</span><span>·</span><span>~1.1 MB</span></div>
+            <a class="btn btn--primary" href="https://releases.tail-os.com/v0.1.0/tail-os-0.1.0.tar.gz">Download</a>
+          </article>
+        </div>
+
+        <div class="section__head" style="margin-top: 80px;">
+          <span class="eyebrow">One-line install</span>
+          <h2>Or just run this.</h2>
+          <p>Installs the <code>tailos</code> CLI, toolchain helpers, and latest QEMU image.</p>
+        </div>
+
+        <div class="code code--lg" style="max-width: 760px; margin: 0 auto;">
+          <div class="code__head"><span>macOS / Linux</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>curl --proto '=https' --tlsv1.2 -sSf https://tail-os.com/install.sh | sh</code></pre>
+        </div>
+
+        <div class="code code--lg" style="max-width: 760px; margin: 18px auto 0;">
+          <div class="code__head"><span>Windows (PowerShell)</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>iwr -useb https://tail-os.com/install.ps1 | iex</code></pre>
+        </div>
+
+        <div class="section__head" style="margin-top: 80px;">
+          <span class="eyebrow">Verify</span>
+          <h2>Check your download.</h2>
+          <p>Every artifact is signed with our release key. Fingerprint: <code>3F8C 4A7E 9B21 TAIL 0OS0</code>.</p>
+        </div>
+
+        <div class="code code--lg" style="max-width: 760px; margin: 0 auto;">
+          <div class="code__head"><span>shell</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>sha256sum -c tail-os-0.1.0.sha256
+gpg --verify tail-os-0.1.0.tar.gz.sig tail-os-0.1.0.tar.gz</code></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <div class="brand">
+          <span class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" width="22" height="22" fill="none"><path d="M4 8h24M4 16h16M4 24h8" stroke="url(#gd2)" stroke-width="3" stroke-linecap="round"/><defs><linearGradient id="gd2" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs></svg>
+          </span>
+          <span class="brand__text">TAIL<span class="brand__dot">.</span>OS</span>
+        </div>
+        <p class="muted">A real-time microkernel OS for robotics, written in Rust.</p>
+      </div>
+      <div class="footer__cols">
+        <div><h5>Product</h5><ul><li><a href="index.html#features">Features</a></li><li><a href="download.html">Download</a></li><li><a href="docs/index.html">Docs</a></li></ul></div>
+        <div><h5>Community</h5><ul><li><a href="https://github.com/tail-os">GitHub</a></li><li><a href="https://discord.gg/tail-os">Discord</a></li><li><a href="mailto:hello@tail-os.com">Contact</a></li></ul></div>
+        <div><h5>Legal</h5><ul><li><a href="#">License</a></li><li><a href="#">Privacy</a></li></ul></div>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <div class="container">
+        <span>&copy; <span id="year"></span> TAIL OS. Built with Rust &amp; care.</span>
+        <span class="muted">v0.1.0 · Early preview</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js" defer></script>
+</body>
+</html>

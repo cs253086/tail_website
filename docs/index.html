@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="TAIL OS documentation — installation, quick start, API reference." />
+  <title>Docs — TAIL OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <header class="nav" id="nav">
+    <div class="nav__inner">
+      <a href="../index.html" class="brand" aria-label="TAIL OS home">
+        <span class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" width="28" height="28" fill="none"><path d="M4 8h24M4 16h16M4 24h8" stroke="url(#gdc1)" stroke-width="3" stroke-linecap="round"/><defs><linearGradient id="gdc1" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs></svg>
+        </span>
+        <span class="brand__text">TAIL<span class="brand__dot">.</span>OS</span>
+      </a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="../index.html#features">Features</a>
+        <a href="../index.html#install">Install</a>
+        <a href="../index.html#usage">Usage</a>
+        <a href="index.html">Docs</a>
+        <a href="../index.html#community">Community</a>
+      </nav>
+      <div class="nav__cta">
+        <a href="../download.html" class="btn btn--primary">Download</a>
+        <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="doc">
+      <aside class="doc__side">
+        <h5>Getting started</h5>
+        <a href="#overview" class="is-active">Overview</a>
+        <a href="#install">Installation</a>
+        <a href="#quickstart">Quick start</a>
+
+        <h5>Guide</h5>
+        <a href="#tasks">Tasks &amp; scheduling</a>
+        <a href="#ipc">IPC channels</a>
+        <a href="#drivers">Drivers</a>
+        <a href="#shell">The <code>tailos&gt;</code> shell</a>
+
+        <h5>Reference</h5>
+        <a href="#cli">CLI reference</a>
+        <a href="#faq">FAQ</a>
+      </aside>
+
+      <article class="doc__content">
+        <h1>TAIL OS documentation</h1>
+        <p>
+          TAIL OS is a microkernel real-time operating system written in Rust. It's built
+          for robotics, autonomous vehicles, and other safety-critical systems where
+          timing is a hard requirement, not a nice-to-have.
+        </p>
+        <p class="muted">Version: v0.1.0 · Early preview</p>
+
+        <h2 id="overview">Overview</h2>
+        <p>TAIL OS ships with:</p>
+        <ul>
+          <li>A small, auditable <strong>microkernel</strong> that runs only scheduling, IPC, and memory management in privileged mode.</li>
+          <li>A <strong>deterministic EDF (Earliest-Deadline-First) scheduler</strong> with sub-microsecond IPC jitter.</li>
+          <li><strong>Userspace drivers</strong> — UART and SD card today, more on the way.</li>
+          <li>A <strong>Rust async runtime</strong> tailored for <code>no_std</code>, with typed message channels and bounded queues.</li>
+          <li>A <strong>developer shell</strong> (<code>tailos&gt;</code>) for inspecting tasks, tracing deadlines, and toggling drivers.</li>
+        </ul>
+
+        <h2 id="install">Installation</h2>
+        <h3>Prerequisites</h3>
+        <ul>
+          <li>Rust <strong>nightly</strong> with <code>rust-src</code> &amp; <code>llvm-tools-preview</code></li>
+          <li>QEMU (for emulation) <em>or</em> a Raspberry Pi 3B + SD card</li>
+          <li>A POSIX shell (macOS / Linux) or PowerShell (Windows)</li>
+        </ul>
+
+        <h3>One-line installer</h3>
+        <div class="code">
+          <div class="code__head"><span>macOS / Linux</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>curl --proto '=https' --tlsv1.2 -sSf https://tail-os.com/install.sh | sh</code></pre>
+        </div>
+
+        <h3>From source</h3>
+        <div class="code">
+          <div class="code__head"><span>shell</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>git clone https://github.com/tail-os/tail-os.git
+cd tail-os
+cargo +nightly build --release --target aarch64-unknown-none-softfloat</code></pre>
+        </div>
+
+        <h2 id="quickstart">Quick start</h2>
+        <p>Boot the prebuilt QEMU image:</p>
+        <div class="code">
+          <div class="code__head"><span>shell</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>tailos pull --target qemu-aarch64
+tailos run  --target qemu-aarch64</code></pre>
+        </div>
+        <p>You'll land in the <code>tailos&gt;</code> shell. Try:</p>
+        <div class="code">
+          <div class="code__head"><span>tailos&gt;</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>help
+ps
+trace control_loop --for 1s</code></pre>
+        </div>
+
+        <h2 id="tasks">Tasks &amp; scheduling</h2>
+        <p>
+          Tasks in TAIL OS are <code>async</code> Rust functions annotated with <code>#[tail_os::task]</code>.
+          Every task declares its priority, period, and optional deadline — the scheduler refuses to admit
+          task sets it can't guarantee.
+        </p>
+        <div class="code">
+          <div class="code__head"><span>src/tasks.rs</span><button class="copy" data-copy>Copy</button></div>
+<pre><code><span class="tk-at">#[tail_os::task(priority = 0, period = "1ms", deadline = "900us")]</span>
+<span class="tk-kw">async fn</span> <span class="tk-fn">control_loop</span>() {
+    <span class="tk-kw">loop</span> {
+        <span class="tk-kw">let</span> sample = imu::read().<span class="tk-fn">await</span>;
+        motor::apply(pid::step(sample));
+        task::yield_now().<span class="tk-fn">await</span>;
+    }
+}</code></pre>
+        </div>
+
+        <h2 id="ipc">IPC channels</h2>
+        <p>Channels are typed, bounded, and lock-free. No <code>unsafe</code> required at the app level.</p>
+        <div class="code">
+          <div class="code__head"><span>src/ipc.rs</span><button class="copy" data-copy>Copy</button></div>
+<pre><code><span class="tk-kw">use</span> tail_os::ipc::channel;
+
+<span class="tk-kw">let</span> (tx, rx) = channel::&lt;<span class="tk-ty">ImuSample</span>&gt;(<span class="tk-num">16</span>); <span class="tk-comment">// capacity = 16</span>
+tx.send(sample).<span class="tk-fn">await</span>?;
+<span class="tk-kw">let</span> next = rx.recv().<span class="tk-fn">await</span>?;</code></pre>
+        </div>
+
+        <h2 id="drivers">Drivers</h2>
+        <p>All drivers live in userspace. Today v0.1 ships:</p>
+        <ul>
+          <li><code>uart0</code> — Raspberry Pi 3B PL011 UART (115200 8N1)</li>
+          <li><code>sdhc</code> — SD / MMC card host controller, read &amp; write</li>
+        </ul>
+        <p>Writing a driver is a crate — expose a capability, handle your IRQs, return messages. That's it.</p>
+
+        <h2 id="shell">The <code>tailos&gt;</code> shell</h2>
+        <p>A built-in REPL for introspection. Useful commands:</p>
+        <div class="code">
+          <div class="code__head"><span>tailos&gt;</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>help                 <span class="tk-comment"># list commands</span>
+ps                   <span class="tk-comment"># list tasks with CPU% &amp; deadline stats</span>
+trace &lt;task&gt; --for 1s  <span class="tk-comment"># WCET / jitter / deadline misses</span>
+drv list             <span class="tk-comment"># installed drivers</span>
+meminfo              <span class="tk-comment"># kernel + userspace memory</span>
+reboot               <span class="tk-comment"># clean reboot</span></code></pre>
+        </div>
+
+        <h2 id="cli">CLI reference</h2>
+        <div class="code">
+          <div class="code__head"><span>tailos --help</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>tailos &lt;command&gt; [options]
+
+COMMANDS
+  run       Boot an image (QEMU or attached board)
+  pull      Fetch a prebuilt image
+  build     Build a TAIL OS app from the current crate
+  flash     Flash an image to an SD card or block device
+  doctor    Check your toolchain &amp; environment
+  version   Print version info</code></pre>
+        </div>
+
+        <h2 id="faq">FAQ</h2>
+        <h3>Is TAIL OS open source?</h3>
+        <p>Early releases are shared for evaluation. Open-sourcing the core is on the v0.2 roadmap.</p>
+
+        <h3>Which boards are supported?</h3>
+        <p>Raspberry Pi 3B and QEMU virt (aarch64) today. Cortex-M and RISC-V targets are in progress.</p>
+
+        <h3>Why a microkernel?</h3>
+        <p>Smaller attack surface, drivers can crash without taking the kernel down, and it's far easier to reason about determinism when the kernel only does three things.</p>
+      </article>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <div class="brand">
+          <span class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" width="22" height="22" fill="none"><path d="M4 8h24M4 16h16M4 24h8" stroke="url(#gdc2)" stroke-width="3" stroke-linecap="round"/><defs><linearGradient id="gdc2" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs></svg>
+          </span>
+          <span class="brand__text">TAIL<span class="brand__dot">.</span>OS</span>
+        </div>
+        <p class="muted">A real-time microkernel OS for robotics, written in Rust.</p>
+      </div>
+      <div class="footer__cols">
+        <div><h5>Product</h5><ul><li><a href="../index.html#features">Features</a></li><li><a href="../download.html">Download</a></li><li><a href="index.html">Docs</a></li></ul></div>
+        <div><h5>Community</h5><ul><li><a href="https://github.com/tail-os">GitHub</a></li><li><a href="https://discord.gg/tail-os">Discord</a></li><li><a href="mailto:hello@tail-os.com">Contact</a></li></ul></div>
+        <div><h5>Legal</h5><ul><li><a href="#">License</a></li><li><a href="#">Privacy</a></li></ul></div>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <div class="container">
+        <span>&copy; <span id="year"></span> TAIL OS. Built with Rust &amp; care.</span>
+        <span class="muted">v0.1.0 · Early preview</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../assets/js/main.js" defer></script>
+</body>
+</html>
