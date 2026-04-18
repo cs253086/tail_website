@@ -210,14 +210,11 @@ qemu-system-aarch64 \
                 </ul>
               </li>
               <li>
-                <h4>Build &amp; flash the SD image</h4>
-                <p>From the TAIL OS source tree, build <code>tailos_sd.img</code> (two-partition FAT32: boot + data) and write it to your SD card.</p>
+                <h4>Flash the SD image</h4>
+                <p>Grab the prebuilt <code>tailos_sd.img</code> (two-partition FAT32: boot + data) from the <a href="download.html">download page</a> and write it to your SD card.</p>
                 <div class="code">
                   <div class="code__head"><span>Linux host</span><button class="copy" data-copy>Copy</button></div>
-<pre><code><span class="tk-comment"># 1. Build TailOS and create the SD card image</span>
-make sd-image
-
-<span class="tk-comment"># 2. Flash to SD card (replace /dev/sdX with your SD card device)</span>
+<pre><code><span class="tk-comment"># Flash to SD card (replace /dev/sdX with your SD card device)</span>
 sudo dd if=tailos_sd.img of=/dev/sdX bs=4M status=progress
 sync</code></pre>
                 </div>
