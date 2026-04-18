@@ -200,23 +200,53 @@ qemu-system-aarch64 \
           <div class="panel" data-panel="rpi">
             <ol class="steps">
               <li>
-                <h4>Download the Pi image</h4>
-                <p>Grab the latest <code>kernel8.img</code> from the <a href="download.html">download page</a>.</p>
+                <h4>What you need</h4>
+                <ul class="muted" style="margin: 6px 0 0; padding-left: 18px; line-height: 1.9;">
+                  <li>Raspberry Pi <strong>3B or 3B+</strong></li>
+                  <li>MicroSD card (8&nbsp;GB or larger)</li>
+                  <li>USB-to-TTL serial adapter (<strong>3.3&nbsp;V</strong>) — FTDI, CP2102, etc.</li>
+                  <li>5&nbsp;V / 2.5&nbsp;A power supply (official RPi PSU recommended)</li>
+                  <li>A Linux host machine for building and flashing</li>
+                </ul>
               </li>
               <li>
-                <h4>Copy it to an SD card</h4>
+                <h4>Build &amp; flash the SD image</h4>
+                <p>From the TAIL OS source tree, build <code>tailos_sd.img</code> (two-partition FAT32: boot + data) and write it to your SD card.</p>
                 <div class="code">
-                  <div class="code__head"><span>macOS / Linux</span><button class="copy" data-copy>Copy</button></div>
-<pre><code>diskutil list                          <span class="tk-comment"># find your SD card, e.g. /dev/disk4</span>
-diskutil unmountDisk /dev/disk4
-sudo dd if=tail-os-rpi3b-v0.1.0.img of=/dev/rdisk4 bs=4m status=progress
-sync &amp;&amp; diskutil eject /dev/disk4</code></pre>
+                  <div class="code__head"><span>Linux host</span><button class="copy" data-copy>Copy</button></div>
+<pre><code><span class="tk-comment"># 1. Build TailOS and create the SD card image</span>
+make sd-image
+
+<span class="tk-comment"># 2. Flash to SD card (replace /dev/sdX with your SD card device)</span>
+sudo dd if=tailos_sd.img of=/dev/sdX bs=4M status=progress
+sync</code></pre>
                 </div>
+                <p class="muted">Double-check <code>/dev/sdX</code> — picking the wrong device will overwrite the wrong disk.</p>
               </li>
               <li>
-                <h4>Boot the Pi</h4>
-                <p>Insert the card, connect UART (115200 8N1) to GPIO 14/15, power on.
-                You'll see the boot log stream over serial at <code>&lt; 2µs</code> IPC latency.</p>
+                <h4>Wire the serial console</h4>
+                <p>Connect your USB-TTL adapter to the RPi3 GPIO header. TX and RX must be crossed.</p>
+                <div class="code">
+                  <div class="code__head"><span>wiring</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>USB-TTL Adapter          RPi3 GPIO Header
++-----------+            +----------------+
+|  TX  o----+----------->| Pin 10 (RXD)  |  GPIO 15
+|  RX  o&lt;---+-----------o| Pin 8  (TXD)  |  GPIO 14
+|  GND o----+----------->| Pin 6  (GND)  |
++-----------+            +----------------+</code></pre>
+                </div>
+                <p class="muted"><strong>Do not</strong> connect the VCC / 5&nbsp;V pin from the adapter to the Pi — power the Pi from its own PSU.</p>
+              </li>
+              <li>
+                <h4>Power on &amp; open a terminal</h4>
+                <p>Insert the SD card, apply power, then open a serial console at 115200 8N1:</p>
+                <div class="code">
+                  <div class="code__head"><span>host</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>screen /dev/ttyUSB0 115200
+<span class="tk-comment"># or</span>
+minicom -D /dev/ttyUSB0 -b 115200</code></pre>
+                </div>
+                <p class="muted">When you see <code>tsh&gt;</code>, TAIL OS is booted and ready on your Pi.</p>
               </li>
             </ol>
           </div>
