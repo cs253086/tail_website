@@ -61,8 +61,11 @@
             </div>
             <h3>QEMU (aarch64)</h3>
             <p>Boot TAIL OS on any machine in seconds. Great for trying it out or CI.</p>
-            <div class="dl-meta"><span>kernel8.img</span><span>·</span><span>~180 KB</span></div>
-            <a class="btn btn--primary" href="https://releases.tail-os.com/v0.1.0/tail-os-qemu-aarch64-v0.1.0.img">Download</a>
+            <div class="dl-meta"><span>tail.rfs</span><span>+</span><span>tail_disk.img</span></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <a class="btn btn--primary" href="https://tail-os.com/wp-content/uploads/2025/09/tail.rfs">tail.rfs</a>
+              <a class="btn btn--ghost" href="https://tail-os.com/wp-content/uploads/2025/09/tail_disk.img">tail_disk.img</a>
+            </div>
           </article>
 
           <article class="dl-card">
@@ -86,7 +89,16 @@
           </article>
         </div>
 
-        <p class="muted" style="text-align:center; margin-top:18px; font-size:0.9rem;">
+        <div style="max-width:760px;margin:32px auto 0;">
+          <p style="font-size:0.85rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-mute);margin-bottom:10px;">Run QEMU after downloading both files</p>
+          <div class="code code--lg">
+            <div class="code__head"><span>shell</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>qemu-system-aarch64 -M raspi3b -kernel tail.rfs -serial mon:stdio \
+  -drive file=tail_disk.img,format=raw,if=sd</code></pre>
+          </div>
+        </div>
+
+        <p class="muted" style="text-align:center; margin-top:24px; font-size:0.9rem;">
           TAIL OS is currently a closed-source preview. Source access is available under evaluation agreement —
           <a href="mailto:hello@tail-os.com" style="color:var(--accent-2);">contact us</a>.
         </p>
