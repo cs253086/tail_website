@@ -62,45 +62,144 @@
         <h2 id="overview">Overview</h2>
         <p>v0.9.0 ships with:</p>
         <ul>
-          <li><strong>Microkernel</strong> — only scheduling, IPC, and memory run privileged. Everything else is userspace.</li>
-          <li><strong>Real-time scheduler</strong> — deterministic, priority-based, with sub-microsecond IPC jitter.</li>
-          <li><strong>Userspace drivers</strong> — UART and SD card (SDHC).</li>
-          <li><strong>Rust async runtime</strong> — <code>no_std</code>, typed message channels, bounded queues.</li>
-          <li><strong>Developer shell</strong> (<code>tsh&gt;</code>) — inspect tasks, trace deadlines, toggle drivers.</li>
+          <li><strong>Microkernel</strong> — only process, memory, scheduling, and IPC run privileged. Drivers and everything else are userspace.</li>
+          <li><strong>Real-time scheduler</strong> — 64 priority levels, preemptive, O(1) dispatch, FIFO or Round-Robin policy.</li>
+          <li><strong>Two IPC patterns</strong> — synchronous request/reply (Service) and asynchronous publish/subscribe (Topic), both kernel-mediated with read-only delivery.</li>
+          <li><strong>Userspace drivers</strong> — UART and SD card (SDHC) on Raspberry Pi 3B.</li>
+          <li><strong>Developer shell</strong> (<code>tsh&gt;</code>) — inspect tasks, processes, memory, and drivers.</li>
         </ul>
 
         <h2 id="microkernel">Microkernel</h2>
         <p>
-          TAIL OS follows a strict microkernel design: the kernel runs only three services in privileged mode —
-          the scheduler, IPC message passing, and memory management. Everything else — drivers, protocol stacks,
-          application tasks — runs as unprivileged userspace processes.
+          The kernel keeps a small, fixed set of services in privileged mode and pushes everything else
+          out to userspace. Four subsystems sit above a hardware abstraction layer; user applications
+          reach them through a single kernel call interface.
         </p>
+        <div class="code">
+          <div class="code__head"><span>kernel layout</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>┌─────────────────────────────────────────┐
+│           User Applications             │
+├─────────────────────────────────────────┤
+│         Kernel Call Interface           │
+├─────────────────────────────────────────┤
+│  Process │ Memory │ Scheduling │  IPC   │
+│  Manager │ Manager│            │        │
+├─────────────────────────────────────────┤
+│      Exception Handling │ Clock         │
+├─────────────────────────────────────────┤
+│      Hardware Abstraction Layer         │
+└─────────────────────────────────────────┘</code></pre>
+        </div>
+
+        <h3>Core services</h3>
+        <ul>
+          <li><strong>Process management</strong> — create and terminate processes, isolate each one in its own address space, assign a unique PID.</li>
+          <li><strong>Memory management</strong> — allocate and protect memory, give each process a private virtual address space, support shared memory regions when processes opt in.</li>
+          <li><strong>Thread scheduling</strong> — pick the next thread to run on each CPU according to priority.</li>
+          <li><strong>IPC</strong> — route messages and service calls between processes.</li>
+        </ul>
+
+        <h3>Processes and threads</h3>
         <p>
-          This boundary is a hard architectural rule, not a convention. A driver bug or crash stays contained
-          in userspace and cannot corrupt kernel state. The kernel surface is small enough to audit in full.
+          A <strong>process</strong> owns an isolated address space, a PID, and resource limits.
+          A <strong>thread</strong> is a unit of execution inside a process — threads in the same process share memory
+          but have their own stack and execution context. Concurrent execution lives at the thread level;
+          isolation lives at the process level.
         </p>
+
+        <h3>Memory model</h3>
+        <p>
+          Memory is split into <strong>kernel space</strong> (privileged), <strong>user space</strong> (per-process,
+          isolated), and explicitly created <strong>shared regions</strong>. The kernel enforces read / write / execute
+          permissions through virtual memory; an invalid access faults rather than corrupting another process.
+        </p>
+
+        <h3>Targets</h3>
+        <p>AArch64 and x86_64. Written in Rust, so memory-safety errors that plague C kernels are eliminated at compile time.</p>
 
         <h2 id="scheduler">Scheduler</h2>
         <p>
-          The scheduler is built for real-time workloads. Tasks declare a priority and, optionally, a period
-          and deadline. The scheduler enforces timing contracts at admission time — if a task set cannot be
-          guaranteed to meet its deadlines, the system rejects it before starting.
+          The scheduler is <strong>priority-based and preemptive</strong>. Its decision rule is simple:
+          always run the highest-priority thread that is ready. What makes it suitable for real-time work
+          is that every scheduling step is bounded in time, regardless of how many threads exist.
         </p>
+
+        <h3>Policy</h3>
+        <ul>
+          <li><strong>64 priority levels</strong> (0 = idle, 63 = highest).</li>
+          <li><strong>Highest-priority-first</strong> with <strong>FIFO ordering</strong> within a priority — threads run in the order they became ready.</li>
+          <li><strong>FIFO or Round-Robin</strong> — system-wide policy. The default is Round-Robin with a 10&nbsp;ms quantum; switching to FIFO removes time slicing entirely.</li>
+          <li><strong>O(1) dispatch</strong> — the next thread is found with a single hardware count-leading-zeros instruction over a 64-bit ready bitmap, so dispatch latency is constant.</li>
+        </ul>
+
+        <h3>Thread states</h3>
         <p>
-          Task execution is deterministic: no background daemons, no global GC, no unbounded critical sections.
-          IPC jitter is kept sub-microsecond so that tight control loops get the timing they need.
+          A thread is always in exactly one of four states: <strong>Ready</strong> (waiting for the CPU),
+          <strong>Running</strong> (executing now), <strong>Blocked</strong> (waiting on IPC, I/O, a mutex, sleep, or a timeout),
+          or <strong>Terminated</strong>.
         </p>
+
+        <h3>Real-time properties</h3>
+        <ul>
+          <li><strong>Bounded ready-to-running latency</strong> — constant-time dispatch and a fully preemptible kernel keep the worst case computable.</li>
+          <li><strong>Priority inheritance</strong> — when a high-priority thread waits on a mutex held by a low-priority one, the holder temporarily inherits the higher priority. Same boost is applied automatically across synchronous IPC calls. This prevents classical priority inversion.</li>
+          <li><strong>Preemptible kernel</strong> — syscalls themselves can be preempted, so a long kernel operation doesn't hold off a higher-priority thread. Interrupts stay enabled across syscall execution.</li>
+          <li><strong>SMP</strong> — a single global ready queue is shared across CPUs; threads honour a per-thread CPU affinity mask. Only CPU&nbsp;0 takes the periodic timer tick; secondaries are nudged by reschedule IPIs.</li>
+          <li><strong>Sleep &amp; timeout queues</strong> — time-based blocking is sorted by wake deadline; expired entries are woken on every tick.</li>
+        </ul>
 
         <h2 id="ipc">IPC</h2>
         <p>
-          Tasks communicate through typed, bounded message channels implemented in the kernel.
-          The channel API is exposed as a Rust async interface — senders <code>await</code> when the
-          buffer is full, receivers <code>await</code> when it is empty.
+          TAIL OS provides two complementary IPC mechanisms: <strong>Service IPC</strong> for synchronous
+          request/reply and <strong>Topic IPC</strong> for asynchronous publish/subscribe. Both share one
+          guarantee: the kernel is the sole mediator. Processes never write into each other's memory —
+          every payload is copied once into a kernel-owned buffer and exposed to receivers as a read-only
+          mapping. That single rule is what makes the IPC layer analysable for safety-critical use
+          (designed with ISO 26262 and IEC 61508 in mind).
         </p>
+
+        <h3>Shared message pool</h3>
         <p>
-          Channels are lock-free and require no <code>unsafe</code> at the application level.
-          Because messages are typed at compile time, protocol mismatches are caught by the Rust compiler,
-          not at runtime.
+          Both mechanisms draw from a single tiered pool of kernel-owned buffers — 256&nbsp;B, 4&nbsp;KiB, and
+          64&nbsp;KiB cells by default, sized for typical message payloads. In <strong>certified mode</strong> the
+          pool is pre-allocated at boot and never calls into the heap on the IPC hot path, giving you fixed,
+          predictable resource use. A critical service can also reserve guaranteed buffer slots so it
+          never starves under load.
+        </p>
+
+        <h3>Service IPC — synchronous request / reply</h3>
+        <p>
+          A <strong>service</strong> is a named endpoint owned by a server thread. A client sends a request
+          and blocks until the reply arrives; the kernel routes the call to the registered server, copies
+          the request into a pool cell, and hands the server a read-only view. Use it for device drivers,
+          system services, and anything RPC-shaped.
+        </p>
+        <ul>
+          <li><strong>Bounded queues.</strong> Each service has a 16-slot request queue; each process can have at most 8 requests in flight at once.</li>
+          <li><strong>Priority inheritance.</strong> While the server handles a request, it runs at the client's priority — a low-priority server cannot hold off a high-priority client.</li>
+          <li><strong>Per-request timeouts.</strong> Clients can attach a deadline to any send and get a clean <code>TimedOut</code> error instead of waiting forever.</li>
+          <li><strong>Clean teardown.</strong> If the server thread or process dies, the kernel drains its queue, releases the buffers, and unblocks every waiting client.</li>
+        </ul>
+
+        <h3>Topic IPC — asynchronous publish / subscribe</h3>
+        <p>
+          A <strong>topic</strong> is a named channel. Any number of publishers send messages to it; every
+          subscriber that was subscribed at publish time gets its own read-only view of the same kernel
+          buffer. Use it for sensor streams, event broadcasting, and data logging.
+        </p>
+        <ul>
+          <li><strong>Fire-and-forget.</strong> The publisher never blocks on subscribers. It returns as soon as the kernel has staged the message.</li>
+          <li><strong>One copy, many readers.</strong> The kernel copies the payload once and refcounts the pool cell — fan-out to N subscribers stays cheap.</li>
+          <li><strong>Drop-oldest queues.</strong> Each subscriber has an 8-slot pending ring. A slow subscriber loses its oldest unread message rather than slowing the publisher or the other subscribers.</li>
+          <li><strong>Per-subscriber isolation.</strong> A crashed or stuck subscriber can't stall anyone else; the kernel cleans up its buffers on process death.</li>
+        </ul>
+
+        <h3>Picking between them</h3>
+        <p>
+          Reach for <strong>Service IPC</strong> when you need a reply, a guarantee of delivery, or transactional
+          semantics — driver calls, configuration changes, filesystem operations. Reach for
+          <strong>Topic IPC</strong> when you have a continuous stream of data and the latest sample matters more
+          than every sample — IMU readings, camera frames, status broadcasts.
         </p>
 
         <h2 id="cli">CLI reference</h2>
