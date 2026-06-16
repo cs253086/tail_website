@@ -40,11 +40,10 @@
         <h5>Getting started</h5>
         <a href="#overview" class="is-active">Overview</a>
 
-        <h5>Guide</h5>
-        <a href="#tasks">Tasks &amp; scheduling</a>
-        <a href="#ipc">IPC channels</a>
-        <a href="#drivers">Drivers</a>
-        <a href="#shell">The <code>tsh&gt;</code> shell</a>
+        <h5>Architecture</h5>
+        <a href="#microkernel">Microkernel</a>
+        <a href="#scheduler">Scheduler</a>
+        <a href="#ipc">IPC</a>
 
         <h5>Reference</h5>
         <a href="#cli">CLI reference</a>
@@ -64,60 +63,45 @@
         <p>v0.9.0 ships with:</p>
         <ul>
           <li><strong>Microkernel</strong> — only scheduling, IPC, and memory run privileged. Everything else is userspace.</li>
-          <li><strong>EDF scheduler</strong> — deterministic Earliest-Deadline-First with sub-microsecond IPC jitter.</li>
+          <li><strong>Real-time scheduler</strong> — deterministic, priority-based, with sub-microsecond IPC jitter.</li>
           <li><strong>Userspace drivers</strong> — UART and SD card (SDHC).</li>
           <li><strong>Rust async runtime</strong> — <code>no_std</code>, typed message channels, bounded queues.</li>
           <li><strong>Developer shell</strong> (<code>tsh&gt;</code>) — inspect tasks, trace deadlines, toggle drivers.</li>
         </ul>
 
-        <h2 id="tasks">Tasks &amp; scheduling</h2>
+        <h2 id="microkernel">Microkernel</h2>
         <p>
-          Tasks in TAIL OS are <code>async</code> Rust functions annotated with <code>#[tail_os::task]</code>.
-          Every task declares its priority, period, and optional deadline — the scheduler refuses to admit
-          task sets it can't guarantee.
+          TAIL OS follows a strict microkernel design: the kernel runs only three services in privileged mode —
+          the scheduler, IPC message passing, and memory management. Everything else — drivers, protocol stacks,
+          application tasks — runs as unprivileged userspace processes.
         </p>
-        <div class="code">
-          <div class="code__head"><span>src/tasks.rs</span><button class="copy" data-copy>Copy</button></div>
-<pre><code><span class="tk-at">#[tail_os::task(priority = 0, period = "1ms", deadline = "900us")]</span>
-<span class="tk-kw">async fn</span> <span class="tk-fn">control_loop</span>() {
-    <span class="tk-kw">loop</span> {
-        <span class="tk-kw">let</span> sample = imu::read().<span class="tk-fn">await</span>;
-        motor::apply(pid::step(sample));
-        task::yield_now().<span class="tk-fn">await</span>;
-    }
-}</code></pre>
-        </div>
+        <p>
+          This boundary is a hard architectural rule, not a convention. A driver bug or crash stays contained
+          in userspace and cannot corrupt kernel state. The kernel surface is small enough to audit in full.
+        </p>
 
-        <h2 id="ipc">IPC channels</h2>
-        <p>Channels are typed, bounded, and lock-free. No <code>unsafe</code> required at the app level.</p>
-        <div class="code">
-          <div class="code__head"><span>src/ipc.rs</span><button class="copy" data-copy>Copy</button></div>
-<pre><code><span class="tk-kw">use</span> tail_os::ipc::channel;
+        <h2 id="scheduler">Scheduler</h2>
+        <p>
+          The scheduler is built for real-time workloads. Tasks declare a priority and, optionally, a period
+          and deadline. The scheduler enforces timing contracts at admission time — if a task set cannot be
+          guaranteed to meet its deadlines, the system rejects it before starting.
+        </p>
+        <p>
+          Task execution is deterministic: no background daemons, no global GC, no unbounded critical sections.
+          IPC jitter is kept sub-microsecond so that tight control loops get the timing they need.
+        </p>
 
-<span class="tk-kw">let</span> (tx, rx) = channel::&lt;<span class="tk-ty">ImuSample</span>&gt;(<span class="tk-num">16</span>); <span class="tk-comment">// capacity = 16</span>
-tx.send(sample).<span class="tk-fn">await</span>?;
-<span class="tk-kw">let</span> next = rx.recv().<span class="tk-fn">await</span>?;</code></pre>
-        </div>
-
-        <h2 id="drivers">Drivers</h2>
-        <p>All drivers live in userspace. Today v0.1 ships:</p>
-        <ul>
-          <li><code>uart0</code> — Raspberry Pi 3B PL011 UART (115200 8N1)</li>
-          <li><code>sdhc</code> — SD / MMC card host controller, read &amp; write</li>
-        </ul>
-        <p>Writing a driver is a crate — expose a capability, handle your IRQs, return messages. That's it.</p>
-
-        <h2 id="shell">The <code>tailos&gt;</code> shell</h2>
-        <p>A built-in REPL for introspection. Useful commands:</p>
-        <div class="code">
-          <div class="code__head"><span>tailos&gt;</span><button class="copy" data-copy>Copy</button></div>
-<pre><code>help                 <span class="tk-comment"># list commands</span>
-ps                   <span class="tk-comment"># list tasks with CPU% &amp; deadline stats</span>
-trace &lt;task&gt; --for 1s  <span class="tk-comment"># WCET / jitter / deadline misses</span>
-drv list             <span class="tk-comment"># installed drivers</span>
-meminfo              <span class="tk-comment"># kernel + userspace memory</span>
-reboot               <span class="tk-comment"># clean reboot</span></code></pre>
-        </div>
+        <h2 id="ipc">IPC</h2>
+        <p>
+          Tasks communicate through typed, bounded message channels implemented in the kernel.
+          The channel API is exposed as a Rust async interface — senders <code>await</code> when the
+          buffer is full, receivers <code>await</code> when it is empty.
+        </p>
+        <p>
+          Channels are lock-free and require no <code>unsafe</code> at the application level.
+          Because messages are typed at compile time, protocol mismatches are caught by the Rust compiler,
+          not at runtime.
+        </p>
 
         <h2 id="cli">CLI reference</h2>
         <div class="code">
