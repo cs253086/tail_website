@@ -42,11 +42,8 @@
         <a href="docs/index.html">Docs</a>
       </nav>
       <div class="nav__cta">
-        <a href="#install" class="btn btn--ghost">Get started</a>
-        <a href="download.html" class="btn btn--primary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Download
-        </a>
+        <a href="docs/index.html" class="btn btn--ghost">Docs</a>
+        <a href="#install" class="btn btn--primary">Get started</a>
         <button class="nav__toggle" aria-label="Toggle menu" aria-expanded="false">
           <span></span><span></span><span></span>
         </button>
@@ -69,11 +66,11 @@
           TAIL OS is a microkernel RTOS written in Rust, built for Robotics.
         </p>
         <div class="hero__cta">
-          <a href="download.html" class="btn btn--primary btn--lg">
-            Download TAIL OS
+          <a href="#install" class="btn btn--primary btn--lg">
+            Installation guide
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </a>
-          <a href="#install" class="btn btn--ghost btn--lg">Installation guide</a>
+          <a href="docs/index.html" class="btn btn--ghost btn--lg">Read the docs</a>
         </div>
 
         <ul class="hero__stats">
@@ -156,6 +153,7 @@
         <div class="tabs" role="tablist" aria-label="Install target">
           <button class="tab is-active" role="tab" data-tab="qemu" aria-selected="true">QEMU</button>
           <button class="tab" role="tab" data-tab="rpi" aria-selected="false">Raspberry Pi 3B</button>
+          <button class="tab" role="tab" data-tab="sdk" aria-selected="false">SDK</button>
         </div>
 
         <div class="tab-panels">
@@ -210,10 +208,12 @@ qemu-system-aarch64 \
               </li>
               <li>
                 <h4>Flash the SD image</h4>
-                <p>Grab the prebuilt <code>tailos_sd.img</code> (two-partition FAT32: boot + data) from the <a href="download.html">download page</a> and write it to your SD card.</p>
+                <p>Grab the prebuilt <code>tailos_sd.img</code> (two-partition FAT32: boot + data) and write it to your SD card.</p>
                 <div class="code">
                   <div class="code__head"><span>Linux host</span><button class="copy" data-copy>Copy</button></div>
-<pre><code><span class="tk-comment"># Flash to SD card (replace /dev/sdX with your SD card device)</span>
+<pre><code>wget https://tail-os.com/wp-content/uploads/2025/09/tailos_sd.img
+
+<span class="tk-comment"># Flash to SD card (replace /dev/sdX with your SD card device)</span>
 sudo dd if=tailos_sd.img of=/dev/sdX bs=4M status=progress
 sync</code></pre>
                 </div>
@@ -243,6 +243,38 @@ sync</code></pre>
 minicom -D /dev/ttyUSB0 -b 115200</code></pre>
                 </div>
                 <p class="muted">When you see <code>tsh&gt;</code>, TAIL OS is booted and ready on your Pi.</p>
+              </li>
+            </ol>
+          </div>
+
+          <div class="panel" data-panel="sdk">
+            <ol class="steps">
+              <li>
+                <h4>Install the Rust toolchain</h4>
+                <p>The TAIL OS SDK targets <code>aarch64-unknown-none</code> and requires Rust nightly with a couple of components.</p>
+                <div class="code">
+                  <div class="code__head"><span>shell</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustup toolchain install nightly
+rustup component add rust-src llvm-tools-preview --toolchain nightly
+rustup target add aarch64-unknown-none --toolchain nightly</code></pre>
+                </div>
+              </li>
+              <li>
+                <h4>Request SDK access</h4>
+                <p>The SDK ships the <code>tail_os</code> crate, headers, and example apps. Because TAIL OS is a closed-source preview, the SDK is distributed under an evaluation agreement.</p>
+                <p>Email <a href="mailto:hello@tail-os.com" style="color:var(--accent-2);">hello@tail-os.com</a> with your use case and we'll send you a signed download link plus credentials.</p>
+              </li>
+              <li>
+                <h4>Build &amp; run your first app</h4>
+                <p>Unpack the SDK, drop into one of the example crates, and build for QEMU or your Pi:</p>
+                <div class="code">
+                  <div class="code__head"><span>shell</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>tar xf tail-os-sdk-0.1.0.tar.gz
+cd tail-os-sdk/examples/blinky
+cargo +nightly build --release --target aarch64-unknown-none</code></pre>
+                </div>
+                <p class="muted">Then boot it with the QEMU launcher (see the QEMU tab) or flash it alongside <code>tail.rfs</code> on your Pi's SD card.</p>
               </li>
             </ol>
           </div>
@@ -296,7 +328,7 @@ minicom -D /dev/ttyUSB0 -b 115200</code></pre>
           <h5>Product</h5>
           <ul>
             <li><a href="#features">Features</a></li>
-            <li><a href="download.html">Download</a></li>
+            <li><a href="#install">Install</a></li>
             <li><a href="docs/index.html">Docs</a></li>
           </ul>
         </div>

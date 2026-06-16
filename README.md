@@ -9,8 +9,7 @@ Plain static HTML, CSS, and JavaScript. No build step. Hosted on Bluehost.
 
 ```
 .
-├── index.html            # Landing page (hero, features, install, usage, community)
-├── download.html         # Downloads for QEMU / Raspberry Pi / source
+├── index.html            # Landing page (hero, features, install, community)
 ├── docs/
 │   └── index.html        # Installation + quick-start + API reference
 ├── assets/
