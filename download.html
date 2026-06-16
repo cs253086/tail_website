@@ -82,7 +82,16 @@
             <h3>Raspberry Pi 3B / 3B+</h3>
             <p>Two-partition FAT32 SD image (boot + data). Flash with <code>dd</code>, insert, power on.</p>
             <div class="dl-meta"><span>tailos_sd.img</span><span>·</span><span>~193 MiB</span></div>
-            <a class="btn btn--primary" href="https://releases.tail-os.com/v0.1.0/tailos_sd.img">Download</a>
+            <div style="margin-bottom:16px;">
+              <a class="btn btn--primary" href="https://releases.tail-os.com/v0.1.0/tailos_sd.img">Download</a>
+            </div>
+            <p style="font-size:0.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-mute);margin:0 0 6px;">Then flash</p>
+            <div class="code" style="margin:0;">
+              <div class="code__head" style="font-size:0.75rem;"><span>shell</span><button class="copy" data-copy>Copy</button></div>
+<pre style="font-size:0.72rem;"><code>sudo dd if=tailos_sd.img of=/dev/sdX \
+  bs=4M status=progress conv=fsync
+sync</code></pre>
+            </div>
           </article>
 
           <article class="dl-card">
