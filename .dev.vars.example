@@ -1,0 +1,6 @@
+# Copy to .dev.vars for local development (git-ignored by wrangler).
+# Get a key at https://aistudio.google.com/apikey — the free tier needs no card.
+GEMINI_API_KEY=your-key-here
+
+# Optional. Defaults to gemini-3.7-flash.
+# GEMINI_MODEL=gemini-3.7-flash

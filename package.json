@@ -1,0 +1,19 @@
+{
+  "name": "tail-os-website",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "tail-os.com — AI-first documentation site generated from the tailos repository",
+  "scripts": {
+    "build": "node tools/generate.mjs",
+    "test": "vitest run",
+    "dev": "wrangler pages dev public --compatibility-date=2026-08-01"
+  },
+  "dependencies": {
+    "markdown-it": "^14.1.0"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.8",
+    "wrangler": "^3.99.0"
+  }
+}

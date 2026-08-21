@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Installing on Raspberry Pi 3 — TAIL OS</title>
+<meta name="description" content="Flash the SD card image, wire the serial console, and boot on real hardware.">
+<link rel="canonical" href="https://tail-os.com/docs/raspberry-pi-3/">
+<meta property="og:title" content="Installing on Raspberry Pi 3 — TAIL OS">
+<meta property="og:description" content="Flash the SD card image, wire the serial console, and boot on real hardware.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tail-os.com/docs/raspberry-pi-3/">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="/assets/a4164c006e06/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/assets/a4164c006e06/css/style.css">
+</head>
+<body class="page-shell">
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 32" width="22" height="22" fill="none" aria-hidden="true"><path d="M4 8h24M4 16h16M4 24h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span>TAIL OS</span><span class="ver">v0.9.0</span></a>
+    <form class="hdr-search" action="/ask/" method="get" role="search">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" name="q" placeholder="Search or ask a question" aria-label="Search or ask a question" autocomplete="off">
+    </form>
+    <nav class="hdr-nav" aria-label="Primary">
+      <a href="/docs/">Docs</a>
+    </nav>
+  </div>
+</header>
+<div class="shell">
+<aside class="side">
+  <nav aria-label="Documentation">
+    <ul class="nav-docs">
+    <li class="nav-group">
+      <a class="nav-doc" href="/docs/getting-started/">Getting Started</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/getting-started/#table-of-contents">Table of Contents</a></li>
+        <li><a href="/docs/getting-started/#prerequisites">Prerequisites</a></li>
+        <li><a href="/docs/getting-started/#run-tailos">Run TailOS</a></li>
+        <li><a href="/docs/getting-started/#developer-setup">Developer setup</a></li>
+        <li><a href="/docs/getting-started/#developing-applications">Developing Applications</a></li>
+        <li><a href="/docs/getting-started/#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <a class="nav-doc" href="/docs/qemu/">Running TAIL OS in QEMU</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/qemu/#prerequisites">Prerequisites</a></li>
+        <li><a href="/docs/qemu/#run-tailos-one-command">Run TailOS (one command)</a></li>
+        <li><a href="/docs/qemu/#try-the-shell">Try the Shell</a></li>
+        <li><a href="/docs/qemu/#manual-launch-alternative">Manual Launch (alternative)</a></li>
+        <li><a href="/docs/qemu/#whats-inside-the-images">What's Inside the Images</a></li>
+        <li><a href="/docs/qemu/#boot-sequence">Boot Sequence</a></li>
+        <li><a href="/docs/qemu/#troubleshooting">Troubleshooting</a></li>
+        <li><a href="/docs/qemu/#see-also">See Also</a></li>
+      </ul>
+    </li>
+    <li class="nav-group is-open">
+      <a class="nav-doc" href="/docs/raspberry-pi-3/" aria-current="page">Installing on Raspberry Pi 3</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/raspberry-pi-3/#hardware-required">Hardware Required</a></li>
+        <li><a href="/docs/raspberry-pi-3/#quick-start">Quick Start</a></li>
+        <li><a href="/docs/raspberry-pi-3/#serial-console-wiring">Serial Console Wiring</a></li>
+        <li><a href="/docs/raspberry-pi-3/#sd-card-image-structure">SD Card Image Structure</a></li>
+        <li><a href="/docs/raspberry-pi-3/#boot-sequence">Boot Sequence</a></li>
+        <li><a href="/docs/raspberry-pi-3/#build-details">Build Details</a></li>
+        <li><a href="/docs/raspberry-pi-3/#configtxt-reference">config.txt Reference</a></li>
+        <li><a href="/docs/raspberry-pi-3/#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </li>
+    </ul>
+  </nav>
+</aside>
+<main class="content">
+<div class="doc-wrap">
+<article class="doc">
+<h1 id="installing-tailos-on-raspberry-pi-3">Installing TailOS on Raspberry Pi 3</h1>
+<h2 id="hardware-required">Hardware Required</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Raspberry Pi 3B or 3B+</td>
+<td></td>
+</tr>
+<tr>
+<td>MicroSD card (8 GB+)</td>
+<td></td>
+</tr>
+<tr>
+<td>USB-to-TTL serial adapter (3.3V)</td>
+<td>For serial console (FTDI, CP2102, etc.)</td>
+</tr>
+<tr>
+<td>5V / 2.5A power supply</td>
+<td>Official RPi PSU recommended</td>
+</tr>
+<tr>
+<td>Host Linux machine</td>
+<td>For building and flashing</td>
+</tr>
+</tbody>
+</table>
+<h2 id="quick-start">Quick Start</h2>
+<pre><code class="language-bash"># 1. Build TailOS and create the SD card image
+make sd-image
+
+# 2. Flash to SD card (replace /dev/sdX with your SD card device)
+sudo dd if=tailos_sd.img of=/dev/sdX bs=4M status=progress
+sync
+
+# 3. Wire serial console, insert SD card, power on
+</code></pre>
+<h2 id="serial-console-wiring">Serial Console Wiring</h2>
+<p>Connect the USB-to-TTL serial adapter to the RPi3 GPIO header:</p>
+<pre><code>USB-TTL Adapter          RPi3 GPIO Header
++-----------+            +----------------+
+|           |            |                |
+|  TX  o----+-----------&gt;| Pin 10 (RXD)  |  GPIO 15
+|           |            |                |
+|  RX  o&lt;---+-----------o| Pin 8  (TXD)  |  GPIO 14
+|           |            |                |
+|  GND o----+-----------&gt;| Pin 6  (GND)  |
+|           |            |                |
++-----------+            +----------------+
+</code></pre>
+<p><strong>Important:</strong> Do NOT connect the VCC/5V pin from the serial adapter to the RPi.
+Power the RPi from its own power supply.</p>
+<p>Open the serial terminal on your host:</p>
+<pre><code class="language-bash">screen /dev/ttyUSB0 115200
+# or
+minicom -D /dev/ttyUSB0 -b 115200
+</code></pre>
+<h2 id="sd-card-image-structure">SD Card Image Structure</h2>
+<p>The <code>make sd-image</code> command produces <code>tailos_sd.img</code> with the following layout:</p>
+<pre><code>+===========================================================================+
+|                          tailos_sd.img (193 MiB)                          |
++===========================================================================+
+|                                                                           |
+|  Sector 0: MBR (Master Boot Record)                                      |
+|    Partition 1: Boot  | FAT32 | 64 MiB                                   |
+|    Partition 2: Data  | FAT32 | 128 MiB                                  |
+|                                                                           |
+|  Partition 1: BOOT                                                        |
+|  +-----------------------------------------------------------------------+|
+|  |  bootcode.bin .... RPi GPU 1st-stage bootloader                       ||
+|  |  start.elf ....... RPi GPU firmware                                   ||
+|  |  fixup.dat ....... RPi GPU memory fixup                               ||
+|  |  config.txt ...... Boot configuration (arm_64bit=1, enable_uart=1)    ||
+|  |  kernel8.img ..... TailOS (startup + kernel + drivers + servers + tsh)||
+|  +-----------------------------------------------------------------------+|
+|                                                                           |
+|  Partition 2: DATA                                                        |
+|  +-----------------------------------------------------------------------+|
+|  |  /usr/bin/ls ..... Directory listing utility                          ||
+|  |  /usr/bin/pidls .. Process listing utility                            ||
+|  +-----------------------------------------------------------------------+|
+|                                                                           |
++===========================================================================+
+</code></pre>
+<h2 id="boot-sequence">Boot Sequence</h2>
+<pre><code>Power On
+  |
+  v
+GPU ROM -&gt; loads bootcode.bin from boot partition
+  |
+  v
+bootcode.bin -&gt; loads start.elf
+  |
+  v
+start.elf -&gt; reads config.txt, loads kernel8.img at 0x80000
+  |
+  v
+TailOS startup (_start.S)
+  |-- Switch EL3 -&gt; EL1
+  |-- Initialize MMU and caches
+  |-- Jump to kernel
+  v
+TailOS kernel
+  |-- Initialize process/thread/IPC subsystem
+  |-- Load drivers from RFS (UART, SD)
+  |-- Mount data partition via SD driver + FAT server
+  |-- Start tsh shell
+  v
+/$ _   (serial console ready)
+</code></pre>
+<h2 id="build-details">Build Details</h2>
+<p>The <code>make sd-image</code> target:</p>
+<ol>
+<li>Builds TailOS (<code>make build-release</code>)</li>
+<li>Downloads RPi3 firmware from <code>raspberrypi/firmware</code> (cached locally)</li>
+<li>Converts <code>tail.rfs</code> (ELF) to <code>kernel8.img</code> (raw binary) via <code>objcopy -O binary</code></li>
+<li>Creates a two-partition FAT32 image with MBR</li>
+<li>Populates boot partition with firmware + kernel</li>
+<li>Populates data partition with user binaries from <code>tail.build</code> <code>[disk]</code> section</li>
+</ol>
+<h3 id="offline-firmware">Offline Firmware</h3>
+<p>To use pre-downloaded firmware instead of auto-downloading:</p>
+<pre><code class="language-bash">python3 utility/host/deploy_disk/make_sd_image.py \
+    ./tail.build \
+    $TAIL_PREFIX/os_image/tail.rfs \
+    $TAIL_PREFIX/target/bin \
+    tailos_sd.img \
+    --firmware-dir /path/to/firmware/
+</code></pre>
+<p>The firmware directory must contain: <code>bootcode.bin</code>, <code>start.elf</code>, <code>fixup.dat</code>.
+These can be obtained from <a href="https://github.com/raspberrypi/firmware/tree/master/boot" rel="noopener">https://github.com/raspberrypi/firmware/tree/master/boot</a>.</p>
+<h2 id="configtxt-reference">config.txt Reference</h2>
+<p>The generated <code>config.txt</code> contains:</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>arm_64bit</code></td>
+<td><code>1</code></td>
+<td>Boot in AArch64 mode</td>
+</tr>
+<tr>
+<td><code>kernel</code></td>
+<td><code>kernel8.img</code></td>
+<td>Kernel filename to load</td>
+</tr>
+<tr>
+<td><code>disable_commandline_tags</code></td>
+<td><code>1</code></td>
+<td>Don't pass ATAGS (TailOS doesn't use them)</td>
+</tr>
+<tr>
+<td><code>gpu_mem</code></td>
+<td><code>16</code></td>
+<td>Minimize GPU memory (TailOS doesn't use GPU)</td>
+</tr>
+<tr>
+<td><code>dtoverlay</code></td>
+<td><code>disable-bt</code></td>
+<td>Free PL011 UART from Bluetooth</td>
+</tr>
+<tr>
+<td><code>enable_uart</code></td>
+<td><code>1</code></td>
+<td>Enable serial console</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>dtoverlay=disable-bt</code> setting is critical: by default, the RPi3 maps the
+full PL011 UART to Bluetooth and provides only the mini UART on GPIO 14/15.
+TailOS uses PL011 (at address 0x3F201000), so Bluetooth must be disabled to
+make PL011 available on the GPIO pins.</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<p><strong>No serial output:</strong></p>
+<ul>
+<li>Verify TX/RX wiring (they must be crossed: adapter TX -&gt; RPi RX)</li>
+<li>Ensure baud rate is 115200</li>
+<li>Check that the SD card has <code>config.txt</code> with <code>dtoverlay=disable-bt</code> and <code>enable_uart=1</code></li>
+</ul>
+<p><strong>RPi power LED on but no activity LED blinking:</strong></p>
+<ul>
+<li>The SD card may not be readable. Re-flash with <code>dd</code> and verify the boot partition
+contains <code>bootcode.bin</code>, <code>start.elf</code>, and <code>kernel8.img</code></li>
+</ul>
+<p><strong>Kernel panic or hang after startup:</strong></p>
+<ul>
+<li>Connect via GDB if built with debug: <code>make run-gdb</code> (QEMU only)</li>
+<li>Compare behavior with QEMU first: see <a href="/docs/qemu/">install_qemu.md</a></li>
+</ul>
+
+<footer class="doc-src">
+  <span>Generated from <span class="mono">doc/install_rpi3.md</span> in the TAIL OS repository.</span>
+</footer>
+</article>
+<nav class="toc" aria-label="On this page">
+  <span class="toc-h">On this page</span>
+  <ul>
+    <li><a href="#hardware-required">Hardware Required</a></li>
+    <li><a href="#quick-start">Quick Start</a></li>
+    <li><a href="#serial-console-wiring">Serial Console Wiring</a></li>
+    <li><a href="#sd-card-image-structure">SD Card Image Structure</a></li>
+    <li><a href="#boot-sequence">Boot Sequence</a></li>
+    <li><a href="#build-details">Build Details</a></li>
+    <li><a href="#configtxt-reference">config.txt Reference</a></li>
+    <li><a href="#troubleshooting">Troubleshooting</a></li>
+  </ul>
+</nav>
+</div>
+</main>
+</div>
+<footer class="ftr">
+  <span>TAIL OS &mdash; real-time microkernel in Rust</span>
+  <span class="ftr-sep">/</span>
+  <span class="mono">v0.9.0</span>
+</footer>
+
+</body>
+</html>

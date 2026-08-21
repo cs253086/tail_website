@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Running TAIL OS in QEMU — TAIL OS</title>
+<meta name="description" content="Boot the prebuilt image under QEMU on Ubuntu with a single command.">
+<link rel="canonical" href="https://tail-os.com/docs/qemu/">
+<meta property="og:title" content="Running TAIL OS in QEMU — TAIL OS">
+<meta property="og:description" content="Boot the prebuilt image under QEMU on Ubuntu with a single command.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tail-os.com/docs/qemu/">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="/assets/a4164c006e06/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/assets/a4164c006e06/css/style.css">
+</head>
+<body class="page-shell">
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 32" width="22" height="22" fill="none" aria-hidden="true"><path d="M4 8h24M4 16h16M4 24h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span>TAIL OS</span><span class="ver">v0.9.0</span></a>
+    <form class="hdr-search" action="/ask/" method="get" role="search">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" name="q" placeholder="Search or ask a question" aria-label="Search or ask a question" autocomplete="off">
+    </form>
+    <nav class="hdr-nav" aria-label="Primary">
+      <a href="/docs/">Docs</a>
+    </nav>
+  </div>
+</header>
+<div class="shell">
+<aside class="side">
+  <nav aria-label="Documentation">
+    <ul class="nav-docs">
+    <li class="nav-group">
+      <a class="nav-doc" href="/docs/getting-started/">Getting Started</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/getting-started/#table-of-contents">Table of Contents</a></li>
+        <li><a href="/docs/getting-started/#prerequisites">Prerequisites</a></li>
+        <li><a href="/docs/getting-started/#run-tailos">Run TailOS</a></li>
+        <li><a href="/docs/getting-started/#developer-setup">Developer setup</a></li>
+        <li><a href="/docs/getting-started/#developing-applications">Developing Applications</a></li>
+        <li><a href="/docs/getting-started/#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </li>
+    <li class="nav-group is-open">
+      <a class="nav-doc" href="/docs/qemu/" aria-current="page">Running TAIL OS in QEMU</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/qemu/#prerequisites">Prerequisites</a></li>
+        <li><a href="/docs/qemu/#run-tailos-one-command">Run TailOS (one command)</a></li>
+        <li><a href="/docs/qemu/#try-the-shell">Try the Shell</a></li>
+        <li><a href="/docs/qemu/#manual-launch-alternative">Manual Launch (alternative)</a></li>
+        <li><a href="/docs/qemu/#whats-inside-the-images">What's Inside the Images</a></li>
+        <li><a href="/docs/qemu/#boot-sequence">Boot Sequence</a></li>
+        <li><a href="/docs/qemu/#troubleshooting">Troubleshooting</a></li>
+        <li><a href="/docs/qemu/#see-also">See Also</a></li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <a class="nav-doc" href="/docs/raspberry-pi-3/">Installing on Raspberry Pi 3</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/raspberry-pi-3/#hardware-required">Hardware Required</a></li>
+        <li><a href="/docs/raspberry-pi-3/#quick-start">Quick Start</a></li>
+        <li><a href="/docs/raspberry-pi-3/#serial-console-wiring">Serial Console Wiring</a></li>
+        <li><a href="/docs/raspberry-pi-3/#sd-card-image-structure">SD Card Image Structure</a></li>
+        <li><a href="/docs/raspberry-pi-3/#boot-sequence">Boot Sequence</a></li>
+        <li><a href="/docs/raspberry-pi-3/#build-details">Build Details</a></li>
+        <li><a href="/docs/raspberry-pi-3/#configtxt-reference">config.txt Reference</a></li>
+        <li><a href="/docs/raspberry-pi-3/#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </li>
+    </ul>
+  </nav>
+</aside>
+<main class="content">
+<div class="doc-wrap">
+<article class="doc">
+<h1 id="running-tailos-in-qemu">Running TailOS in QEMU</h1>
+<p>Try TailOS on your Linux machine in under two minutes — no hardware, no
+toolchain. For installing TailOS on real Raspberry Pi 3 hardware, see
+<a href="/docs/raspberry-pi-3/">install_rpi3.md</a>.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Install command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linux host (Ubuntu 22.04 / 24.04 tested)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>qemu-system-aarch64</code></td>
+<td><code>sudo apt-get install -y qemu-system-aarch64 qemu-utils</code></td>
+</tr>
+<tr>
+<td><code>curl</code> or <code>wget</code></td>
+<td>usually preinstalled</td>
+</tr>
+</tbody>
+</table>
+<p>That's it. Everything else is bundled in the prebuilt images.</p>
+<h2 id="run-tailos-one-command">Run TailOS (one command)</h2>
+<pre><code class="language-bash">curl -sSL (private repository) | bash
+</code></pre>
+<p>The launcher will:</p>
+<ol>
+<li>Check that QEMU is installed.</li>
+<li>Download <code>tail.rfs</code> (kernel) and <code>tail_disk.img</code> (data disk) into
+<code>~/.cache/tailos/</code> on first run. Later runs reuse the cache.</li>
+<li>Boot TailOS in QEMU with the correct flags.</li>
+</ol>
+<p>When you see <code>/$</code>, the system is ready. Exit QEMU with <strong>Ctrl-A, then X</strong>.</p>
+<h2 id="try-the-shell">Try the Shell</h2>
+<pre><code>/$ help
+/$ pwd
+/$ ls /usr/bin
+/$ /usr/bin/pidls
+/$ cd /usr/bin
+/usr/bin$ exit
+</code></pre>
+<p>The prompt shows the current directory (it changes after <code>cd</code>). The shell also
+supports arrow-key history, per-process <code>cwd</code>, and background jobs
+with <code>&amp;</code>.</p>
+<h2 id="manual-launch-alternative">Manual Launch (alternative)</h2>
+<p>If you prefer not to run a remote script, do it by hand:</p>
+<pre><code class="language-bash"># 1. Install QEMU
+sudo apt-get install -y qemu-system-aarch64 qemu-utils
+
+# 2. Download the images
+wget https://tail-os.com/wp-content/uploads/2025/09/tail.rfs
+wget https://tail-os.com/wp-content/uploads/2025/09/tail_disk.img
+
+# 3. Boot
+qemu-system-aarch64 \
+    -M raspi3b \
+    -kernel tail.rfs \
+    -serial mon:stdio \
+    -drive file=tail_disk.img,format=raw,if=sd
+</code></pre>
+<h2 id="whats-inside-the-images">What's Inside the Images</h2>
+<p><code>tail.rfs</code> is a custom ELF container that bundles the entire OS:</p>
+<pre><code>tail.rfs
+├── startup_rpi3              Early boot (EL3 -&gt; EL1, MMU, jump to kernel)
+├── kernel                    Microkernel (process, thread, IPC, scheduler)
+├── uart_pl011                UART + TTY server (user-space)
+├── sd_rpi3                   SD card block driver (user-space)
+├── fat_file_system_server    Mounts tail_disk.img as &quot;/&quot;
+├── debug_server              GDB remote protocol stub
+└── tsh                       Shell
+</code></pre>
+<p><code>tail_disk.img</code> is a FAT32 disk image exposed to the guest as an SD card:</p>
+<pre><code>tail_disk.img
+├── /usr/bin/ls       Directory listing utility
+└── /usr/bin/pidls    Process listing utility
+</code></pre>
+<h2 id="boot-sequence">Boot Sequence</h2>
+<pre><code>qemu-system-aarch64 -M raspi3b
+  |
+  v
+QEMU loads tail.rfs at 0x80000 (raspi3b entry point)
+  |
+  v
+TailOS startup (_start.S)
+  |-- Switch EL3 -&gt; EL1
+  |-- Initialize MMU, caches
+  |-- Jump to kernel
+  v
+TailOS kernel
+  |-- Initialize process/thread/IPC/memory subsystems
+  |-- Load user-space servers from RFS
+  |-- Mount tail_disk.img as &quot;/&quot; via SD + FAT
+  |-- Start tsh shell
+  v
+/$ _
+</code></pre>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<p><strong><code>qemu-system-aarch64: command not found</code>:</strong>
+Install QEMU with <code>sudo apt-get install -y qemu-system-aarch64 qemu-utils</code>.</p>
+<p><strong>No output at all in the QEMU window:</strong>
+The launcher passes <code>-serial mon:stdio</code> for you. If you're running QEMU by
+hand, make sure that flag is present — otherwise UART output goes nowhere
+visible.</p>
+<p><strong>Want to force a fresh download:</strong>
+Clear the cache: <code>rm -rf ~/.cache/tailos</code> and re-run the launcher.</p>
+<p><strong>QEMU boots but hangs before <code>/$</code>:</strong>
+The FAT filesystem takes several seconds to initialize on first boot; give it
+up to a minute. If it never appears, re-download the images (the cached copy
+may be corrupted) with <code>rm -rf ~/.cache/tailos</code>.</p>
+<p><strong>Exiting:</strong>
+Inside QEMU, press <strong>Ctrl-A, then X</strong> to quit. <strong>Ctrl-A, then C</strong> drops into
+the QEMU monitor (type <code>quit</code>).</p>
+<h2 id="see-also">See Also</h2>
+<ul>
+<li><a href="/docs/raspberry-pi-3/">install_rpi3.md</a> — Installing on Raspberry Pi 3 hardware</li>
+<li>buildsystem.md — Building TailOS from source (contributors)</li>
+</ul>
+
+<footer class="doc-src">
+  <span>Generated from <span class="mono">doc/install_qemu.md</span> in the TAIL OS repository.</span>
+</footer>
+</article>
+<nav class="toc" aria-label="On this page">
+  <span class="toc-h">On this page</span>
+  <ul>
+    <li><a href="#prerequisites">Prerequisites</a></li>
+    <li><a href="#run-tailos-one-command">Run TailOS (one command)</a></li>
+    <li><a href="#try-the-shell">Try the Shell</a></li>
+    <li><a href="#manual-launch-alternative">Manual Launch (alternative)</a></li>
+    <li><a href="#whats-inside-the-images">What's Inside the Images</a></li>
+    <li><a href="#boot-sequence">Boot Sequence</a></li>
+    <li><a href="#troubleshooting">Troubleshooting</a></li>
+    <li><a href="#see-also">See Also</a></li>
+  </ul>
+</nav>
+</div>
+</main>
+</div>
+<footer class="ftr">
+  <span>TAIL OS &mdash; real-time microkernel in Rust</span>
+  <span class="ftr-sep">/</span>
+  <span class="mono">v0.9.0</span>
+</footer>
+
+</body>
+</html>

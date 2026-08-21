@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Getting Started — TAIL OS</title>
+<meta name="description" content="Run TAIL OS, set up a development environment, and build your own applications.">
+<link rel="canonical" href="https://tail-os.com/docs/getting-started/">
+<meta property="og:title" content="Getting Started — TAIL OS">
+<meta property="og:description" content="Run TAIL OS, set up a development environment, and build your own applications.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tail-os.com/docs/getting-started/">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="/assets/a4164c006e06/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/assets/a4164c006e06/css/style.css">
+</head>
+<body class="page-shell">
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 32" width="22" height="22" fill="none" aria-hidden="true"><path d="M4 8h24M4 16h16M4 24h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span>TAIL OS</span><span class="ver">v0.9.0</span></a>
+    <form class="hdr-search" action="/ask/" method="get" role="search">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" name="q" placeholder="Search or ask a question" aria-label="Search or ask a question" autocomplete="off">
+    </form>
+    <nav class="hdr-nav" aria-label="Primary">
+      <a href="/docs/">Docs</a>
+    </nav>
+  </div>
+</header>
+<div class="shell">
+<aside class="side">
+  <nav aria-label="Documentation">
+    <ul class="nav-docs">
+    <li class="nav-group is-open">
+      <a class="nav-doc" href="/docs/getting-started/" aria-current="page">Getting Started</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/getting-started/#table-of-contents">Table of Contents</a></li>
+        <li><a href="/docs/getting-started/#prerequisites">Prerequisites</a></li>
+        <li><a href="/docs/getting-started/#run-tailos">Run TailOS</a></li>
+        <li><a href="/docs/getting-started/#developer-setup">Developer setup</a></li>
+        <li><a href="/docs/getting-started/#developing-applications">Developing Applications</a></li>
+        <li><a href="/docs/getting-started/#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <a class="nav-doc" href="/docs/qemu/">Running TAIL OS in QEMU</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/qemu/#prerequisites">Prerequisites</a></li>
+        <li><a href="/docs/qemu/#run-tailos-one-command">Run TailOS (one command)</a></li>
+        <li><a href="/docs/qemu/#try-the-shell">Try the Shell</a></li>
+        <li><a href="/docs/qemu/#manual-launch-alternative">Manual Launch (alternative)</a></li>
+        <li><a href="/docs/qemu/#whats-inside-the-images">What's Inside the Images</a></li>
+        <li><a href="/docs/qemu/#boot-sequence">Boot Sequence</a></li>
+        <li><a href="/docs/qemu/#troubleshooting">Troubleshooting</a></li>
+        <li><a href="/docs/qemu/#see-also">See Also</a></li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <a class="nav-doc" href="/docs/raspberry-pi-3/">Installing on Raspberry Pi 3</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/raspberry-pi-3/#hardware-required">Hardware Required</a></li>
+        <li><a href="/docs/raspberry-pi-3/#quick-start">Quick Start</a></li>
+        <li><a href="/docs/raspberry-pi-3/#serial-console-wiring">Serial Console Wiring</a></li>
+        <li><a href="/docs/raspberry-pi-3/#sd-card-image-structure">SD Card Image Structure</a></li>
+        <li><a href="/docs/raspberry-pi-3/#boot-sequence">Boot Sequence</a></li>
+        <li><a href="/docs/raspberry-pi-3/#build-details">Build Details</a></li>
+        <li><a href="/docs/raspberry-pi-3/#configtxt-reference">config.txt Reference</a></li>
+        <li><a href="/docs/raspberry-pi-3/#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </li>
+    </ul>
+  </nav>
+</aside>
+<main class="content">
+<div class="doc-wrap">
+<article class="doc">
+<h1 id="getting-started-with-tail-os">Getting Started with TAIL OS</h1>
+<p>Welcome to TAIL OS! This guide helps you <strong>run</strong> TailOS, set up a <strong>development environment</strong>, and build your <strong>own applications</strong>.</p>
+<blockquote>
+<p><strong>Working on TAIL OS itself</strong> (kernel, drivers, build system) rather than
+just running it? See <a href="#developer-setup">Developer setup</a> below — you want
+utility/host/dev_setup/dev_setup.sh,
+not the prebuilt-image launcher.</p>
+</blockquote>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li><a href="#prerequisites">Prerequisites</a></li>
+<li><a href="#run-tailos">Run TailOS</a></li>
+<li><a href="#developer-setup">Developer setup</a></li>
+<li><a href="#developing-applications">Developing Applications</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+</ol>
+<h2 id="prerequisites">Prerequisites</h2>
+<h3 id="system-requirements">System Requirements</h3>
+<ul>
+<li><strong>Operating System</strong>: Ubuntu 22.04 or 24.04 (22.04 is the validated baseline for building from source — the toolchain build pins <code>gcc-11</code>)</li>
+<li><strong>Architecture</strong>: x86_64 host system</li>
+<li><strong>Memory</strong>: 4 GB to run the prebuilt image; 8 GB recommended to build from source</li>
+<li><strong>Storage</strong>: ~10 GB to run the prebuilt image; ~30 GB to build from source (toolchain build)</li>
+<li><strong>Required Software</strong>: see below — running the prebuilt image needs only QEMU; building from source installs every dependency for you</li>
+</ul>
+<p><strong>To run the prebuilt image</strong> you only need QEMU — installed in step 1 of
+<a href="#run-tailos">Run TailOS</a> below.</p>
+<p><strong>To build from source</strong>, do <strong>not</strong> hand-install build dependencies — the
+developer bootstrap (<a href="#developer-setup">Developer setup</a>) installs all of them
+(<code>build-essential</code>, <code>bison</code>, <code>flex</code>, <code>texinfo</code>, the GMP/MPC/MPFR/ISL/elf-dev
+libraries, <code>cmake</code>, <code>ninja-build</code>, <code>gdb-multiarch</code>, <code>git-lfs</code>,
+<code>gcc-11</code>/<code>g++-11</code>, QEMU, …) for you.</p>
+<h2 id="run-tailos">Run TailOS</h2>
+<p>Boot TailOS in QEMU in about two minutes — no toolchain, no build, no clone.</p>
+<p><strong>1. Install QEMU</strong> (the only requirement):</p>
+<pre><code class="language-bash">sudo apt install -y qemu-system-aarch64 qemu-utils
+</code></pre>
+<p><strong>2. Launch it</strong> with the one-command launcher. On first run it downloads the
+prebuilt kernel (<code>tail.rfs</code>) and data disk (<code>tail_disk.img</code>) into
+<code>~/.cache/tailos</code>, caches them for next time, and boots QEMU with the right
+flags:</p>
+<pre><code class="language-bash">curl -sSL (private repository) | bash
+</code></pre>
+<p>Prefer to read the script first? Clone the repo and run it locally instead:</p>
+<pre><code class="language-bash">./scripts/run_tailos_qemu.sh
+</code></pre>
+<p><strong>3. You're in.</strong> After a few seconds — the FAT disk can take up to a minute on
+the very first boot — the boot log finishes at the TailOS shell prompt:</p>
+<pre><code>[START] kernel
+[SUCCESS] KERNEL_MEMORY_ALLOCATOR is initialized
+[SUCCESS] exception manager is initialized
+[SUCCESS] system clock is initialized
+#  Type 'exit' to terminate TSH    #
+
+/$
+</code></pre>
+<p>Try a few things, then exit:</p>
+<pre><code>/$ help
+/$ ls /usr/bin
+/$ /usr/bin/pidls
+</code></pre>
+<p><strong>Exit QEMU with Ctrl-A, then X.</strong></p>
+<blockquote>
+<ul>
+<li>Re-download fresh images (e.g. after a new release): <code>rm -rf ~/.cache/tailos</code>.</li>
+<li>No output, or it hangs before <code>/$</code>? See <a href="/docs/qemu/#troubleshooting">install_qemu.md</a>.</li>
+</ul>
+</blockquote>
+<h2 id="developer-setup">Developer setup</h2>
+<p>Want to change TailOS, or build apps against the current source? The developer
+bootstrap turns a fresh Ubuntu machine into a complete TailOS build environment
+with <strong>one script</strong>. You run it once; it takes ~2–3 hours, mostly unattended
+(the bulk is building two custom Rust toolchains).</p>
+<p><strong>Before you start:</strong> Ubuntu 22.04 (x86_64), <strong>~30 GB</strong> free disk, <strong>8 GB+</strong>
+RAM, and a network connection. You'll be prompted for <code>sudo</code> once, to install
+apt packages.</p>
+<p><strong>1. Install the two things the script can't self-install, then clone:</strong></p>
+<pre><code class="language-bash">sudo apt install -y git make
+git clone (private repository) ~/src/tailos
+cd ~/src/tailos
+</code></pre>
+<p><strong>2. Run the bootstrap</strong> (grab a coffee — this is the ~2–3 hour part):</p>
+<pre><code class="language-bash">./utility/host/dev_setup/dev_setup.sh all
+</code></pre>
+<p>It installs every build dependency, builds the <code>aarch64-elf</code> cross-compiler
+(needed only to build the custom Rust toolchain — not to build or run the OS or
+apps) and the <code>tail_release</code> / <code>tail_debug</code> Rust toolchains, and wires up your
+shell (<code>~/.bashrc</code> + direnv, which sets this worktree's <code>TAIL_PREFIX</code> install
+prefix). Every step is idempotent — if one fails (say, a flaky download), just
+re-run it, or run <code>… all</code> again.</p>
+<p><strong>3. Reload your shell, then build and boot:</strong></p>
+<pre><code class="language-bash">exec bash                                  # picks up TAIL_PREFIX + the direnv hook
+make build-release &amp;&amp; make run-release     # builds everything, then boots QEMU
+</code></pre>
+<p>When QEMU reaches the <code>/$</code> prompt, your environment works. Exit with
+<strong>Ctrl-A, then X</strong> — you're ready to <a href="#developing-applications">develop applications</a>.</p>
+<blockquote>
+<p><code>dev_setup.sh all</code> runs <code>direnv allow</code> for this worktree automatically. You
+only run <code>direnv allow</code> yourself in <em>additional</em> worktrees you create later.</p>
+</blockquote>
+<p><strong>Need to re-run a single step, or recover a half-finished toolchain build?</strong>
+Every subcommand (<code>apt_deps</code>, <code>cross_compiler</code>, <code>rust_tail_release</code>, …) can be
+run on its own — see the
+dev_setup reference for the full list and
+recovery recipes.</p>
+<h2 id="developing-applications">Developing Applications</h2>
+<p>A TailOS application is an ordinary Rust <strong><code>std</code></strong> program — a normal <code>fn main()</code>
+with the full standard library. Only the kernel is <code>no_std</code>. You compile it for
+the <code>aarch64-unknown-tail</code> target with the <code>tail_release</code> toolchain, copy the
+binary onto the TailOS data disk, and run it from the shell at <code>/usr/bin</code>.</p>
+<blockquote>
+<p><strong>Prerequisite:</strong> the <code>tail_release</code> toolchain. If you only want to build
+apps, the quickest way to get it is the <strong>TailOS SDK</strong>: extract the SDK bundle
+and run <code>./install.sh --prefix &lt;dir&gt;</code>, which registers <code>tail_release</code> with
+<code>rustup</code> and needs no external cross-compiler and no <code>~/.cargo/config.toml</code>
+link flags — the <code>aarch64-unknown-tail</code> target links with the toolchain's own
+bundled <code>rust-lld</code>. Then <code>source &lt;dir&gt;/tail-sdk-env.sh</code> and build with
+<code>cargo +tail_release build --target aarch64-unknown-tail</code>. If you are building
+TailOS from source, <a href="#developer-setup">Developer setup</a> gives you the same
+toolchain.</p>
+</blockquote>
+<p>This walk-through builds an out-of-tree app (your own crate, anywhere on disk).
+If instead you want to contribute a utility that ships <em>with</em> the OS, add a crate
+under <code>utility/target/</code> and wire it into the <code>Makefile</code> and <code>tail.build</code> the way
+the existing utilities (<code>ls</code>, <code>pidls</code>, <code>top</code>, …) do.</p>
+<h3 id="1-create-the-project">1. Create the project</h3>
+<pre><code class="language-bash">cargo new hello-tail
+cd hello-tail
+</code></pre>
+<p>The default <code>src/main.rs</code> already works unchanged:</p>
+<pre><code class="language-rust">fn main() {
+    println!(&quot;Hello, TailOS!&quot;);
+}
+</code></pre>
+<h3 id="2-select-the-tailos-toolchain">2. Select the TailOS toolchain</h3>
+<p>Pin the custom toolchain for this project directory (sub-directories inherit it):</p>
+<pre><code class="language-bash">rustup override set tail_release
+</code></pre>
+<p>Equivalently, pass <code>+tail_release</code> to each <code>cargo</code> invocation.</p>
+<h3 id="3-build-for-the-tailos-target">3. Build for the TailOS target</h3>
+<pre><code class="language-bash">cargo build --target aarch64-unknown-tail --release
+</code></pre>
+<p>No extra linker flags are needed: the <code>aarch64-unknown-tail</code> target spec bakes
+the whole user-space link recipe — the link script, the self-contained
+<code>tail_crt0.o</code> start object, and the freestanding link flags — into the target
+itself. The build links a bootable binary with an empty <code>~/.cargo/config.toml</code>
+and no external cross-compiler. The binary lands at:</p>
+<pre><code>target/aarch64-unknown-tail/release/hello-tail
+</code></pre>
+<p>To shrink it, add an optimized release profile to <code>Cargo.toml</code> (the same one the
+bundled utilities use):</p>
+<pre><code class="language-toml">[profile.release]
+opt-level = &quot;z&quot;
+codegen-units = 1
+strip = &quot;symbols&quot;
+</code></pre>
+<h3 id="4-copy-the-binary-onto-the-tailos-disk">4. Copy the binary onto the TailOS disk</h3>
+<p><code>make run-release</code> boots the <code>tail_disk.img</code> in the <strong>repository root</strong> and mounts
+its data partition as <code>/</code>. Add your binary to that image with the same tool the
+build uses — no <code>sudo</code>, no manual mounting.</p>
+<p>Create a one-line deploy manifest (e.g. <code>deploy.build</code> in the tailos repo):</p>
+<pre><code class="language-ini">[disk]
+/usr/bin/hello-tail=hello-tail
+</code></pre>
+<p>The left side of <code>=</code> is the path on the TailOS disk; the right side is the
+binary's filename inside the directory you pass as the last argument below. Then,
+from the tailos repo, run:</p>
+<pre><code class="language-bash">python3 utility/host/deploy_disk/deploy_disk.py \
+    deploy.build \
+    tail_disk.img \
+    /path/to/hello-tail/target/aarch64-unknown-tail/release
+</code></pre>
+<p><code>deploy_disk.py</code> writes <code>hello-tail</code> into <code>/usr/bin/</code> on the image's FAT data
+partition, <strong>adding</strong> to the files already there rather than erasing them.</p>
+<blockquote>
+<p><strong>File names:</strong> TailOS supports VFAT long file names, so <code>hello-tail</code> (longer
+than the classic FAT 8.3 limit) works end to end — <code>deploy_disk.py</code> and the OS
+file system both write the long-name directory entries, and a unique 8.3 short
+alias (e.g. <code>HELLO-~1</code>) is generated automatically. Path look-ups are
+case-insensitive.</p>
+</blockquote>
+<blockquote>
+<p><strong>Why not <code>mount</code> it by hand?</strong> <code>tail_disk.img</code> is a two-partition MBR image:
+the FAT <em>data</em> partition starts at sector 133120 (≈ 65 MiB), <strong>not</strong> at 1 MiB,
+and the two FAT copies must be kept in sync. <code>deploy_disk.py</code> does all of that
+correctly; a hand-rolled <code>mount -o offset=…</code> is easy to get wrong (the binary
+silently won't appear).</p>
+</blockquote>
+<h3 id="5-run-it">5. Run it</h3>
+<p>From the tailos repo:</p>
+<pre><code class="language-bash">make run-release
+</code></pre>
+<p>Wait for the <code>/$</code> prompt, then:</p>
+<pre><code>/$ ls /usr/bin
+/$ /usr/bin/hello-tail
+Hello, TailOS!
+</code></pre>
+<p>Exit QEMU with <strong>Ctrl-A, then X</strong>.</p>
+<blockquote>
+<p>Re-running <code>make build-release</code> re-deploys the OS's own utilities but leaves
+your <code>hello-tail</code> in place. <code>make clean</code> (or any change that recreates the
+disk image) removes it — just re-run the <code>deploy_disk.py</code> step from step 4.</p>
+</blockquote>
+<h3 id="6-using-tailos-services-from-your-app">6. Using TailOS services from your app</h3>
+<p>For anything beyond the standard library — IPC topics, talking to OS servers,
+device memory — TailOS <code>std</code> re-exports the platform crate <code>tail_core</code>. Enable it
+with the <code>tail_core</code> feature; <strong>no extra Cargo dependency is required</strong>:</p>
+<pre><code class="language-rust">#![feature(tail_core)]
+</code></pre>
+<h4 id="publish-subscribe-topic-ipc">Publish / subscribe (topic IPC)</h4>
+<p>Topics are asynchronous pub/sub. Publishing never blocks, and <code>read()</code> is
+non-blocking — it returns <code>None</code> when no message is queued, so a subscriber polls
+on its own schedule:</p>
+<pre><code class="language-rust">#![feature(tail_core)]
+
+use std::tail_core::topic::publisher::Publisher;
+use std::tail_core::topic::subscriber::Subscriber;
+
+fn main() {
+    let publisher = Publisher::new(&quot;sensor/temperature&quot;);
+    let subscriber = Subscriber::new(&quot;sensor/temperature&quot;);
+
+    let sample: u32 = 42;
+    publisher.publish(&amp;sample);
+
+    // read() is non-blocking — poll until a message arrives.
+    loop {
+        if let Some((ptr, size)) = subscriber.read() {
+            assert!(size &gt;= core::mem::size_of::&lt;u32&gt;());
+            let value = unsafe { core::ptr::read_unaligned(ptr as *const u32) };
+            println!(&quot;received: {}&quot;, value);
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(1));
+    }
+}
+</code></pre>
+<h4 id="calling-an-os-service-request-reply">Calling an OS service (request / reply)</h4>
+<p>Servers (<code>process_manager</code>, the FAT filesystem, TTY, …) are reached by name
+through the service client. This is the exact call <code>pidls</code> makes to query
+<code>process_manager</code> for the running-process list:</p>
+<pre><code class="language-rust">#![feature(tail_core)]
+
+use std::tail_core::service::client;
+use std::tail_core::service::process_manager::PROCESS_MANAGER_LIST_PROCESSES;
+use std::tail_core::service::service_request::ServiceRequestData;
+
+fn main() {
+    // LIST_PROCESSES needs no payload; send a zero-length request.
+    let dummy: u8 = 0;
+    let request = ServiceRequestData::new(&amp;dummy, 0);
+
+    match client::send_service_request_and_wait_for_reply::&lt;u8, u8&gt;(
+        &quot;process_manager&quot;,
+        PROCESS_MANAGER_LIST_PROCESSES,
+        &amp;request,
+    ) {
+        Ok(reply) =&gt; {
+            // Reply begins with a u64 process count (see ProcessListReply).
+            let count = unsafe { *(reply.get_reply_message_ptr() as *const u64) };
+            println!(&quot;{} processes running&quot;, count);
+        }
+        Err(e) =&gt; eprintln!(&quot;service call failed: {:?}&quot;, e),
+    }
+}
+</code></pre>
+<p>The reply buffer and request buffer are released automatically when the
+<code>ServiceReplyData</code> / <code>ServiceRequestData</code> values drop (RAII). For the full
+reply-parsing example see
+utility/target/pidls/src/main.rs; for the
+complete client API (including the ≤ 32-byte register fast path
+<code>send_request_reg</code>) see
+library/tail_core/src/service/client.rs.</p>
+<h4 id="memory">Memory</h4>
+<p>Use the standard heap — <code>Vec</code>, <code>Box</code>, <code>String</code>, etc. — for ordinary allocation;
+it behaves exactly as on any <code>std</code> platform. The lower-level
+<code>std::tail_core::memory::mmap::mmap_physical_memory(base, size, prot)</code> is for
+mapping <strong>physical / device</strong> memory (MMIO), not general-purpose allocation.</p>
+<h3 id="7-debugging">7. Debugging</h3>
+<p>Build a debug binary and deploy it the same way (step 4), then start QEMU with
+the GDB stub from the tailos repo:</p>
+<pre><code class="language-bash">cargo build --target aarch64-unknown-tail        # debug profile (no --release)
+# ...deploy with deploy_disk.py as in step 4...
+make run-gdb
+</code></pre>
+<p>In another terminal, point <code>gdb-multiarch</code> at your binary and attach — user-space
+debugging uses the in-OS debug server on port <strong>1234</strong>, the kernel uses <strong>5555</strong>:</p>
+<pre><code class="language-bash">gdb-multiarch target/aarch64-unknown-tail/debug/hello-tail
+(gdb) target extended-remote :1234    # user-space  (kernel: target remote :5555)
+(gdb) break main
+(gdb) continue
+</code></pre>
+<p><code>println!</code> / <code>eprintln!</code> go to the console, so plain print tracing works too. See
+debug.md for more.</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="common-issues">Common Issues</h3>
+<h4 id="build-failures">Build Failures</h4>
+<pre><code class="language-bash"># Clean and rebuild
+make clean
+make build-debug
+</code></pre>
+<h4 id="qemu-issues">QEMU Issues</h4>
+<pre><code class="language-bash"># Check QEMU installation
+qemu-system-aarch64 --version
+
+# Try different QEMU options
+qemu-system-aarch64 -M raspi3b -kernel ${TAIL_PREFIX}/os_image/tail.rfs -serial stdio
+</code></pre>
+<h4 id="rust-toolchain-issues">Rust Toolchain Issues</h4>
+<pre><code class="language-bash"># Update Rust
+rustup update
+
+# Reinstall target
+rustup target remove aarch64-unknown-tail
+rustup target add aarch64-unknown-tail
+</code></pre>
+<h4 id="cross-compiler-issues">Cross-Compiler Issues</h4>
+<pre><code class="language-bash"># Rebuild toolchain
+cd toolchain/aarch64-elf-gcc
+./build_target_toolchain.sh
+</code></pre>
+<h3 id="getting-help">Getting Help</h3>
+<ul>
+<li><strong>Documentation</strong>: Check <code>doc/</code> directory for detailed documentation</li>
+<li><strong>Issues</strong>: Report bugs and ask questions on the project repository</li>
+<li><strong>Community</strong>: Join discussions in project forums</li>
+</ul>
+<h3 id="development-tips">Development Tips</h3>
+<ol>
+<li><strong>Start Simple</strong>: Begin with basic applications before complex ones</li>
+<li><strong>Use Debug Builds</strong>: Debug builds include more error checking</li>
+<li><strong>Test Frequently</strong>: Test your applications regularly during development</li>
+<li><strong>Read Documentation</strong>: Familiarize yourself with <code>tail_core</code> API</li>
+<li><strong>Use GDB</strong>: Debugging is essential for complex applications</li>
+</ol>
+<hr>
+<p><em>This guide provides the foundation for TAIL OS development. For advanced topics, refer to the detailed documentation in the <code>doc/</code> directory.</em></p>
+
+<footer class="doc-src">
+  <span>Generated from <span class="mono">doc/get_started.md</span> in the TAIL OS repository.</span>
+</footer>
+</article>
+<nav class="toc" aria-label="On this page">
+  <span class="toc-h">On this page</span>
+  <ul>
+    <li><a href="#table-of-contents">Table of Contents</a></li>
+    <li><a href="#prerequisites">Prerequisites</a></li>
+    <li><a href="#run-tailos">Run TailOS</a></li>
+    <li><a href="#developer-setup">Developer setup</a></li>
+    <li><a href="#developing-applications">Developing Applications</a></li>
+    <li><a href="#troubleshooting">Troubleshooting</a></li>
+  </ul>
+</nav>
+</div>
+</main>
+</div>
+<footer class="ftr">
+  <span>TAIL OS &mdash; real-time microkernel in Rust</span>
+  <span class="ftr-sep">/</span>
+  <span class="mono">v0.9.0</span>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+node_modules/
+.wrangler/
+.design/node_modules/
+.dev.vars
+
+# Design mockups (working files; the canvas is published as an Artifact)
+.design/

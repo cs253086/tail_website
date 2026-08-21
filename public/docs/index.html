@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentation — TAIL OS</title>
+<meta name="description" content="Published TAIL OS documentation: getting started, running under QEMU, and installing on a Raspberry Pi 3B.">
+<link rel="canonical" href="https://tail-os.com/docs/">
+<meta property="og:title" content="Documentation — TAIL OS">
+<meta property="og:description" content="Published TAIL OS documentation: getting started, running under QEMU, and installing on a Raspberry Pi 3B.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tail-os.com/docs/">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="/assets/a4164c006e06/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/assets/a4164c006e06/css/style.css">
+</head>
+<body class="page-shell">
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 32" width="22" height="22" fill="none" aria-hidden="true"><path d="M4 8h24M4 16h16M4 24h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span>TAIL OS</span><span class="ver">v0.9.0</span></a>
+    <form class="hdr-search" action="/ask/" method="get" role="search">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" name="q" placeholder="Search or ask a question" aria-label="Search or ask a question" autocomplete="off">
+    </form>
+    <nav class="hdr-nav" aria-label="Primary">
+      <a href="/docs/">Docs</a>
+    </nav>
+  </div>
+</header>
+<div class="shell">
+<aside class="side">
+  <nav aria-label="Documentation">
+    <ul class="nav-docs">
+    <li class="nav-group">
+      <a class="nav-doc" href="/docs/getting-started/">Getting Started</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/getting-started/#table-of-contents">Table of Contents</a></li>
+        <li><a href="/docs/getting-started/#prerequisites">Prerequisites</a></li>
+        <li><a href="/docs/getting-started/#run-tailos">Run TailOS</a></li>
+        <li><a href="/docs/getting-started/#developer-setup">Developer setup</a></li>
+        <li><a href="/docs/getting-started/#developing-applications">Developing Applications</a></li>
+        <li><a href="/docs/getting-started/#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <a class="nav-doc" href="/docs/qemu/">Running TAIL OS in QEMU</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/qemu/#prerequisites">Prerequisites</a></li>
+        <li><a href="/docs/qemu/#run-tailos-one-command">Run TailOS (one command)</a></li>
+        <li><a href="/docs/qemu/#try-the-shell">Try the Shell</a></li>
+        <li><a href="/docs/qemu/#manual-launch-alternative">Manual Launch (alternative)</a></li>
+        <li><a href="/docs/qemu/#whats-inside-the-images">What's Inside the Images</a></li>
+        <li><a href="/docs/qemu/#boot-sequence">Boot Sequence</a></li>
+        <li><a href="/docs/qemu/#troubleshooting">Troubleshooting</a></li>
+        <li><a href="/docs/qemu/#see-also">See Also</a></li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <a class="nav-doc" href="/docs/raspberry-pi-3/">Installing on Raspberry Pi 3</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/raspberry-pi-3/#hardware-required">Hardware Required</a></li>
+        <li><a href="/docs/raspberry-pi-3/#quick-start">Quick Start</a></li>
+        <li><a href="/docs/raspberry-pi-3/#serial-console-wiring">Serial Console Wiring</a></li>
+        <li><a href="/docs/raspberry-pi-3/#sd-card-image-structure">SD Card Image Structure</a></li>
+        <li><a href="/docs/raspberry-pi-3/#boot-sequence">Boot Sequence</a></li>
+        <li><a href="/docs/raspberry-pi-3/#build-details">Build Details</a></li>
+        <li><a href="/docs/raspberry-pi-3/#configtxt-reference">config.txt Reference</a></li>
+        <li><a href="/docs/raspberry-pi-3/#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </li>
+    </ul>
+  </nav>
+</aside>
+<main class="content">
+<article class="doc">
+  <h1>Documentation</h1>
+  <p class="lede">Everything published here is generated from the TAIL OS repository.</p>
+  <ul class="idx">
+    <li>
+      <a class="idx-t" href="/docs/getting-started/">Getting Started</a>
+      <p class="idx-d">Run TAIL OS, set up a development environment, and build your own applications.</p>
+    </li>
+    <li>
+      <a class="idx-t" href="/docs/qemu/">Running TAIL OS in QEMU</a>
+      <p class="idx-d">Boot the prebuilt image under QEMU on Ubuntu with a single command.</p>
+    </li>
+    <li>
+      <a class="idx-t" href="/docs/raspberry-pi-3/">Installing on Raspberry Pi 3</a>
+      <p class="idx-d">Flash the SD card image, wire the serial console, and boot on real hardware.</p>
+    </li>
+  </ul>
+</article>
+</main>
+</div>
+<footer class="ftr">
+  <span>TAIL OS &mdash; real-time microkernel in Rust</span>
+  <span class="ftr-sep">/</span>
+  <span class="mono">v0.9.0</span>
+</footer>
+
+</body>
+</html>

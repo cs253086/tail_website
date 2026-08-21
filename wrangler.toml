@@ -1,0 +1,13 @@
+name = "tail-os"
+compatibility_date = "2026-08-01"
+pages_build_output_dir = "public"
+
+# Answer cache, per-IP token buckets and the daily counter share one namespace.
+# Create it once, then paste the id here:
+#   npx wrangler kv namespace create ANSWER_CACHE
+#
+# The Function degrades gracefully when this binding is absent: answers are
+# still generated, they are simply neither cached nor rate limited.
+[[kv_namespaces]]
+binding = "ANSWER_CACHE"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
