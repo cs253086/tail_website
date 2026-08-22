@@ -24,6 +24,7 @@ export async function answer({ question, passages, apiKey, model = DEFAULT_MODEL
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   let response;
+  let body;
   try {
     response = await fetchImpl(`${ENDPOINT}/${model}:generateContent`, {
       method: 'POST',
@@ -35,16 +36,17 @@ export async function answer({ question, passages, apiKey, model = DEFAULT_MODEL
         generationConfig: { temperature: 0, maxOutputTokens: 1024, candidateCount: 1 },
       }),
     });
+    if (response.status === 429) throw new ModelError('provider quota exhausted', 'quota');
+    if (!response.ok) throw new ModelError(`provider returned ${response.status}`, 'unavailable');
+    // Read the body inside the timeout: headers can arrive promptly and the
+    // body then trickle, which would otherwise hang past TIMEOUT_MS.
+    body = await response.json();
   } catch (error) {
+    if (error instanceof ModelError) throw error;
     throw new ModelError(`request failed: ${error.message}`, 'unavailable');
   } finally {
     clearTimeout(timer);
   }
-
-  if (response.status === 429) throw new ModelError('provider quota exhausted', 'quota');
-  if (!response.ok) throw new ModelError(`provider returned ${response.status}`, 'unavailable');
-
-  const body = await response.json();
   const text = (body?.candidates?.[0]?.content?.parts ?? [])
     .map((part) => part?.text ?? '')
     .join('')

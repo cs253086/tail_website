@@ -12,11 +12,11 @@
 <meta property="og:url" content="https://tail-os.com/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/a4164c006e06/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/b1169afd160b/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/a4164c006e06/css/style.css">
+<link rel="stylesheet" href="/assets/b1169afd160b/css/style.css">
 </head>
 <body class="page-home">
 <header class="hdr">
@@ -42,29 +42,19 @@
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
       </button>
       <div class="chips">
-        <button type="submit" name="q" value="What do I need to build TAIL OS from source?" class="chip">What do I need to build TAIL OS from source?</button>
-        <button type="submit" name="q" value="How do I set up a development environment?" class="chip">How do I set up a development environment?</button>
-        <button type="submit" name="q" value="How do I write my first TAIL OS application?" class="chip">How do I write my first TAIL OS application?</button>
-        <button type="submit" name="q" value="How do I run TAIL OS on QEMU?" class="chip">How do I run TAIL OS on QEMU?</button>
-        <button type="submit" name="q" value="How do I try the TAIL OS shell?" class="chip">How do I try the TAIL OS shell?</button>
+        <a class="chip" href="/ask/?q=What%20do%20I%20need%20to%20build%20TAIL%20OS%20from%20source%3F">What do I need to build TAIL OS from source?</a>
+        <a class="chip" href="/ask/?q=How%20do%20I%20set%20up%20a%20development%20environment%3F">How do I set up a development environment?</a>
+        <a class="chip" href="/ask/?q=How%20do%20I%20write%20my%20first%20TAIL%20OS%20application%3F">How do I write my first TAIL OS application?</a>
+        <a class="chip" href="/ask/?q=How%20do%20I%20run%20TAIL%20OS%20on%20QEMU%3F">How do I run TAIL OS on QEMU?</a>
+        <a class="chip" href="/ask/?q=How%20do%20I%20try%20the%20TAIL%20OS%20shell%3F">How do I try the TAIL OS shell?</a>
       </div>
     </form>
   </section>
 
   <section class="strip" aria-label="At a glance">
-    <div class="stat"><span class="stat-n mono">&lt; 2&#181;s</span><span class="stat-l">IPC latency</span></div>
-    <div class="stat"><span class="stat-n mono">64 KB</span><span class="stat-l">kernel footprint</span></div>
-    <div class="stat"><span class="stat-n mono">100%</span><span class="stat-l">safe Rust core</span></div>
-  </section>
-
-  <section class="quick">
-    <div class="quick-head">
-      <h2>Boot it in about two minutes</h2>
-      <a href="/docs/qemu/">Read the full guide</a>
-    </div>
-    <pre class="term"><code><span class="pr">$</span> sudo apt install -y qemu-system-aarch64 qemu-utils
-<span class="pr">$</span> ./scripts/run_tailos_qemu.sh</code></pre>
-    <p class="quick-note">No toolchain and no build. The launcher caches the prebuilt kernel and data disk, then boots QEMU with the right flags.</p>
+    <div class="stat"><span class="stat-n mono">AArch64</span><span class="stat-l">target architecture</span></div>
+    <div class="stat"><span class="stat-n mono">Pi 3B + QEMU</span><span class="stat-l">supported targets</span></div>
+    <div class="stat"><span class="stat-n mono">Ubuntu 22.04</span><span class="stat-l">validated build host</span></div>
   </section>
 
   <section class="docs-cards" aria-label="Documentation">

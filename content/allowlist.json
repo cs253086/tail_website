@@ -15,6 +15,24 @@
       "replacement": "(private repository)"
     }
   ],
+  "home": {
+    "_comment": "Front-page claims. Everything here is asserted to the public without a citation, so it must be true and checkable in the published documents. quickstart is omitted until there is a command a reader without repository access can actually run.",
+    "highlights": [
+      {
+        "value": "AArch64",
+        "label": "target architecture"
+      },
+      {
+        "value": "Pi 3B + QEMU",
+        "label": "supported targets"
+      },
+      {
+        "value": "Ubuntu 22.04",
+        "label": "validated build host"
+      }
+    ],
+    "quickstart": null
+  },
   "documents": [
     {
       "path": "doc/get_started.md",

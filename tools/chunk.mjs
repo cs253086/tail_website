@@ -6,6 +6,22 @@
 
 const MAX_WORDS = 650;
 
+// Two headings can slugify identically ("Notes" under two parents). Left alone
+// that collides chunk ids — the Function's byId map silently drops one and a
+// citation then points at the wrong passage — and emits duplicate HTML ids, so
+// the deep link lands on the wrong section too. Anchors are allocated once, in
+// document order, and every consumer uses that allocation.
+export function makeAnchorAllocator() {
+  const seen = new Map();
+  return (text) => {
+    const base = slugify(text);
+    if (!base) return '';
+    const count = seen.get(base) ?? 0;
+    seen.set(base, count + 1);
+    return count === 0 ? base : `${base}-${count}`;
+  };
+}
+
 export function slugify(text) {
   return String(text)
     .toLowerCase()
@@ -63,8 +79,13 @@ function splitSection(lines) {
   return parts;
 }
 
+// Returns the chunks and, separately, every heading in document order with its
+// allocated anchor. The generator assigns HTML ids from that same list, so a
+// citation anchor and a heading id can never disagree.
 export function chunkMarkdown(markdown, { docSlug, docTitle }) {
   const lines = String(markdown).split('\n');
+  const allocate = makeAnchorAllocator();
+  const headings = [];
   const sections = [];
   let headingStack = [];
   let currentHeading = null;
@@ -78,7 +99,7 @@ export function chunkMarkdown(markdown, { docSlug, docTitle }) {
     }
     sections.push({
       headingPath: currentHeading ? [...headingStack] : [docTitle],
-      anchor: currentHeading ? slugify(currentHeading.text) : '',
+      anchor: currentHeading ? currentHeading.anchor : '',
       lines: buffer,
     });
     buffer = [];
@@ -101,7 +122,8 @@ export function chunkMarkdown(markdown, { docSlug, docTitle }) {
       headingStack = headingStack.slice(0, level - 1);
       headingStack[level - 1] = text;
       headingStack = headingStack.filter((entry) => entry !== undefined);
-      currentHeading = { level, text };
+      currentHeading = { level, text, anchor: allocate(text) };
+      headings.push(currentHeading);
       continue;
     }
 
@@ -128,5 +150,5 @@ export function chunkMarkdown(markdown, { docSlug, docTitle }) {
       });
     });
   }
-  return chunks;
+  return { chunks, headings };
 }

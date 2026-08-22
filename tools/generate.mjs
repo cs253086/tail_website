@@ -6,7 +6,7 @@
 // before a push is the publication review.
 
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync, cpSync, existsSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import MarkdownIt from 'markdown-it';
@@ -14,12 +14,14 @@ import MarkdownIt from 'markdown-it';
 import { assertAllowlisted, rewriteLink, validateAllowlist } from './allowlist.mjs';
 import { assertRedacted, compileRules, redact } from './redact.mjs';
 import { buildIndex } from './bm25.mjs';
-import { chunkMarkdown, slugify } from './chunk.mjs';
-import { renderAsk, renderDoc, renderDocsIndex, renderHome } from './render.mjs';
+import { chunkMarkdown } from './chunk.mjs';
+import { renderAsk, renderDoc, renderDocsIndex, renderHome, renderNotFound } from './render.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const PUBLIC = join(ROOT, 'public');
-const GENERATED = join(ROOT, 'generated');
+// Redirectable so a test can build somewhere disposable instead of overwriting
+// the committed output that `git diff` is supposed to review.
+const PUBLIC = process.env.SITE_OUT ? resolve(process.env.SITE_OUT) : join(ROOT, 'public');
+const GENERATED = process.env.CORPUS_OUT ? resolve(process.env.CORPUS_OUT) : join(ROOT, 'generated');
 const ORIGIN = 'https://tail-os.com';
 
 function fail(message) {
@@ -59,15 +61,16 @@ const site = {
 const redactionRules = compileRules(allowlist.redact);
 const redactions = [];
 
-function makeRenderer(currentDocPath) {
+function makeRenderer(currentDocPath, headings) {
   const md = new MarkdownIt({ html: false, linkify: true, typographer: false });
 
-  // Heading ids must match chunk.mjs slugs so a citation can deep-link to the
-  // exact section the answer was drawn from.
+  // Ids come from the chunker's allocation, consumed in document order, so a
+  // citation anchor and the heading it points at are the same string by
+  // construction rather than by two slugifiers happening to agree.
+  let headingIndex = 0;
   md.renderer.rules.heading_open = (tokens, i, options, env, self) => {
-    const inline = tokens[i + 1];
-    const text = inline && inline.type === 'inline' ? inline.content : '';
-    const anchor = slugify(text.replace(/[*_`]/g, ''));
+    const anchor = headings[headingIndex]?.anchor;
+    headingIndex += 1;
     if (anchor) tokens[i].attrSet('id', anchor);
     return self.renderToken(tokens, i, options);
   };
@@ -112,23 +115,40 @@ for (const entry of bySourcePath.values()) {
   redactions.push(...hits.map((hit) => ({ ...hit, path: entry.path })));
   hash.update(entry.path).update(markdown);
 
-  const md = makeRenderer(entry.path);
+  const { chunks, headings } = chunkMarkdown(markdown, { docSlug: entry.slug, docTitle: entry.title });
+  const md = makeRenderer(entry.path, headings);
   const tokens = md.parse(markdown, {});
 
-  const sections = [];
-  for (let i = 0; i < tokens.length; i += 1) {
-    if (tokens[i].type !== 'heading_open' || tokens[i].tag !== 'h2') continue;
-    const title = tokens[i + 1]?.content?.replace(/[*_`]/g, '') ?? '';
-    if (title) sections.push({ title, anchor: slugify(title) });
+  // The chunker and markdown-it are separate parsers. If they ever disagree on
+  // how many headings a document has, every id after the divergence is wrong;
+  // stop rather than publish silently misaligned anchors.
+  const parsed = tokens.filter((token) => token.type === 'heading_open').length;
+  if (parsed !== headings.length) {
+    fail(`heading mismatch in ${entry.path}: chunker saw ${headings.length}, renderer saw ${parsed}`);
   }
 
-  const html = md.render(markdown);
+  const sections = headings
+    .filter((heading) => heading.level === 2 && heading.text)
+    .map((heading) => ({ title: heading.text.replace(/[*_`]/g, ''), anchor: heading.anchor }));
+
+  const html = md.renderer.render(tokens, md.options, {});
   assertRedacted(html, redactionRules, entry.path);
 
-  const doc = { ...entry, sections, html };
-  docs.push(doc);
-  allChunks.push(...chunkMarkdown(markdown, { docSlug: entry.slug, docTitle: entry.title }));
+  docs.push({ ...entry, sections, html });
+  allChunks.push(...chunks);
 }
+
+// Assets are part of the build hash because the hash is what makes their
+// year-long immutable cache safe. Sorted so the digest is order-independent.
+function hashTree(dir, into) {
+  for (const entry of readdirSync(dir).sort()) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) hashTree(full, into);
+    else if (!entry.endsWith('.test.js')) into.update(entry).update(readFileSync(full));
+  }
+}
+hashTree(join(ROOT, 'assets'), hash);
+hash.update(readFileSync(join(ROOT, 'tools/bm25.mjs')));
 
 const buildId = hash.digest('hex').slice(0, 12);
 // Assets are served from a build-hashed path so the year-long immutable cache
@@ -143,12 +163,13 @@ rmSync(PUBLIC, { recursive: true, force: true });
 for (const doc of docs) {
   write(join(PUBLIC, 'docs', doc.slug, 'index.html'), renderDoc({ site, docs, doc, html: doc.html }));
 }
-write(join(PUBLIC, 'index.html'), renderHome({ site, docs, questions }));
+write(join(PUBLIC, 'index.html'), renderHome({ site, docs, questions, home: allowlist.home ?? {} }));
+write(join(PUBLIC, '404.html'), renderNotFound({ site, docs }));
 write(join(PUBLIC, 'ask', 'index.html'), renderAsk({ site, docs, questions }));
 write(join(PUBLIC, 'docs', 'index.html'), renderDocsIndex({ site, docs }));
 
-// Two views of one build: the browser gets previews for keyword search, the
-// Function gets full text for retrieval. Both carry the same buildId.
+// Two views of one build: the browser gets chunk metadata for keyword search,
+// the Function gets full text for retrieval. Both carry the same buildId.
 const meta = allChunks.map((chunk) => ({
   id: chunk.id,
   docSlug: chunk.docSlug,
@@ -162,10 +183,7 @@ write(
   JSON.stringify({
     buildId,
     index,
-    chunks: meta.map((chunk, i) => ({
-      ...chunk,
-      preview: allChunks[i].text.replace(/[`*#>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 220),
-    })),
+    chunks: meta,
   }),
 );
 

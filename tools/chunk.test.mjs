@@ -12,7 +12,7 @@ describe('slugify', () => {
 
 describe('chunkMarkdown', () => {
   it('splits at headings and records the heading path', () => {
-    const chunks = chunkMarkdown('# Guide\n\nIntro text.\n\n## Install\n\nRun the installer.\n', options);
+    const { chunks } = chunkMarkdown('# Guide\n\nIntro text.\n\n## Install\n\nRun the installer.\n', options);
     expect(chunks).toHaveLength(2);
     expect(chunks[1].headingPath).toEqual(['Guide', 'Install']);
     expect(chunks[1].anchor).toBe('install');
@@ -31,7 +31,7 @@ describe('chunkMarkdown', () => {
       '',
     ].join('\n');
 
-    const chunks = chunkMarkdown(markdown, options);
+    const { chunks } = chunkMarkdown(markdown, options);
     expect(chunks).toHaveLength(1);
     expect(chunks[0].anchor).toBe('quick-start');
     expect(chunks[0].text).toContain('# 1. Build TailOS');
@@ -40,7 +40,7 @@ describe('chunkMarkdown', () => {
   it('keeps a fenced block whole when a section is split for size', () => {
     const filler = Array.from({ length: 400 }, (_, i) => `word${i}`).join(' ');
     const markdown = `## Big\n\n${filler}\n\n\`\`\`bash\ncurl -sSL https://example.test/run.sh | bash\n\`\`\`\n\n${filler}\n`;
-    const chunks = chunkMarkdown(markdown, options);
+    const { chunks } = chunkMarkdown(markdown, options);
 
     expect(chunks.length).toBeGreaterThan(1);
     const withFence = chunks.filter((chunk) => chunk.text.includes('curl -sSL'));
@@ -51,18 +51,35 @@ describe('chunkMarkdown', () => {
 
   it('gives every chunk a unique id', () => {
     const filler = Array.from({ length: 900 }, (_, i) => `word${i}`).join(' ');
-    const chunks = chunkMarkdown(`## Big\n\n${filler}\n`, options);
+    const { chunks } = chunkMarkdown(`## Big\n\n${filler}\n`, options);
     expect(new Set(chunks.map((chunk) => chunk.id)).size).toBe(chunks.length);
   });
 
+  // Repeated subheadings (Prerequisites, Troubleshooting, Notes) are the norm
+  // once the allowlist grows. Colliding ids made the Function serve one
+  // section's text under another section's citation.
+  it('disambiguates headings that slugify identically', () => {
+    const markdown = '# Doc\n\n## Install\n\n### Notes\n\nFirst note.\n\n## Build\n\n### Notes\n\nSecond note.\n';
+    const { chunks, headings } = chunkMarkdown(markdown, options);
+
+    expect(headings.map((h) => h.anchor)).toEqual(['doc', 'install', 'notes', 'build', 'notes-1']);
+    expect(new Set(chunks.map((chunk) => chunk.id)).size).toBe(chunks.length);
+    expect(chunks.find((c) => c.text === 'Second note.').anchor).toBe('notes-1');
+  });
+
+  it('reports every heading in document order with its level', () => {
+    const { headings } = chunkMarkdown('# A\n\ntext\n\n## B\n\ntext\n', options);
+    expect(headings.map((h) => [h.level, h.text, h.anchor])).toEqual([[1, 'A', 'a'], [2, 'B', 'b']]);
+  });
+
   it('exposes the heading path as its own field, separate from the body', () => {
-    const chunks = chunkMarkdown('# Guide\n\n## Serial Console Wiring\n\nConnect the pins.\n', options);
+    const { chunks } = chunkMarkdown('# Guide\n\n## Serial Console Wiring\n\nConnect the pins.\n', options);
     expect(chunks[0].heading).toBe('Guide Serial Console Wiring');
     expect(chunks[0].text).not.toContain('Serial Console Wiring');
   });
 
   it('drops heading-only sections that carry no retrievable text', () => {
-    const chunks = chunkMarkdown('## Empty\n\n## Real\n\nBody.\n', options);
+    const { chunks } = chunkMarkdown('## Empty\n\n## Real\n\nBody.\n', options);
     expect(chunks.map((chunk) => chunk.anchor)).toEqual(['real']);
   });
 });

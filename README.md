@@ -89,7 +89,7 @@ and no build command — the site is already built and committed.
 Nothing here has billing enabled. Cloudflare Pages hosting and 100,000 Function
 requests a day are free; the Gemini free tier allows 1,500 answers a day and needs
 no card. Three limits keep the site inside it — a 30-day answer cache, a per-IP
-token bucket, and a 1,200/day ceiling — and each degrades to keyword results
+token bucket, and a 1,000/day ceiling — and each degrades to keyword results
 rather than an error.
 
 ## Migrating from Bluehost

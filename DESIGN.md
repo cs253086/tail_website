@@ -1,6 +1,6 @@
 # TAIL OS website — v2 design
 
-Status: proposed
+Status: implemented
 Date: 2026-08-20
 Supersedes: the hand-written static site (`index.html`, `docs/index.html`)
 
@@ -24,7 +24,7 @@ a hand-curated navigation tree over 341 markdown documents.
 4. Answers are free to serve. No credit card is attached to any account in this system,
    so no traffic pattern can produce a bill.
 5. Nothing outside an explicit allowlist can ever become public.
-6. Pages remain indexable by search engines and linkable from GitHub issues.
+6. Pages remain indexable by search engines and linkable from an issue tracker.
 
 ## 3. Non-goals
 
@@ -47,7 +47,7 @@ of an OS project make that fail, and each one is why a page substrate exists:
 
 The resolution is AI-first, not AI-only. The visitor experiences a search bar. Beneath
 it, generated pages give the answer something to cite, Google something to index, and a
-GitHub issue something to link.
+issue thread something to link.
 
 ## 5. Architecture
 
@@ -177,7 +177,8 @@ Two design consequences follow:
 1. The suggested questions on the home page are drawn only from covered topics, so a
    first-time visitor's first interaction succeeds rather than hits a refusal.
 2. The refusal path is a common case at launch, not an edge case. It must name what the
-   site does cover and link to the GitHub repository, rather than being a dead end.
+   site does cover and offer those documents, rather than being a dead end. It
+   links to no repository (§5.0).
 
 A dedicated public-documentation directory is planned in the tailos repository (or as a
 separate public repository). When it exists, the generator's source root points at it
@@ -194,7 +195,7 @@ keep the system inside it:
 |---|---|---|
 | Answer cache | KV, 30-day TTL | Identical questions never reach Gemini. A docs site repeats the same ~50 questions indefinitely. |
 | Per-IP rate limit | KV token bucket | Caps one visitor's share. Prevents a scraper draining the daily quota. |
-| Global daily ceiling | KV counter, 1,200/day | Below the 1,500 hard limit, leaving headroom. On reaching it, Gemini is not called at all. |
+| Global daily ceiling | KV counter, 1,000/day | Well below the 1,500 hard limit. The gap absorbs eventual-consistency overshoot, since KV offers no compare-and-set; see `_limits.js`. |
 
 Every limit degrades to retrieval results rather than an error. The site is never
 broken by exhaustion — it is only less clever until midnight.
@@ -207,8 +208,14 @@ of this system has billing enabled.
 The Gemini call lives behind one function in `functions/api/_model.js`:
 
 ```
-answer({ question, passages }) -> { text, citations }
+answer({ question, passages, apiKey, model }) -> { text }
 ```
+
+It returns text only. Citations are not the provider's to report: they are
+derived from that text by `_citations.js`, using the same parse the browser
+renders, so the guarantee in §5.3 does not depend on a provider's cooperation.
+Failures are raised as `ModelError` with a `kind` of `quota`, `unavailable` or
+`unconfigured`, which is all the handler needs to choose a degradation message.
 
 Nothing else in the codebase knows which provider is in use. Moving to Claude — if
 answer quality on architectural questions ever justifies the cost — is an edit to that
@@ -219,7 +226,8 @@ unchanged.
 
 | Route | Content |
 |---|---|
-| `/` | Question box, five suggested questions drawn from the current corpus, three-line description of TAIL OS, install snippet, GitHub link. No sidebar. |
+| `/` | Question box, five suggested questions drawn from the current corpus, a short description of TAIL OS, and links into the documents. No sidebar, and no repository link (§5.0). |
+| `/404.html` | The documentation shell with a route back in. Replaces the error document the retired Apache config provided. |
 | `/ask/?q=...` | Answer with inline citations, source cards linking into `/docs/`, keyword results below. Shareable URL. `noindex`, and disallowed in `robots.txt`. |
 | `/docs/` | Generated index of every published document. |
 | `/docs/<slug>/` | One generated page per allowlisted document. Plain HTML, readable with JavaScript disabled. |
@@ -244,8 +252,13 @@ Documentation pages are static HTML and work without JavaScript, which is what k
 them indexable. The question box is progressive enhancement over a plain form.
 
 **Visual direction.** Light-first and theme-aware, one accent colour, generous
-whitespace, Inter for text and JetBrains Mono for code — continuing the typographic
-choices already in the current stylesheet. The home page is close to empty by design.
+whitespace, IBM Plex Sans for text and IBM Plex Mono for code. The home page is
+close to empty by design.
+
+Front-page claims live in `content/allowlist.json`, not in the generator. Anything
+asserted there reaches a reader uncited, which on a site whose whole thesis is §5.3
+means it must be true and checkable in the published documents — a standard three
+inherited performance figures failed, one of them demonstrably.
 
 ### 9.1 Asset caching
 

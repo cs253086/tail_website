@@ -55,14 +55,13 @@ function header({ site, compact }) {
 </header>`;
 }
 
-function sidebar({ docs, activeSlug, activeAnchor = null }) {
+function sidebar({ docs, activeSlug }) {
   const groups = docs.map((doc) => {
     const isActive = doc.slug === activeSlug;
-    const sections = doc.sections.map((section) => {
-      const current = isActive && section.anchor === activeAnchor ? ' aria-current="true"' : '';
-      return `<li><a href="/docs/${esc(doc.slug)}/#${esc(section.anchor)}"${current}>${esc(section.title)}</a></li>`;
-    }).join('\n        ');
-    return `<li class="nav-group${isActive ? ' is-open' : ''}">
+    const sections = doc.sections
+      .map((section) => `<li><a href="/docs/${esc(doc.slug)}/#${esc(section.anchor)}">${esc(section.title)}</a></li>`)
+      .join('\n        ');
+    return `<li class="nav-group">
       <a class="nav-doc" href="/docs/${esc(doc.slug)}/"${isActive ? ' aria-current="page"' : ''}>${esc(doc.title)}</a>
       <ul class="nav-sections">
         ${sections}
@@ -87,10 +86,34 @@ function footer({ site }) {
 </footer>`;
 }
 
-export function renderHome({ site, docs, questions }) {
+export function renderHome({ site, docs, questions, home = {} }) {
+  // Links, not submit buttons: a button named `q` inside a form whose input is
+  // also named `q` submits both, and URLSearchParams.get() takes the first.
   const chips = questions
-    .map((q) => `<button type="submit" name="q" value="${esc(q)}" class="chip">${esc(q)}</button>`)
+    .map((q) => `<a class="chip" href="/ask/?q=${encodeURIComponent(q)}">${esc(q)}</a>`)
     .join('\n        ');
+
+  // Every front-page claim is uncited by nature, so it comes from config the
+  // maintainer owns rather than from a literal in this file.
+  const highlights = (home.highlights ?? []).length
+    ? `  <section class="strip" aria-label="At a glance">
+${(home.highlights ?? []).map((item) => `    <div class="stat"><span class="stat-n mono">${esc(item.value)}</span><span class="stat-l">${esc(item.label)}</span></div>`).join('\n')}
+  </section>
+`
+    : '';
+
+  const quickstart = home.quickstart
+    ? `
+  <section class="quick">
+    <div class="quick-head">
+      <h2>${esc(home.quickstart.title)}</h2>
+      <a href="/docs/${esc(home.quickstart.doc)}/">Read the full guide</a>
+    </div>
+    <pre class="term"><code>${home.quickstart.commands.map((line) => `<span class="pr">$</span> ${esc(line)}`).join('\n')}</code></pre>
+    <p class="quick-note">${esc(home.quickstart.note)}</p>
+  </section>
+`
+    : '';
 
   const cards = docs
     .map((doc) => `<a class="card" href="/docs/${esc(doc.slug)}/">
@@ -126,22 +149,7 @@ ${header({ site, compact: false })}
     </form>
   </section>
 
-  <section class="strip" aria-label="At a glance">
-    <div class="stat"><span class="stat-n mono">&lt; 2&#181;s</span><span class="stat-l">IPC latency</span></div>
-    <div class="stat"><span class="stat-n mono">64 KB</span><span class="stat-l">kernel footprint</span></div>
-    <div class="stat"><span class="stat-n mono">100%</span><span class="stat-l">safe Rust core</span></div>
-  </section>
-
-  <section class="quick">
-    <div class="quick-head">
-      <h2>Boot it in about two minutes</h2>
-      <a href="/docs/qemu/">Read the full guide</a>
-    </div>
-    <pre class="term"><code><span class="pr">$</span> sudo apt install -y qemu-system-aarch64 qemu-utils
-<span class="pr">$</span> ./scripts/run_tailos_qemu.sh</code></pre>
-    <p class="quick-note">No toolchain and no build. The launcher caches the prebuilt kernel and data disk, then boots QEMU with the right flags.</p>
-  </section>
-
+${highlights}${quickstart}
   <section class="docs-cards" aria-label="Documentation">
       ${cards}
   </section>
@@ -151,12 +159,12 @@ ${footer({ site })}
 </html>`;
 }
 
-function shell({ site, docs, title, description, canonical, activeSlug, activeAnchor, main, extraHead = '', scripts = '' }) {
+function shell({ site, docs, title, description, canonical, activeSlug, main, extraHead = '', scripts = '' }) {
   return `${head({ site, title, description, canonical, extraHead })}
 <body class="page-shell">
 ${header({ site, compact: true })}
 <div class="shell">
-${sidebar({ docs, activeSlug, activeAnchor })}
+${sidebar({ docs, activeSlug })}
 <main class="content">
 ${main}
 </main>
@@ -179,7 +187,6 @@ export function renderAsk({ site, docs, questions }) {
     description: 'Ask a question about TAIL OS and get an answer cited from the documentation.',
     canonical: `${site.origin}/ask/`,
     activeSlug: null,
-    activeAnchor: null,
     // Answers are generated per request, so this route is deliberately excluded
     // from indexing; the documents it cites are what search engines should see.
     extraHead: '<meta name="robots" content="noindex">\n',
@@ -194,6 +201,28 @@ export function renderAsk({ site, docs, questions }) {
   </div>
 </div>`,
     scripts: `<script type="module" src="${esc(site.assets)}/js/ask.js"></script>`,
+  });
+}
+
+export function renderNotFound({ site, docs }) {
+  return shell({
+    site,
+    docs,
+    title: 'Not found — TAIL OS',
+    description: 'That page does not exist.',
+    canonical: `${site.origin}/404.html`,
+    activeSlug: null,
+    extraHead: '<meta name="robots" content="noindex">\n',
+    main: `<article class="doc">
+  <h1>That page does not exist.</h1>
+  <p class="lede">The address may be out of date. Search from the bar above, or pick a document from the sidebar.</p>
+  <ul class="idx">
+    ${docs.map((doc) => `<li>
+      <a class="idx-t" href="/docs/${esc(doc.slug)}/">${esc(doc.title)}</a>
+      <p class="idx-d">${esc(doc.summary)}</p>
+    </li>`).join('\n    ')}
+  </ul>
+</article>`,
   });
 }
 
@@ -212,7 +241,6 @@ export function renderDocsIndex({ site, docs }) {
     description: 'Published TAIL OS documentation: getting started, running under QEMU, and installing on a Raspberry Pi 3B.',
     canonical: `${site.origin}/docs/`,
     activeSlug: null,
-    activeAnchor: null,
     main: `<article class="doc">
   <h1>Documentation</h1>
   <p class="lede">Everything published here is generated from the TAIL OS repository.</p>
@@ -240,7 +268,6 @@ export function renderDoc({ site, docs, doc, html }) {
     description: doc.summary,
     canonical: `${site.origin}/docs/${doc.slug}/`,
     activeSlug: doc.slug,
-    activeAnchor: null,
     main: `<div class="doc-wrap">
 <article class="doc">
 ${html}

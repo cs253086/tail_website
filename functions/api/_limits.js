@@ -3,10 +3,21 @@
 // the rest of the day but never broken.
 //
 // `now` is always injected so the arithmetic is testable without waiting.
+//
+// Known limitation: both counters are read-modify-write over Workers KV, which
+// offers no compare-and-set and propagates writes with eventual consistency.
+// Concurrent requests — especially across colos — can therefore overshoot both
+// limits for a short window. These are cost guards, not security controls, so
+// the ceiling is set well under the provider's hard limit to absorb that rather
+// than reaching for Durable Objects, which would add cost and complexity a
+// documentation site does not need. Tighten this if it ever guards something
+// that must not be exceeded.
 
 export const PER_IP_BURST = 8;
 export const PER_IP_REFILL_SECONDS = 45;
-export const DAILY_CEILING = 1200;
+// 1,500/day is the provider's hard limit; the gap absorbs eventual-consistency
+// overshoot rather than assuming the counter is exact.
+export const DAILY_CEILING = 1000;
 
 function dayKey(now) {
   return `daily:${new Date(now).toISOString().slice(0, 10)}`;

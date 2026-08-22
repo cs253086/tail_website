@@ -91,6 +91,20 @@ describe('validateAnswer', () => {
   it('finds every marker in the text', () => {
     expect(findMarkers('a [1] b [12] c')).toEqual([1, 12]);
   });
+
+  // The gate must count what the browser will actually render as a citation.
+  // Counting raw [n] let `array[1]` pass as sourced while rendering none.
+  it('does not accept a bracket inside inline code as a citation', () => {
+    expect(validateAnswer('Index the array with `array[1]` to read it.', 6).reason).toBe('uncited');
+  });
+
+  it('does not accept a bracket inside a fenced block as a citation', () => {
+    expect(validateAnswer('Run:\n\n```bash\nprintf "%s" "${arr[1]}"\n```\n', 6).reason).toBe('uncited');
+  });
+
+  it('still accepts a genuine citation beside bracketed code', () => {
+    expect(validateAnswer('Use `array[1]` as shown [2].', 6)).toEqual({ ok: true, used: [2] });
+  });
 });
 
 describe('isRefusal', () => {
@@ -235,7 +249,8 @@ describe('POST /api/ask', () => {
 
   it('degrades once a single visitor exhausts their burst', async () => {
     const env = { ANSWER_CACHE: fakeKv() };
-    modelMock.answer.mockImplementation(async () => ({ text: `Boot it [1]. ${Math.random()}` }));
+    let call = 0;
+    modelMock.answer.mockImplementation(async () => ({ text: `Boot it [1]. Call ${(call += 1)}.` }));
 
     const statuses = [];
     for (let i = 0; i < PER_IP_BURST + 2; i += 1) {

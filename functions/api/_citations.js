@@ -5,12 +5,17 @@
 // discarded rather than shown — so a fabricated answer can never reach a
 // reader wearing the appearance of a sourced one.
 
-const MARKER = /\[(\d{1,2})\]/g;
+import { parseAnswer } from '../../assets/js/answer-format.js';
 
+// Markers are counted from the same parse the browser renders, so a bracket
+// inside `array[1]` or inside a fenced command is not a citation here either.
+// Two definitions of "a citation" is how an uncited answer slips through
+// wearing the appearance of a sourced one.
 export function findMarkers(text) {
-  const found = [];
-  for (const match of String(text).matchAll(MARKER)) found.push(Number(match[1]));
-  return found;
+  return parseAnswer(text)
+    .flatMap((block) => block.pieces ?? [])
+    .filter((piece) => piece.type === 'cite')
+    .map((piece) => piece.n);
 }
 
 export function validateAnswer(text, passageCount) {
