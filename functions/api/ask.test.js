@@ -122,11 +122,27 @@ describe('cache keys', () => {
   });
 
   it('is stable for the same question and build', async () => {
-    expect(await cacheKey('How do I run QEMU?', 'b1')).toBe(await cacheKey('how do i run qemu', 'b1'));
+    expect(await cacheKey('How do I run QEMU?', 'b1', 'm1')).toBe(await cacheKey('how do i run qemu', 'b1', 'm1'));
   });
 
   it('changes when the documentation is republished', async () => {
-    expect(await cacheKey('How do I run QEMU?', 'b1')).not.toBe(await cacheKey('How do I run QEMU?', 'b2'));
+    expect(await cacheKey('How do I run QEMU?', 'b1', 'm1')).not.toBe(await cacheKey('How do I run QEMU?', 'b2', 'm1'));
+  });
+
+  it('retires cached answers when the model changes, so a switch takes effect', async () => {
+    // Without the model in the key, replacing a model kept serving thirty days
+    // of answers produced by the one it replaced.
+    expect(await cacheKey('q', 'b1', 'gemini-3.7-flash'))
+      .not.toBe(await cacheKey('q', 'b1', 'gemini-flash-lite-latest'));
+  });
+
+  it('retires cached answers when the system prompt changes', async () => {
+    expect(await cacheKey('q', 'b1', 'm1', 'answer from passages'))
+      .not.toBe(await cacheKey('q', 'b1', 'm1', 'answer differently'));
+  });
+
+  it('cannot collide across fields, because they are NUL-separated', async () => {
+    expect(await cacheKey('q', 'a', 'b:c')).not.toBe(await cacheKey('q', 'a:b', 'c'));
   });
 });
 

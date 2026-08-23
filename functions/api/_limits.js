@@ -15,9 +15,13 @@
 
 export const PER_IP_BURST = 8;
 export const PER_IP_REFILL_SECONDS = 45;
-// 1,500/day is the provider's hard limit; the gap absorbs eventual-consistency
-// overshoot rather than assuming the counter is exact.
-export const DAILY_CEILING = 1000;
+// The free tier is metered per model per day, and the allowance is far smaller
+// than the 1,500/day the older Flash models offered: gemini-3.7-flash grants
+// 20. This ceiling is deliberately conservative because the lite model's exact
+// allowance has not been read off the provider's dashboard; raise it to sit
+// just under the real figure once that is known. The gap also absorbs
+// eventual-consistency overshoot rather than assuming the counter is exact.
+export const DAILY_CEILING = 200;
 
 function dayKey(now) {
   return `daily:${new Date(now).toISOString().slice(0, 10)}`;

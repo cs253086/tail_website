@@ -2,8 +2,12 @@
 // indefinitely, so this is the difference between staying inside a free quota
 // and exhausting it by lunchtime.
 //
-// The build hash is part of the key, so republishing the documentation retires
-// every cached answer without an explicit purge step.
+// The key covers every input that determines the answer — the corpus (via the
+// build hash), the model, the system prompt and the question — so changing any
+// of them retires the affected entries without an explicit purge step. Leaving
+// the model out once meant a model switch kept serving thirty days of answers
+// from the model it replaced. Fields are NUL-separated so no combination of
+// values can collide with a different one.
 
 const TTL_SECONDS = 60 * 60 * 24 * 30;
 
@@ -16,8 +20,10 @@ export function normalizeQuestion(question) {
     .trim();
 }
 
-export async function cacheKey(question, buildId) {
-  const data = new TextEncoder().encode(`${buildId}:${normalizeQuestion(question)}`);
+export async function cacheKey(question, buildId, model, systemPrompt = '') {
+  const data = new TextEncoder().encode(
+    [buildId, model, systemPrompt, normalizeQuestion(question)].join('\u0000'),
+  );
   const digest = await crypto.subtle.digest('SHA-256', data);
   const hex = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
   return `answer:${buildId}:${hex.slice(0, 32)}`;

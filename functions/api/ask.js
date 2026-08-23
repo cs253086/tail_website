@@ -9,9 +9,10 @@ import corpus from '../../generated/chunks.json';
 
 import { search } from '../../tools/bm25.mjs';
 import { cacheKey, readCache, writeCache } from './_cache.js';
+import { SYSTEM_PROMPT } from './_prompt.js';
 import { isRefusal, validateAnswer } from './_citations.js';
 import { recordModelCall, takeToken, withinDailyCeiling } from './_limits.js';
-import { ModelError, answer as callModel } from './_model.js';
+import { DEFAULT_MODEL, ModelError, answer as callModel } from './_model.js';
 
 const MAX_QUESTION = 500;
 const PASSAGES = 6;
@@ -68,7 +69,10 @@ export async function onRequestPost({ request, env }) {
     });
   }
 
-  const key = await cacheKey(question, corpus.buildId);
+  // Resolved here rather than inside answer(), because the cache key has to
+  // name the model that actually produced the entry.
+  const model = env.GEMINI_MODEL || DEFAULT_MODEL;
+  const key = await cacheKey(question, corpus.buildId, model, SYSTEM_PROMPT);
   const cached = await readCache(kv, key);
   if (cached) return json(cached);
 
@@ -88,7 +92,7 @@ export async function onRequestPost({ request, env }) {
       question,
       passages,
       apiKey: env.GEMINI_API_KEY,
-      model: env.GEMINI_MODEL,
+      model,
     }));
   } catch (error) {
     const reason = error instanceof ModelError && error.kind === 'quota'
