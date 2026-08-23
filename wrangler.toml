@@ -10,4 +10,4 @@ pages_build_output_dir = "public"
 # still generated, they are simply neither cached nor rate limited.
 [[kv_namespaces]]
 binding = "ANSWER_CACHE"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "934fdb4ada1f45edb722e2c03e74399b"
