@@ -188,14 +188,17 @@ published set reviewable in a diff.
 
 ## 7. Cost and quota control
 
-Gemini Flash free tier: 1,500 requests/day, 15/minute, no credit card. Three mechanisms
-keep the system inside it:
+The free tier is metered **per model per day**, and the allowance is much smaller than
+the 1,500/day the older Flash models offered — `gemini-3.7-flash` grants 20, and
+`gemini-2.5-flash` is no longer issued to new accounts at all. Measured, not assumed:
+the figure was read off a `RESOURCE_EXHAUSTED` response, since the API reports a quota
+only once it is exceeded. Three mechanisms keep the system inside it:
 
 | Mechanism | Storage | Behaviour |
 |---|---|---|
 | Answer cache | KV, 30-day TTL | Identical questions never reach Gemini. A docs site repeats the same ~50 questions indefinitely. |
 | Per-IP rate limit | KV token bucket | Caps one visitor's share. Prevents a scraper draining the daily quota. |
-| Global daily ceiling | KV counter, 1,000/day | Well below the 1,500 hard limit. The gap absorbs eventual-consistency overshoot, since KV offers no compare-and-set; see `_limits.js`. |
+| Global daily ceiling | KV counter, 200/day | Deliberately conservative: the lite model's exact allowance has not been read off the provider's dashboard. The gap also absorbs eventual-consistency overshoot, since KV offers no compare-and-set; see `_limits.js`. |
 
 Every limit degrades to retrieval results rather than an error. The site is never
 broken by exhaustion — it is only less clever until midnight.
@@ -210,6 +213,18 @@ The Gemini call lives behind one function in `functions/api/_model.js`:
 ```
 answer({ question, passages, apiKey, model }) -> { text }
 ```
+
+The model must be a **non-thinking** one. Thinking tokens are charged against
+`maxOutputTokens`, so a thinking model spends the budget on reasoning the reader never
+sees and returns whatever is left — measured at 985 of 1024 consumed before the answer
+began, which arrives as a sentence cut off mid-word. `gemini-flash-lite-latest` does not
+think, so the whole budget reaches the page.
+
+A generation is accepted only when the provider reports `finishReason: STOP`. Anything
+else — `MAX_TOKENS`, `SAFETY`, `RECITATION` — is a fragment rather than a shorter
+answer, and would otherwise satisfy §5.3 whenever a citation marker happened to fall
+before the cut. It is rejected as `unavailable` and the request degrades to retrieval
+results.
 
 It returns text only. Citations are not the provider's to report: they are
 derived from that text by `_citations.js`, using the same parse the browser

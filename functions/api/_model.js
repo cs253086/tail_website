@@ -6,7 +6,12 @@
 
 import { SYSTEM_PROMPT, buildUserMessage } from './_prompt.js';
 
-export const DEFAULT_MODEL = 'gemini-3.7-flash';
+// A non-thinking model is a requirement, not a preference. The provider
+// charges thinking tokens against maxOutputTokens, so on a thinking model the
+// reasoning consumes the budget and the reader receives whatever few tokens
+// are left — measured at 985 of 1024 spent before the answer began. Lite
+// models do not think, so the whole budget reaches the page.
+export const DEFAULT_MODEL = 'gemini-flash-lite-latest';
 const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 const TIMEOUT_MS = 20000;
 
@@ -47,7 +52,19 @@ export async function answer({ question, passages, apiKey, model = DEFAULT_MODEL
   } finally {
     clearTimeout(timer);
   }
-  const text = (body?.candidates?.[0]?.content?.parts ?? [])
+  const candidate = body?.candidates?.[0];
+
+  // Anything other than STOP means the provider cut the generation short:
+  // MAX_TOKENS ends mid-word, SAFETY and RECITATION end wherever they end. The
+  // fragment is not a shorter answer, it is a broken one, and it would still
+  // satisfy the citation gate if a marker happened to land before the cut. An
+  // absent reason is not a truncation signal, so only an explicit one rejects.
+  const { finishReason } = candidate ?? {};
+  if (finishReason && finishReason !== 'STOP') {
+    throw new ModelError(`generation stopped early: ${finishReason}`, 'unavailable');
+  }
+
+  const text = (candidate?.content?.parts ?? [])
     .map((part) => part?.text ?? '')
     .join('')
     .trim();
