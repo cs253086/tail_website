@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AllowlistError, assertAllowlisted, rewriteLink, validateAllowlist } from './allowlist.mjs';
+import { AllowlistError, assertAllowlisted, rewriteLink, validateAllowlist, validateOrigin } from './allowlist.mjs';
 
 const SOURCE_ROOT = '/src/tailos';
 const exists = () => true;
@@ -85,5 +85,33 @@ describe('rewriteLink', () => {
     expect(rewriteLink('https://example.test/x', 'doc/a.md', allowed)).toBe('https://example.test/x');
     expect(rewriteLink('#prerequisites', 'doc/a.md', allowed)).toBe('#prerequisites');
     expect(rewriteLink('mailto:x@example.test', 'doc/a.md', allowed)).toBe('mailto:x@example.test');
+  });
+});
+
+describe('validateOrigin', () => {
+  it('accepts a bare https origin', () => {
+    expect(validateOrigin('https://tail-os.com')).toBe('https://tail-os.com');
+  });
+
+  it('normalises away a trailing slash, so paths are never doubled', () => {
+    expect(validateOrigin('https://tail-os.com/')).toBe('https://tail-os.com');
+  });
+
+  it('rejects a missing origin rather than emitting undefined URLs', () => {
+    expect(() => validateOrigin(undefined)).toThrow(AllowlistError);
+    expect(() => validateOrigin('')).toThrow(/missing origin/);
+  });
+
+  it('rejects a non-URL', () => {
+    expect(() => validateOrigin('tail-os.com')).toThrow(/not a URL/);
+  });
+
+  it('rejects http, which would publish canonical URLs the site cannot serve', () => {
+    expect(() => validateOrigin('http://tail-os.com')).toThrow(/must be https/);
+  });
+
+  it('rejects an origin carrying a path', () => {
+    expect(() => validateOrigin('https://tail-os.com/docs')).toThrow(/bare scheme and host/);
+    expect(() => validateOrigin('https://tail-os.com/?a=1')).toThrow(/bare scheme and host/);
   });
 });

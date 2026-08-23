@@ -63,3 +63,29 @@ export function rewriteLink(href, currentDocPath, allowed) {
   const target = allowed.get(resolved);
   return target ? `/docs/${target.slug}/${suffix}` : null;
 }
+
+// The site's own origin. Every canonical URL, Open Graph URL, sitemap entry
+// and the robots.txt Sitemap line is this string with a root-relative path
+// appended, so it is normalised to a bare scheme+host: a trailing slash or a
+// stray path segment here would corrupt every absolute URL on the site.
+export function validateOrigin(origin) {
+  if (typeof origin !== 'string' || origin === '') {
+    throw new AllowlistError('allowlist is missing origin');
+  }
+
+  let parsed;
+  try {
+    parsed = new URL(origin);
+  } catch {
+    throw new AllowlistError(`origin is not a URL: ${origin}`);
+  }
+
+  if (parsed.protocol !== 'https:') {
+    throw new AllowlistError(`origin must be https: ${origin}`);
+  }
+  if (parsed.pathname !== '/' || parsed.search || parsed.hash) {
+    throw new AllowlistError(`origin must be a bare scheme and host: ${origin}`);
+  }
+
+  return parsed.origin;
+}

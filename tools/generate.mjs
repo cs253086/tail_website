@@ -11,7 +11,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import MarkdownIt from 'markdown-it';
 
-import { assertAllowlisted, rewriteLink, validateAllowlist } from './allowlist.mjs';
+import { assertAllowlisted, rewriteLink, validateAllowlist, validateOrigin } from './allowlist.mjs';
 import { assertRedacted, compileRules, redact } from './redact.mjs';
 import { buildIndex } from './bm25.mjs';
 import { chunkMarkdown } from './chunk.mjs';
@@ -22,7 +22,6 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // the committed output that `git diff` is supposed to review.
 const PUBLIC = process.env.SITE_OUT ? resolve(process.env.SITE_OUT) : join(ROOT, 'public');
 const GENERATED = process.env.CORPUS_OUT ? resolve(process.env.CORPUS_OUT) : join(ROOT, 'generated');
-const ORIGIN = 'https://tail-os.com';
 
 function fail(message) {
   console.error(`generate: ${message}`);
@@ -44,8 +43,10 @@ if (!existsSync(sourceRoot)) {
 }
 
 let bySourcePath;
+let origin;
 try {
   bySourcePath = validateAllowlist(allowlist, sourceRoot, existsSync);
+  origin = validateOrigin(allowlist.origin);
 } catch (error) {
   fail(error.message);
 }
@@ -54,7 +55,7 @@ const allowedPaths = new Set(bySourcePath.keys());
 // --- markdown --------------------------------------------------------------
 
 const site = {
-  origin: ORIGIN,
+  origin,
   version: allowlist.version,
 };
 
@@ -202,7 +203,7 @@ write(
   join(PUBLIC, 'sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((url) => `  <url><loc>${ORIGIN}${url}</loc><changefreq>weekly</changefreq></url>`).join('\n')}
+${urls.map((url) => `  <url><loc>${origin}${url}</loc><changefreq>weekly</changefreq></url>`).join('\n')}
 </urlset>
 `,
 );
@@ -215,7 +216,7 @@ write(
 Allow: /
 Disallow: /ask/
 
-Sitemap: ${ORIGIN}/sitemap.xml
+Sitemap: ${origin}/sitemap.xml
 `,
 );
 
