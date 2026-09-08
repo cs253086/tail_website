@@ -37,6 +37,19 @@
   },
   "documents": [
     {
+      "path": "framework/periodic/doc/periodic_framework_public.md",
+      "slug": "periodic-framework-rust",
+      "title": "Periodic Framework (Rust)",
+      "summary": "Declare a period and let the framework own the timing loop, admission, freshness and the publish.",
+      "questions": [
+        "How do I write a periodic node in TAIL OS?",
+        "What does the periodic attribute accept?",
+        "What happens when a cycle misses its deadline?",
+        "How do I keep state between cycles?",
+        "Which topic lane should I use?"
+      ]
+    },
+    {
       "path": "doc/get_started.md",
       "slug": "getting-started",
       "title": "Getting Started",

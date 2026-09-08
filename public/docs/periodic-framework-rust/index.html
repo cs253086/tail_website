@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Periodic Framework (Rust) — TAIL OS</title>
+<meta name="description" content="Declare a period and let the framework own the timing loop, admission, freshness and the publish.">
+<link rel="canonical" href="https://tail-os.com/docs/periodic-framework-rust/">
+<meta property="og:title" content="Periodic Framework (Rust) — TAIL OS">
+<meta property="og:description" content="Declare a period and let the framework own the timing loop, admission, freshness and the publish.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tail-os.com/docs/periodic-framework-rust/">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="/assets/f2ec9fae0e3a/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/assets/f2ec9fae0e3a/css/style.css">
+</head>
+<body class="page-shell">
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 32" width="22" height="22" fill="none" aria-hidden="true"><path d="M4 8h24M4 16h16M4 24h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span>TAIL OS</span><span class="ver">v0.9.0</span></a>
+    <form class="hdr-search" action="/ask/" method="get" role="search">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" name="q" placeholder="Search or ask a question" aria-label="Search or ask a question" autocomplete="off">
+    </form>
+    <nav class="hdr-nav" aria-label="Primary">
+      <a href="/docs/">Docs</a>
+    </nav>
+  </div>
+</header>
+<div class="shell">
+<aside class="side">
+  <nav aria-label="Documentation">
+    <ul class="nav-docs">
+    <li class="nav-group">
+      <a class="nav-doc" href="/docs/periodic-framework-rust/" aria-current="page">Periodic Framework (Rust)</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/periodic-framework-rust/#a-complete-node">A complete node</a></li>
+        <li><a href="/docs/periodic-framework-rust/#node-shapes">Node shapes</a></li>
+        <li><a href="/docs/periodic-framework-rust/#the-periodic-attribute">The periodic attribute</a></li>
+        <li><a href="/docs/periodic-framework-rust/#durations">Durations</a></li>
+        <li><a href="/docs/periodic-framework-rust/#publishing-and-declining-to-publish">Publishing, and declining to publish</a></li>
+        <li><a href="/docs/periodic-framework-rust/#state-that-outlives-a-cycle">State that outlives a cycle</a></li>
+        <li><a href="/docs/periodic-framework-rust/#cycle-one-activations-inputs">Cycle: one activation's inputs</a></li>
+        <li><a href="/docs/periodic-framework-rust/#overrun-policies">Overrun policies</a></li>
+        <li><a href="/docs/periodic-framework-rust/#lanes-and-safety-classification">Lanes and safety classification</a></li>
+        <li><a href="/docs/periodic-framework-rust/#payload-requirements">Payload requirements</a></li>
+        <li><a href="/docs/periodic-framework-rust/#startup-failures">Startup failures</a></li>
+        <li><a href="/docs/periodic-framework-rust/#the-executor-directly">The executor, directly</a></li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <a class="nav-doc" href="/docs/getting-started/">Getting Started</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/getting-started/#table-of-contents">Table of Contents</a></li>
+        <li><a href="/docs/getting-started/#prerequisites">Prerequisites</a></li>
+        <li><a href="/docs/getting-started/#run-tailos">Run TailOS</a></li>
+        <li><a href="/docs/getting-started/#developer-setup">Developer setup</a></li>
+        <li><a href="/docs/getting-started/#developing-applications">Developing Applications</a></li>
+        <li><a href="/docs/getting-started/#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <a class="nav-doc" href="/docs/qemu/">Running TAIL OS in QEMU</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/qemu/#prerequisites">Prerequisites</a></li>
+        <li><a href="/docs/qemu/#run-tailos-one-command">Run TailOS (one command)</a></li>
+        <li><a href="/docs/qemu/#try-the-shell">Try the Shell</a></li>
+        <li><a href="/docs/qemu/#manual-launch-alternative">Manual Launch (alternative)</a></li>
+        <li><a href="/docs/qemu/#whats-inside-the-images">What's Inside the Images</a></li>
+        <li><a href="/docs/qemu/#boot-sequence">Boot Sequence</a></li>
+        <li><a href="/docs/qemu/#troubleshooting">Troubleshooting</a></li>
+        <li><a href="/docs/qemu/#see-also">See Also</a></li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <a class="nav-doc" href="/docs/raspberry-pi-3/">Installing on Raspberry Pi 3</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/raspberry-pi-3/#hardware-required">Hardware Required</a></li>
+        <li><a href="/docs/raspberry-pi-3/#quick-start">Quick Start</a></li>
+        <li><a href="/docs/raspberry-pi-3/#serial-console-wiring">Serial Console Wiring</a></li>
+        <li><a href="/docs/raspberry-pi-3/#sd-card-image-structure">SD Card Image Structure</a></li>
+        <li><a href="/docs/raspberry-pi-3/#boot-sequence">Boot Sequence</a></li>
+        <li><a href="/docs/raspberry-pi-3/#build-details">Build Details</a></li>
+        <li><a href="/docs/raspberry-pi-3/#configtxt-reference">config.txt Reference</a></li>
+        <li><a href="/docs/raspberry-pi-3/#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </li>
+    </ul>
+  </nav>
+</aside>
+<main class="content">
+<div class="doc-wrap">
+<article class="doc">
+<h1 id="the-periodic-framework">The Periodic Framework</h1>
+<p>A robotics application is a set of things that happen <em>on a cadence</em>: read a sensor every
+20 ms, run a controller every 5 ms, publish a state estimate every 100 ms. The periodic
+framework owns that cadence, so an application declares what it is and writes only the
+work.</p>
+<p>This is the periodic half of the TAIL OS application framework. The aperiodic half is the
+service framework: one dispatch per external event, rather than one per elapsed period.</p>
+<h2 id="a-complete-node">A complete node</h2>
+<p>This is an entire program. There is no <code>main</code> — the attribute generates it.</p>
+<pre><code class="language-rust">#![feature(tail_core)]
+
+use periodic::periodic;
+
+/// A sensor reading. `repr(C)` and `Copy` because it crosses shared memory.
+#[derive(Clone, Copy)]
+#[repr(C)]
+struct Range {
+    stamp: u64,
+    range_mm: u32,
+    quality: u32,
+}
+
+// SAFETY: `repr(C)`, all-integer, every bit pattern valid.
+unsafe impl std::tail_core::sync::shared_mutex::ShmSafe for Range {}
+
+#[periodic(every = &quot;20ms&quot;, publish = &quot;sensor/range&quot;, lane = safe, on_overrun = Skip)]
+fn lidar() -&gt; Range {
+    Range { stamp: 0x1234_5678, range_mm: 4200, quality: 97 }
+}
+</code></pre>
+<p>The framework opens the topic — retrying, so startup order is not the application's
+problem — releases the body at <code>start + n * period</code>, publishes the return value, and
+counts every release the body ran past.</p>
+<p>Add the crate as a direct dependency:</p>
+<pre><code class="language-toml">[dependencies]
+periodic = { path = &quot;&lt;relative path to&gt;/framework/periodic/lib&quot; }
+</code></pre>
+<p><code>periodic</code> is a standalone direct dependency, not re-exported through <code>tail_core</code>, so
+adding it forces no toolchain or <code>std</code> rebuild.</p>
+<h2 id="node-shapes">Node shapes</h2>
+<p>A node's shape follows from which topic keys it declares. The macro checks the parameter
+list against the declaration, so a mismatch names the missing half rather than surfacing
+as a trait-bound error against generated code.</p>
+<table>
+<thead>
+<tr>
+<th>Declares</th>
+<th>Body signature</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>publish</code></td>
+<td><code>fn f() -&gt; T</code></td>
+<td>Produces a sample every cycle</td>
+</tr>
+<tr>
+<td><code>subscribe</code></td>
+<td><code>fn f(input: Cycle&lt;T&gt;)</code></td>
+<td>Consumes a sample every cycle</td>
+</tr>
+<tr>
+<td>both</td>
+<td><code>fn f(input: Cycle&lt;In&gt;) -&gt; Out</code></td>
+<td>Transforms: reads, computes, publishes</td>
+</tr>
+<tr>
+<td>plus <code>init</code></td>
+<td>state comes <strong>first</strong>: <code>fn f(state: &amp;mut S, input: Cycle&lt;T&gt;)</code></td>
+<td>Keeps something between cycles</td>
+</tr>
+</tbody>
+</table>
+<p>A node that declares neither <code>publish</code> nor <code>subscribe</code> is refused: it is a timer, and the
+framework has nothing to offer it.</p>
+<h2 id="the-periodic-attribute">The periodic attribute</h2>
+<pre><code class="language-rust">#[periodic(every = &quot;20ms&quot;, subscribe = &quot;sensor/range&quot;, lane = safe,
+           stale_after = &quot;60ms&quot;, on_overrun = Skip)]
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Value</th>
+<th>Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>every</code></td>
+<td>duration — the release period</td>
+<td><strong>yes</strong></td>
+</tr>
+<tr>
+<td><code>lane</code></td>
+<td><code>kernel</code>, <code>safe</code>, or <code>fast</code></td>
+<td><strong>yes</strong></td>
+</tr>
+<tr>
+<td><code>on_overrun</code></td>
+<td><code>Skip</code>, <code>CatchUp</code>, or <code>Fault</code></td>
+<td><strong>yes</strong></td>
+</tr>
+<tr>
+<td><code>publish</code></td>
+<td>topic name to publish on</td>
+<td>one of <code>publish</code>/<code>subscribe</code></td>
+</tr>
+<tr>
+<td><code>subscribe</code></td>
+<td>topic name to read from</td>
+<td>one of <code>publish</code>/<code>subscribe</code></td>
+</tr>
+<tr>
+<td><code>stale_after</code></td>
+<td>duration after which a sample reads as absent</td>
+<td><strong>yes, if <code>subscribe</code></strong></td>
+</tr>
+<tr>
+<td><code>init</code></td>
+<td>expression building the node's state</td>
+<td>no</td>
+</tr>
+<tr>
+<td><code>safety</code></td>
+<td>bare flag: this topic carries safety-relevant data</td>
+<td>no</td>
+</tr>
+</tbody>
+</table>
+<p>Three rules are enforced at build time:</p>
+<ul>
+<li><strong><code>on_overrun</code> has no default.</strong> A cycle that misses its deadline is a safety-relevant
+event, and a policy acquired by silence is emergent behaviour. Omitting it does not
+compile.</li>
+<li><strong><code>subscribe</code> requires <code>stale_after</code>.</strong> Without it there is no answer to &quot;is this data
+still usable&quot;, and the node would act on whatever it was last given.</li>
+<li><strong>A <code>safety</code> topic cannot bind to a QM-only lane.</strong> This is a <code>const</code> assertion in the
+generated <code>main</code>, so it fails the build rather than a review.</li>
+</ul>
+<p>String-valued keys are expressions, not just literals, so a node can keep its period and
+topic names in named constants — which is what lets a test assert on them:</p>
+<pre><code class="language-rust">const PERIOD: &amp;str = &quot;20ms&quot;;
+const TOPIC: &amp;str = &quot;sensor/range&quot;;
+
+#[periodic(every = PERIOD, publish = TOPIC, lane = safe, on_overrun = Skip)]
+fn lidar() -&gt; Range { read_sensor() }
+</code></pre>
+<h2 id="durations">Durations</h2>
+<p>An integer followed by a unit. Parsed at startup; a typo is reported naming the literal
+rather than silently defaulting to something plausible.</p>
+<table>
+<thead>
+<tr>
+<th>Unit</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ns</code></td>
+<td>nanoseconds</td>
+</tr>
+<tr>
+<td><code>us</code></td>
+<td>microseconds</td>
+</tr>
+<tr>
+<td><code>ms</code></td>
+<td>milliseconds</td>
+</tr>
+<tr>
+<td><code>s</code></td>
+<td>seconds</td>
+</tr>
+</tbody>
+</table>
+<p><code>&quot;20ms&quot;</code>, <code>&quot;1s&quot;</code>, <code>&quot;500us&quot;</code>, <code>&quot;250ns&quot;</code>. There is no fractional form — write <code>&quot;1500us&quot;</code>,
+not <code>&quot;1.5ms&quot;</code>.</p>
+<h2 id="publishing-and-declining-to-publish">Publishing, and declining to publish</h2>
+<p>A publishing node's return type decides whether it may skip a cycle. No attribute key
+selects between them; the compiler picks from the return type.</p>
+<pre><code class="language-rust">// Always publishes.
+#[periodic(every = &quot;20ms&quot;, publish = &quot;sensor/range&quot;, lane = safe, on_overrun = Skip)]
+fn lidar() -&gt; Range {
+    read_sensor()
+}
+
+// Publishes only when it has something to say.
+#[periodic(every = &quot;20ms&quot;, publish = &quot;sensor/range&quot;, lane = safe, on_overrun = Skip)]
+fn lidar() -&gt; Option&lt;Range&gt; {
+    read_sensor_if_ready()
+}
+</code></pre>
+<p>Prefer <code>T</code> when the node always produces a sample. <code>Option&lt;T&gt;</code> costs a copy that <code>T</code> does
+not: a node that may decline has to decide before entering the fill path, which forces the
+value onto the stack first.</p>
+<p>Returning <code>None</code> is <strong>not</strong> an overrun and is not counted as one. &quot;I had nothing to say&quot;
+and &quot;I did not finish in time&quot; are different facts, reported through different fields.</p>
+<h2 id="state-that-outlives-a-cycle">State that outlives a cycle</h2>
+<p>A node that must keep something between cycles — a device handle, a filter, an
+accumulator — names how to build it with <code>init</code> and takes it as its <strong>first</strong> parameter,
+by <code>&amp;mut</code>.</p>
+<pre><code class="language-rust">use periodic::periodic;
+
+#[derive(Default)]
+struct Cycles(u64);
+
+#[periodic(every = &quot;20ms&quot;, publish = &quot;diag/counted&quot;, lane = safe, on_overrun = Skip,
+           init = Cycles::default())]
+fn counter(cycles: &amp;mut Cycles) -&gt; Count {
+    cycles.0 += 1;
+    Count { cycles: cycles.0 }
+}
+</code></pre>
+<p>The state is built once, before the first release, and the same one is handed back on
+every cycle. It is dropped when the node stops.</p>
+<p>An actuator holding a device handle is the ordinary shape, not an exception. Without
+<code>init</code> such a node would reach for a <code>static</code>, which is the boilerplate the framework
+exists to remove.</p>
+<p>With both <code>init</code> and <code>subscribe</code>, state comes first:</p>
+<pre><code class="language-rust">#[periodic(every = &quot;5ms&quot;, subscribe = &quot;input/pad&quot;, lane = kernel, stale_after = &quot;300ms&quot;,
+           on_overrun = Skip, init = Motor::attach())]
+fn drive(motor: &amp;mut Motor, pad: Cycle&lt;Command&gt;) {
+    motor.set(pad.get().map_or(Command::Stop, |command| *command));
+}
+</code></pre>
+<h2 id="cycle-one-activations-inputs">Cycle: one activation's inputs</h2>
+<p>Everything a node needs to know about <em>this</em> cycle arrives on one value. None of it is a
+counter the node must remember to poll.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Returns</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>get()</code></td>
+<td><code>Option&lt;&amp;T&gt;</code></td>
+<td>The sample, if present <strong>and</strong> fresher than <code>stale_after</code></td>
+</tr>
+<tr>
+<td><code>copied()</code></td>
+<td><code>Option&lt;T&gt;</code></td>
+<td>The same, copied out, for a node that would rather own it</td>
+</tr>
+<tr>
+<td><code>since_received()</code></td>
+<td><code>Option&lt;Duration&gt;</code></td>
+<td>How long since this node last received a sample</td>
+</tr>
+<tr>
+<td><code>was_stale()</code></td>
+<td><code>bool</code></td>
+<td>Data was held, but older than <code>stale_after</code></td>
+</tr>
+<tr>
+<td><code>missed()</code></td>
+<td><code>u32</code></td>
+<td>Publications lost since the previous cycle — <strong>not cumulative</strong></td>
+</tr>
+<tr>
+<td><code>rejected()</code></td>
+<td><code>u32</code></td>
+<td>Publications the transport refused — <strong>not cumulative</strong></td>
+</tr>
+<tr>
+<td><code>overruns()</code></td>
+<td><code>u32</code></td>
+<td>Releases missed since the previous cycle ran</td>
+</tr>
+<tr>
+<td><code>is_healthy()</code></td>
+<td><code>bool</code></td>
+<td>No loss, no rejection, no overrun</td>
+</tr>
+</tbody>
+</table>
+<h3 id="staleness-collapses-into-absence">Staleness collapses into absence</h3>
+<p><code>get()</code> returns <code>None</code> both when nothing has ever arrived and when what arrived is older
+than <code>stale_after</code>. That is deliberate: the fail-safe branch becomes the default branch,
+and a node takes it without having to know that staleness is a concept.</p>
+<pre><code class="language-rust">#[periodic(every = &quot;20ms&quot;, subscribe = &quot;sensor/range&quot;, lane = safe,
+           stale_after = &quot;60ms&quot;, on_overrun = Skip)]
+fn brake(lidar: Cycle&lt;Range&gt;) {
+    match lidar.get() {
+        Some(reading) =&gt; brake_for(reading.range_mm),
+        None          =&gt; brake_for(0),   // absent OR stale — one case
+    }
+}
+</code></pre>
+<p>A transport's own <code>read()</code> cannot draw this distinction: it returns <code>None</code> for an empty
+topic, which does not separate &quot;nothing published yet&quot; from &quot;the publisher died three
+seconds ago&quot;. <code>was_stale()</code> is there for the node that genuinely needs the difference —
+but nothing requires a node to ask, which is the property that matters.</p>
+<h3 id="what-since_received-does-and-does-not-measure">What <code>since_received</code> does and does not measure</h3>
+<p>It is the interval since a sample last arrived <strong>at this node</strong>, taken from the same
+monotonic counter the cadence runs on. It is <strong>not</strong> the sample's publication age: no
+transport timestamps a publication.</p>
+<p>It does not include the time a sample spent between publication and this node's next read.
+That is bounded by the node's own period, but it is not measured.</p>
+<h3 id="counters-are-per-cycle">Counters are per-cycle</h3>
+<p><code>missed()</code>, <code>rejected()</code> and <code>overruns()</code> report what happened since the previous cycle,
+not a running total. A node that wants per-cycle loss from a transport counter would have
+to store-previous-and-subtract itself — and one that forgets never sees loss at all,
+because the total climbs silently for the life of the process. The subtraction happens
+once, here.</p>
+<p>Overruns are delivered once and then cleared, following the same read-and-clear shape as
+POSIX <code>timer_getoverrun</code>.</p>
+<p><code>Cycle</code> borrows its sample rather than owning it, and is deliberately not <code>Send</code>:
+subscribing and reading a topic must happen on the same thread, so this is a compile error
+rather than a node that silently never receives anything.</p>
+<h2 id="overrun-policies">Overrun policies</h2>
+<p>What a node does when a cycle does not finish before its next release. The three differ in
+<strong>what they preserve</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Policy</th>
+<th>Preserves</th>
+<th>Use when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Skip</code></td>
+<td><strong>Phase</strong> — output stays on the <code>start + n * period</code> grid, with gaps rather than drift</td>
+<td>A control loop, where a command computed from stale inputs and delivered late is worse than no command</td>
+</tr>
+<tr>
+<td><code>CatchUp</code></td>
+<td><strong>Count</strong> — every release eventually runs, back to back until caught up</td>
+<td>An integrator or accumulator that must see every interval exactly once</td>
+</tr>
+<tr>
+<td><code>Fault</code></td>
+<td>Neither — the node stops and reports</td>
+<td>The deadline <em>is</em> the safety requirement, and continuing on any terms is the wrong answer</td>
+</tr>
+</tbody>
+</table>
+<p><code>Skip</code> is the right default for control. <code>CatchUp</code> does not preserve phase while catching
+up, but is bounded by construction: one overrun schedules at most the releases it actually
+passed, so a persistently slow node degrades to running continuously rather than
+accumulating unbounded backlog.</p>
+<p>Under <code>Fault</code> the node exits with <code>NodeError::DeadlineMissed</code> rather than returning
+success, so a supervisor can tell a missed deadline from a clean shutdown.</p>
+<h2 id="lanes-and-safety-classification">Lanes and safety classification</h2>
+<p>One trait spans all three transports, so the executor is written once and changing lane
+changes no application code beyond the declaration.</p>
+<table>
+<thead>
+<tr>
+<th><code>lane =</code></th>
+<th>Cost</th>
+<th>Safety class</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kernel</code></td>
+<td>One copy into a kernel pool cell, one kernel call per message</td>
+<td>Safety</td>
+</tr>
+<tr>
+<td><code>safe</code></td>
+<td>Four kernel calls per message, zero-copy, with prevention</td>
+<td>Safety</td>
+</tr>
+<tr>
+<td><code>fast</code></td>
+<td>Zero kernel calls, no lock, zero-copy</td>
+<td><strong>QM only</strong></td>
+</tr>
+</tbody>
+</table>
+<p><code>fast</code> is Quality Managed only by its own design: its writer holds a standing read-write
+mapping of every slot for the region's lifetime, so it <em>can</em> alter a frame a reader is
+parsing. That is detection, not prevention.</p>
+<p>So this does not compile:</p>
+<pre><code class="language-rust">#[periodic(every = &quot;20ms&quot;, publish = &quot;brake/command&quot;, lane = fast,
+           on_overrun = Skip, safety)]
+fn brake_command() -&gt; Command { ... }
+//  error: a safety-classified topic cannot be carried on a QM-only lane
+</code></pre>
+<p>A single API spanning a safety lane and a QM-only lane means the declaration carries the
+classification — and a framework that could not enforce that would have made the dangerous
+choice exactly as easy as the safe one.</p>
+<blockquote>
+<p><strong>Known gap.</strong> The lane a topic is carried on is not currently compared between
+publisher and subscriber. Two processes that disagree about the lane fail as a subscriber
+that silently never receives anything, rather than with a diagnostic.</p>
+</blockquote>
+<p>There is deliberately no maximum-payload constant on the lane trait. Every transport
+already refuses an over-large shape at open, before any syscall; predicting that refusal
+would only add a second place to be wrong.</p>
+<h2 id="payload-requirements">Payload requirements</h2>
+<p>A payload crosses shared memory, so every bit pattern must be valid and it must be <code>Copy</code>.</p>
+<pre><code class="language-rust">#[derive(Clone, Copy)]
+#[repr(C)]
+struct Range {
+    stamp: u64,
+    range_mm: u32,
+    quality: u32,
+}
+
+// SAFETY: `repr(C)`, all-integer, every bit pattern valid.
+unsafe impl std::tail_core::sync::shared_mutex::ShmSafe for Range {}
+</code></pre>
+<p>The publisher's and subscriber's types must match exactly; a mismatch is refused by the
+shape check at open.</p>
+<h2 id="startup-failures">Startup failures</h2>
+<p>A node that cannot reach its topic says which and why, then exits non-zero. It does not
+run forever reading <code>None</code>, which is the failure mode that looks like a working node with
+a quiet peer.</p>
+<table>
+<thead>
+<tr>
+<th><code>NodeError</code></th>
+<th>Cause</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BadDuration(text)</code></td>
+<td>A duration literal could not be parsed</td>
+</tr>
+<tr>
+<td><code>UnusablePeriod</code></td>
+<td>The period is zero, or rounds to zero ticks on this clock</td>
+</tr>
+<tr>
+<td><code>NeverAppeared(topic)</code></td>
+<td>A topic did not appear within the admission attempts</td>
+</tr>
+<tr>
+<td><code>Refused(topic, error)</code></td>
+<td>The transport refused the open for a reason retrying will not fix</td>
+</tr>
+<tr>
+<td><code>DeadlineMissed(node)</code></td>
+<td>A cycle overran under <code>on_overrun = Fault</code></td>
+</tr>
+</tbody>
+</table>
+<p>Admission retries because the kernel deliberately refuses a name nobody publishes yet — so
+a misspelled topic fails loudly at startup instead of becoming a topic that never delivers.
+The retry has to exist somewhere, and one bound with one diagnostic beats one per
+application.</p>
+<h2 id="the-executor-directly">The executor, directly</h2>
+<p>Most applications never touch this: the attribute drives it. It is public because the
+cadence is testable without a topic, and a node with an unusual shape may want it.</p>
+<pre><code class="language-rust">use periodic::{Executor, OverrunPolicy};
+use core::time::Duration;
+
+let mut executor = Executor::new(clock, Duration::from_millis(20), OverrunPolicy::Skip)?;
+executor.run(|overruns| {
+    // one cycle; `overruns` is per-cycle, already cleared
+});
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Executor::new(clock, period, policy)</code></td>
+<td>Start releasing every <code>period</code>, from now</td>
+</tr>
+<tr>
+<td><code>Executor::step(body)</code></td>
+<td>Run one cycle; returns <code>false</code> when the policy has stopped the node</td>
+</tr>
+<tr>
+<td><code>Executor::run(body)</code></td>
+<td>Run until the policy stops the node</td>
+</tr>
+<tr>
+<td><code>Executor::release()</code> / <code>period()</code></td>
+<td>The next release, and the period, in clock ticks</td>
+</tr>
+<tr>
+<td><code>Clock</code></td>
+<td><code>now()</code>, <code>ticks_per_second()</code>, <code>sleep_until(deadline)</code></td>
+</tr>
+<tr>
+<td><code>next_release(policy, release, period, now)</code></td>
+<td>Pure function: releases missed, and where the next one falls</td>
+</tr>
+<tr>
+<td><code>period_ticks(period, ticks_per_second)</code></td>
+<td>A declared period in ticks, or <code>None</code> if unrepresentable</td>
+</tr>
+</tbody>
+</table>
+<p>Releases are placed at <code>start + n * period</code> and slept <strong>to</strong>, never &quot;now + period&quot; slept
+<strong>for</strong>. The difference is not stylistic: <code>sleep</code> reads the clock inside the kernel, after
+the trap, so a relative loop adds every cycle's scheduling delay to the period and never
+recovers it.</p>
+<p><code>next_release</code> is a free function over ticks rather than a method on a clock, so every
+overrun case is exhaustively testable without a clock at all.</p>
+
+<footer class="doc-src">
+  <span>Generated from <span class="mono">framework/periodic/doc/periodic_framework_public.md</span> in the TAIL OS repository.</span>
+</footer>
+</article>
+<nav class="toc" aria-label="On this page">
+  <span class="toc-h">On this page</span>
+  <ul>
+    <li><a href="#a-complete-node">A complete node</a></li>
+    <li><a href="#node-shapes">Node shapes</a></li>
+    <li><a href="#the-periodic-attribute">The periodic attribute</a></li>
+    <li><a href="#durations">Durations</a></li>
+    <li><a href="#publishing-and-declining-to-publish">Publishing, and declining to publish</a></li>
+    <li><a href="#state-that-outlives-a-cycle">State that outlives a cycle</a></li>
+    <li><a href="#cycle-one-activations-inputs">Cycle: one activation's inputs</a></li>
+    <li><a href="#overrun-policies">Overrun policies</a></li>
+    <li><a href="#lanes-and-safety-classification">Lanes and safety classification</a></li>
+    <li><a href="#payload-requirements">Payload requirements</a></li>
+    <li><a href="#startup-failures">Startup failures</a></li>
+    <li><a href="#the-executor-directly">The executor, directly</a></li>
+  </ul>
+</nav>
+</div>
+</main>
+</div>
+<footer class="ftr">
+  <span>TAIL OS &mdash; real-time microkernel in Rust</span>
+  <span class="ftr-sep">/</span>
+  <span class="mono">v0.9.0</span>
+</footer>
+
+</body>
+</html>
