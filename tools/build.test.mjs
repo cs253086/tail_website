@@ -78,6 +78,19 @@ describe('published output', () => {
   it('gives every chunk a unique id, so no citation resolves to another section', () => {
     expect(new Set(corpus.chunks.map((chunk) => chunk.id)).size).toBe(corpus.chunks.length);
   });
+
+  it('resolves every in-page link to a heading that exists', () => {
+    // A document carries its own cross-references. One pointing at a heading the
+    // renderer never allocated is a dead link on a published page, and nothing
+    // else in the build would notice.
+    for (const doc of allowlist.documents) {
+      const html = readFileSync(join(ROOT, `public/docs/${doc.slug}/index.html`), 'utf8');
+      const ids = new Set([...html.matchAll(/<h[1-6][^>]*id="([^"]+)"/g)].map((m) => m[1]));
+      const targets = [...html.matchAll(/href="#([^"]+)"/g)].map((m) => m[1]);
+      expect({ slug: doc.slug, broken: targets.filter((id) => !ids.has(id)) })
+        .toEqual({ slug: doc.slug, broken: [] });
+    }
+  });
 });
 
 // Running the generator needs the tailos checkout, so this half may skip. It
