@@ -12,11 +12,11 @@
 <meta property="og:url" content="https://tail-os.com/docs/periodic-framework-rust/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/fd257d103f5c/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/d496c9731b13/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/fd257d103f5c/css/style.css">
+<link rel="stylesheet" href="/assets/d496c9731b13/css/style.css">
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -95,9 +95,21 @@
 <h1 id="periodic-framework-rust-api">Periodic Framework — Rust API</h1>
 <p>Declare a period; the framework owns the timing loop, topic admission, freshness and the
 publish. A node is a function with an attribute — there is no <code>main</code> to write.</p>
+<p>A <strong>periodic node</strong> is what you would otherwise create by hand as a thread running a timer
+loop — spawn a task, read the clock, do the work, sleep for the remainder, repeat. The
+framework replaces that loop, so you never write the thread, the sleep, or the drift
+correction the hand-written version needs.</p>
 <p>For why the framework works this way, see the design document. This page is the API.</p>
 <h2 id="quick-start">Quick start</h2>
-<p>An entire program:</p>
+<p>Two programs: one that produces a reading on a topic, one that consumes it. Neither writes
+a <code>main</code>, a thread, or a sleep.</p>
+<p>Add the crate as a direct dependency. It is standalone — not re-exported through
+<code>tail_core</code> — so adding it forces no toolchain or <code>std</code> rebuild.</p>
+<pre><code class="language-toml">[dependencies]
+periodic = { path = &quot;&lt;relative path to&gt;/framework/periodic/lib&quot; }
+</code></pre>
+<h3 id="a-publisher">A publisher</h3>
+<p>Reads a sensor every 20 ms and publishes the reading. This is the whole program:</p>
 <pre><code class="language-rust">#![feature(tail_core)]
 
 use periodic::periodic;
@@ -114,9 +126,33 @@ fn lidar() -&gt; Range {
     Range { stamp: 0x1234_5678, range_mm: 4200, quality: 97 }
 }
 </code></pre>
-<pre><code class="language-toml">[dependencies]
-periodic = { path = &quot;&lt;relative path to&gt;/framework/periodic/lib&quot; }
+<h3 id="a-subscriber">A subscriber</h3>
+<p>Reads that topic every 20 ms and brakes on it. <code>stale_after</code> says how old a reading may be
+before it counts as absent, so the fail-safe branch is the one that runs when the sensor
+goes quiet:</p>
+<pre><code class="language-rust">#![feature(tail_core)]
+
+use periodic::{periodic, Cycle};
+
+// Must match the publisher's payload exactly.
+#[derive(Clone, Copy)]
+#[repr(C)]
+struct Range { stamp: u64, range_mm: u32, quality: u32 }
+
+// SAFETY: `repr(C)`, all-integer, every bit pattern valid.
+unsafe impl std::tail_core::sync::shared_mutex::ShmSafe for Range {}
+
+#[periodic(every = &quot;20ms&quot;, subscribe = &quot;sensor/range&quot;, lane = safe,
+           stale_after = &quot;60ms&quot;, on_overrun = Skip)]
+fn brake(lidar: Cycle&lt;Range&gt;) {
+    match lidar.get() {
+        Some(reading) =&gt; brake_for(reading.range_mm),
+        None          =&gt; brake_for(0),   // absent or stale
+    }
+}
 </code></pre>
+<p>Neither program names the other. The framework opens each topic and retries, so the two
+can start in any order.</p>
 <h2 id="periodic-keys"><code>#[periodic]</code> keys</h2>
 <h3 id="every-required"><code>every</code> — required</h3>
 <p>The release period. Releases fall on <code>start + n * period</code>, never drifting.</p>
