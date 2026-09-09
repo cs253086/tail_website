@@ -12,11 +12,11 @@
 <meta property="og:url" content="https://tail-os.com/docs/periodic-framework-rust/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/b528b1db0699/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/c05b40c17ead/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/b528b1db0699/css/style.css">
+<link rel="stylesheet" href="/assets/c05b40c17ead/css/style.css">
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -159,9 +159,46 @@ can start in any order.</p>
 <pre><code class="language-rust">#[periodic(every = &quot;20ms&quot;, ...)]
 </code></pre>
 <h3 id="lane-required"><code>lane</code> — required</h3>
-<p>Which transport carries the topic: <code>kernel</code>, <code>safe</code>, or <code>fast</code>.</p>
+<p>Which transport carries the topic. All three move the same payload and converge on one
+API, so changing lane is a change to this line and nothing else.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kernel</code></td>
+<td><strong>one copy</strong></td>
+<td>Copied through a pool shared by all topics. One kernel call each way, no dedicated memory per topic. <strong>Any number of writers.</strong></td>
+</tr>
+<tr>
+<td><code>safe</code></td>
+<td><strong>safe zero-copy</strong></td>
+<td>No copy, and the writer cannot alter a frame a reader is inside. Cost scales with pages, not payload size. <strong>Exactly one writer</strong>, named when the topic is created.</td>
+</tr>
+<tr>
+<td><code>fast</code></td>
+<td><strong>fast zero-copy</strong></td>
+<td>No copy and no kernel call at all. Cost scales with nothing. <strong>Exactly one writer.</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Choose the one with the least machinery that meets the requirement:</p>
+<pre><code>more than one node publishes the topic?            -&gt;  kernel   (the only lane that allows it)
+payload under ~2 KB                                -&gt;  kernel
+large payload, a reader has a safety requirement   -&gt;  safe
+large payload, nothing downstream is safety-rated  -&gt;  fast
+</code></pre>
+<p>Zero-copy is not &quot;the fast one, always&quot;. Below that crossover <code>safe</code> is <em>slower</em> than the
+copy — two kernel calls and a mapping teardown against one call and a small <code>memcpy</code> — and
+it buys a safety argument that did not need to be made.</p>
 <pre><code class="language-rust">#[periodic(lane = safe, ...)]
 </code></pre>
+<p>Full detail under <a href="#lanes">Lanes</a>.</p>
 <h3 id="on_overrun-required"><code>on_overrun</code> — required</h3>
 <p>What to do when a cycle runs past its next release: <code>Skip</code>, <code>CatchUp</code>, or <code>Fault</code>.
 No default — omitting it does not compile.</p>
@@ -312,21 +349,38 @@ deadline from a clean shutdown.</p>
 <pre><code class="language-rust">#[periodic(on_overrun = Fault, ...)]
 </code></pre>
 <h2 id="lanes">Lanes</h2>
-<h3 id="kernel"><code>kernel</code></h3>
-<p>One copy into a kernel pool cell, one kernel call per message. May carry safety data.</p>
-<pre><code class="language-rust">#[periodic(lane = kernel, ...)]
-</code></pre>
-<h3 id="safe"><code>safe</code></h3>
-<p>Zero-copy with prevention; four kernel calls per message. May carry safety data.</p>
-<pre><code class="language-rust">#[periodic(lane = safe, ...)]
-</code></pre>
-<h3 id="fast"><code>fast</code></h3>
-<p>Zero-copy, zero kernel calls, no lock. <strong>Quality Managed only</strong> — its writer can alter a
-frame a reader is parsing, which is detection, not prevention.</p>
-<pre><code class="language-rust">#[periodic(lane = fast, ...)]   // must not be combined with `safety`
-</code></pre>
-<p>Combining <code>safety</code> with <code>lane = fast</code> fails the build:</p>
-<pre><code>error: a safety-classified topic cannot be carried on a QM-only lane
+<p>Cost and writer count are in <a href="#lane-required"><code>lane</code></a>. What decides a lane beyond those is
+the safety classification, which the compiler enforces.</p>
+<table>
+<thead>
+<tr>
+<th>Lane</th>
+<th>May carry data a safety requirement depends on</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kernel</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>safe</code></td>
+<td>Yes</td>
+</tr>
+<tr>
+<td><code>fast</code></td>
+<td><strong>No — Quality Managed only</strong></td>
+</tr>
+</tbody>
+</table>
+<p><code>fast</code> is Quality Managed by its own design: its writer holds a standing read-write mapping
+of every slot for the region's lifetime, so it <em>can</em> alter a frame a reader is parsing.
+That is detection, not prevention.</p>
+<p>Declaring <code>safety</code> on a <code>fast</code> topic therefore fails the build rather than a review:</p>
+<pre><code class="language-rust">#[periodic(every = &quot;10ms&quot;, publish = &quot;brake/command&quot;, lane = fast,
+           on_overrun = Fault, safety)]
+fn brake_command() -&gt; Command { ... }
+//  error: a safety-classified topic cannot be carried on a QM-only lane
 </code></pre>
 <blockquote>
 <p><strong>Known gap.</strong> The lane is not compared between publisher and subscriber. Two processes
