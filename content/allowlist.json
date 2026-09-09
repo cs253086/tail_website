@@ -46,33 +46,19 @@
       "path": "doc/get_started.md",
       "slug": "getting-started",
       "title": "Getting Started",
-      "summary": "Run TAIL OS, set up a development environment, and build your own applications.",
-      "questions": [
-        "What do I need to build TAIL OS from source?",
-        "How do I set up a development environment?",
-        "How do I write my first TAIL OS application?"
-      ]
+      "summary": "Run TAIL OS, set up a development environment, and build your own applications."
     },
     {
       "path": "doc/install_qemu.md",
       "slug": "qemu",
       "title": "Running TAIL OS in QEMU",
-      "summary": "Boot the prebuilt image under QEMU on Ubuntu with a single command.",
-      "questions": [
-        "How do I run TAIL OS on QEMU?",
-        "How do I try the TAIL OS shell?"
-      ]
+      "summary": "Boot the prebuilt image under QEMU on Ubuntu with a single command."
     },
     {
       "path": "doc/install_rpi3.md",
       "slug": "raspberry-pi-3",
       "title": "Installing on Raspberry Pi 3",
-      "summary": "Flash the SD card image, wire the serial console, and boot on real hardware.",
-      "questions": [
-        "How do I flash TAIL OS to a Raspberry Pi 3B?",
-        "How do I wire up the serial console?",
-        "What hardware do I need for a Raspberry Pi 3B?"
-      ]
+      "summary": "Flash the SD card image, wire the serial console, and boot on real hardware."
     }
   ]
 }

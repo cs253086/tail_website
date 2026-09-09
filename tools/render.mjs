@@ -89,9 +89,11 @@ function footer({ site }) {
 export function renderHome({ site, docs, questions, home = {} }) {
   // Links, not submit buttons: a button named `q` inside a form whose input is
   // also named `q` submits both, and URLSearchParams.get() takes the first.
-  const chips = questions
-    .map((q) => `<a class="chip" href="/ask/?q=${encodeURIComponent(q)}">${esc(q)}</a>`)
-    .join('\n        ');
+  const chips = questions.length
+    ? `      <div class="chips">
+        ${questions.map((q) => `<a class="chip" href="/ask/?q=${encodeURIComponent(q)}">${esc(q)}</a>`).join('\n        ')}
+      </div>`
+    : '';
 
   // Every front-page claim is uncited by nature, so it comes from config the
   // maintainer owns rather than from a literal in this file.
@@ -143,9 +145,7 @@ ${header({ site, compact: false })}
       <button class="ask-go" type="submit" aria-label="Ask">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
       </button>
-      <div class="chips">
-        ${chips}
-      </div>
+${chips}
     </form>
   </section>
 
@@ -176,9 +176,11 @@ ${scripts}
 }
 
 export function renderAsk({ site, docs, questions }) {
-  const chips = questions
-    .map((q) => `<a class="chip" href="/ask/?q=${encodeURIComponent(q)}">${esc(q)}</a>`)
-    .join('\n      ');
+  const chips = questions.length
+    ? `    <div class="chips">
+      ${questions.map((q) => `<a class="chip" href="/ask/?q=${encodeURIComponent(q)}">${esc(q)}</a>`).join('\n      ')}
+    </div>`
+    : '';
 
   return shell({
     site,
@@ -195,9 +197,7 @@ export function renderAsk({ site, docs, questions }) {
   <div class="ask-empty">
     <h1>What do you want to know?</h1>
     <p class="lede">Ask in your own words. Every answer cites the documentation it came from.</p>
-    <div class="chips">
-      ${chips}
-    </div>
+${chips}
   </div>
 </div>`,
     scripts: `<script type="module" src="${esc(site.assets)}/js/ask.js"></script>`,
