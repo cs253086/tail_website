@@ -122,4 +122,35 @@ describe.skipIf(!existsSync(sourceRoot))('generator', () => {
       expect(readFileSync(file, 'utf8')).not.toContain('githubusercontent');
     }
   });
+
+  it('names sections with text the document actually contains', () => {
+    // A navigation entry that names something the document does not say is a
+    // reader following a link to text that is not there. The extraction itself
+    // is pinned in sections.test.mjs; this is the end-to-end shape of it, and
+    // it names no document's content so it holds for whatever is allowlisted
+    // next.
+    //
+    // One page carries the section list of every document, so the slug in each
+    // link is what says which source to check a title against.
+    const html = readFileSync(join(out, 'docs/index.html'), 'utf8');
+    const links = [...html.matchAll(/href="\/docs\/([^/"]+)\/#[^"]*">([^<]+)</g)];
+    expect(links.length).toBeGreaterThan(0);
+
+    const bySlug = new Map();
+    for (const [, slug, title] of links) {
+      const text = title
+        .replaceAll('&lt;', '<').replaceAll('&gt;', '>')
+        .replaceAll('&amp;', '&').replaceAll('&#39;', "'").replaceAll('&quot;', '"');
+      bySlug.set(slug, [...(bySlug.get(slug) ?? []), text]);
+    }
+
+    for (const doc of allowlist.documents) {
+      // Backticks are legitimately gone from a title: the delimiters of a code
+      // span are not part of its text. Everything else must have survived.
+      const source = readFileSync(join(sourceRoot, doc.path), 'utf8').replaceAll('`', '');
+      const titles = bySlug.get(doc.slug) ?? [];
+      expect({ slug: doc.slug, absent: titles.filter((title) => !source.includes(title)) })
+        .toEqual({ slug: doc.slug, absent: [] });
+    }
+  });
 });
