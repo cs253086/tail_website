@@ -26,6 +26,10 @@ export function parseAnswer(text) {
   return blocks;
 }
 
+// One or more passage numbers in a single bracket: `[1]`, `[1, 2]`, `[1,2,6]`.
+const MARKER = /(\[\d{1,2}(?:\s*,\s*\d{1,2})*\])/g;
+const ANCHORED_MARKER = /^\[(\d{1,2}(?:\s*,\s*\d{1,2})*)\]$/;
+
 function parsePieces(paragraph) {
   const pieces = [];
   for (const part of paragraph.split(/(`[^`\n]+`)/g)) {
@@ -34,11 +38,19 @@ function parsePieces(paragraph) {
       pieces.push({ type: 'code', text: part.slice(1, -1) });
       continue;
     }
-    for (const piece of part.split(/(\[\d{1,2}\])/g)) {
+    for (const piece of part.split(MARKER)) {
       if (!piece) continue;
-      const marker = /^\[(\d{1,2})\]$/.exec(piece);
-      if (marker) pieces.push({ type: 'cite', n: Number(marker[1]) });
-      else pieces.push({ type: 'text', text: piece });
+      const marker = ANCHORED_MARKER.exec(piece);
+      // A claim resting on two passages is cited as one bracket holding both,
+      // and that is the form a model reaches for whenever a sentence draws on
+      // more than one. Matching only `[1]` counted such an answer as uncited,
+      // so the citation gate discarded work that was correctly sourced, and
+      // any that survived on other markers rendered `[1, 2]` as plain text.
+      if (marker) {
+        for (const n of marker[1].split(',')) pieces.push({ type: 'cite', n: Number(n.trim()) });
+      } else {
+        pieces.push({ type: 'text', text: piece });
+      }
     }
   }
   return pieces;
