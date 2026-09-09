@@ -125,14 +125,14 @@ ${(home.highlights ?? []).map((item) => `    <div class="stat"><span class="stat
   return `${head({
     site,
     title: 'TAIL OS — real-time microkernel RTOS in Rust',
-    description: 'TAIL OS is a real-time microkernel written in Rust for robotics and safety-critical systems. Ask the documentation anything.',
+    description: 'TAIL OS is a real-time microkernel written in Rust for robotics and safety-critical systems. Ask anything about TAIL OS.',
     canonical: `${site.origin}/`,
   })}
 <body class="page-home">
 ${header({ site, compact: false })}
 <main>
   <section class="hero">
-    <h1>Ask the documentation anything.</h1>
+    <h1>Ask anything about TAIL OS</h1>
     <p class="lede">TAIL OS is a real-time microkernel written in Rust for robotics and safety-critical systems.</p>
 
     <form class="ask" action="/ask/" method="get" role="search">
