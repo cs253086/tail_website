@@ -213,6 +213,18 @@ describe('POST /api/ask', () => {
     ]);
   });
 
+  it('accepts an answer whose only citations are grouped', async () => {
+    // A sentence resting on two passages is cited as one bracket holding both.
+    // While only `[1]` was matched, such an answer counted as uncited and was
+    // discarded even though every claim in it was sourced.
+    modelMock.answer.mockResolvedValue({ text: 'Install QEMU, then boot the image [1, 2].' });
+    // A question that retrieves both fixture chunks, so [2] is in range.
+    const payload = await (await ask('install the image')).json();
+
+    expect(payload.status).toBe('answered');
+    expect(payload.citations.map((citation) => citation.n)).toEqual([1, 2]);
+  });
+
   it('discards an uncited answer instead of showing it', async () => {
     modelMock.answer.mockResolvedValue({ text: 'Just run make qemu, it always works.' });
     const payload = await (await ask('how do I run tail os on qemu')).json();

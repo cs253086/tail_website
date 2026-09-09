@@ -21,6 +21,28 @@ describe('parseAnswer', () => {
     expect(block.pieces.filter((p) => p.type === 'cite').map((p) => p.n)).toEqual([1, 12]);
   });
 
+  it('reads a grouped marker as one citation per passage', () => {
+    // A claim resting on two passages is cited as one bracket holding both.
+    // Counting that as zero discarded correctly sourced answers.
+    const cites = (text) => parseAnswer(text)[0].pieces
+      .filter((piece) => piece.type === 'cite').map((piece) => piece.n);
+    expect(cites('Both lanes carry safety data [1, 2].')).toEqual([1, 2]);
+    expect(cites('Three of them [1,2,6].')).toEqual([1, 2, 6]);
+    expect(cites('Mixed [3] and grouped [4, 5].')).toEqual([3, 4, 5]);
+  });
+
+  it('keeps the prose around a grouped marker intact', () => {
+    const [block] = parseAnswer('Install QEMU [1, 2] before booting.');
+    expect(flat(block)).toBe('Install QEMU [1][2] before booting.');
+  });
+
+  it('leaves a bracket that is not a citation as text', () => {
+    const cites = (text) => parseAnswer(text)[0].pieces
+      .filter((piece) => piece.type === 'cite').map((piece) => piece.n);
+    expect(cites('An array [1 2] is not a citation.')).toEqual([]);
+    expect(cites('Nor is [] or [a, b].')).toEqual([]);
+  });
+
   it('does not mistake a bracket inside inline code for a citation', () => {
     const [block] = parseAnswer('Use `array[1]` carefully [2].');
     expect(block.pieces.find((p) => p.type === 'code').text).toBe('array[1]');
