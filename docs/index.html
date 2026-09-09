@@ -3,13 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="TAIL OS documentation — installation, quick start, API reference." />
+  <meta name="description" content="TAIL OS documentation — microkernel architecture, IPC (Service & Topic), scheduler, and the application API with worked examples." />
   <title>Docs — TAIL OS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../assets/css/style.css" />
   <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg" />
+  <style>
+    /* Diagram cards — background matches the page; light border to delineate */
+    .diagram { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 18px 0; }
+    .diagram__head { padding: 8px 14px; border-bottom: 1px solid var(--border); background: var(--bg-soft); font-family: "JetBrains Mono", monospace; font-size: 0.8rem; color: var(--text-mute); letter-spacing: 0.02em; }
+    .diagram .mermaid { margin: 0; padding: 22px 18px; text-align: center; overflow-x: auto; }
+    .diagram .mermaid svg { max-width: 100%; height: auto; }
+    /* Pre-render fallback: show the source as muted monospace instead of a flash of raw text */
+    .diagram .mermaid:not([data-processed="true"]) { color: var(--text-mute); font-family: "JetBrains Mono", monospace; font-size: 0.82rem; line-height: 1.5; white-space: pre; text-align: left; }
+  </style>
 </head>
 <body>
   <div class="bg-grid" aria-hidden="true"></div>
@@ -43,7 +52,20 @@
         <h5>Architecture</h5>
         <a href="#microkernel">Microkernel</a>
         <a href="#scheduler">Scheduler</a>
-        <a href="#ipc">IPC</a>
+        <a href="#ipc">IPC: Service &amp; Topic</a>
+
+        <h5>API reference</h5>
+        <a href="#api-app">Writing an app</a>
+        <a href="#api-threads">Threads &amp; scheduling</a>
+        <a href="#api-process">Processes</a>
+        <a href="#api-service">Service IPC</a>
+        <a href="#api-topic">Topic IPC</a>
+
+        <h5>Examples</h5>
+        <a href="#ex-hello">Minimal app</a>
+        <a href="#ex-pubsub">Pub/sub over a topic</a>
+        <a href="#ex-service">Service request/reply</a>
+        <a href="#ex-spawn">Spawn a process</a>
 
         <h5>Reference</h5>
         <a href="#cli">CLI reference</a>
@@ -63,11 +85,18 @@
         <p>v0.9.0 ships with:</p>
         <ul>
           <li><strong>Microkernel</strong> — only process, memory, scheduling, and IPC run privileged. Drivers and everything else are userspace.</li>
-          <li><strong>Real-time scheduler</strong> — 64 priority levels, preemptive, O(1) dispatch, FIFO or Round-Robin policy.</li>
+          <li><strong>Real-time scheduler</strong> — 256 priority levels, preemptive, O(1) dispatch, FIFO or Round-Robin policy.</li>
           <li><strong>Two IPC patterns</strong> — synchronous request/reply (Service) and asynchronous publish/subscribe (Topic), both kernel-mediated with read-only delivery.</li>
           <li><strong>Userspace drivers</strong> — UART and SD card (SDHC) on Raspberry Pi 3B.</li>
           <li><strong>Developer shell</strong> (<code>tsh&gt;</code>) — inspect tasks, processes, memory, and drivers.</li>
         </ul>
+        <p>
+          Applications are ordinary Rust programs built against the TAIL <code>std</code>. They reach the
+          kernel through a small set of wrappers — <code>std::thread</code>, <code>std::process</code>, and the
+          TAIL-specific <code>std::tail_core::*</code> modules for IPC. The
+          <a href="#api-app">API reference</a> and <a href="#ex-hello">examples</a> below cover the surface an
+          application developer actually calls.
+        </p>
 
         <h2 id="microkernel">Microkernel</h2>
         <p>
@@ -75,20 +104,39 @@
           out to userspace. Four subsystems sit above a hardware abstraction layer; user applications
           reach them through a single kernel call interface.
         </p>
-        <div class="code">
-          <div class="code__head"><span>kernel layout</span><button class="copy" data-copy>Copy</button></div>
-<pre><code>┌─────────────────────────────────────────┐
-│           User Applications             │
-├─────────────────────────────────────────┤
-│         Kernel Call Interface           │
-├─────────────────────────────────────────┤
-│  Process │ Memory │ Scheduling │  IPC   │
-│  Manager │ Manager│            │        │
-├─────────────────────────────────────────┤
-│      Exception Handling │ Clock         │
-├─────────────────────────────────────────┤
-│      Hardware Abstraction Layer         │
-└─────────────────────────────────────────┘</code></pre>
+        <div class="diagram">
+          <div class="diagram__head">figure · system architecture</div>
+          <div class="mermaid">
+flowchart TB
+    subgraph USER["User space — unprivileged"]
+        direction LR
+        APP["User applications"]
+        SRV["System servers&lt;br/&gt;file system · process manager"]
+        DRV["Userspace drivers&lt;br/&gt;UART · SD card"]
+    end
+    KCI(["Kernel Call Interface — syscalls"])
+    subgraph KERNEL["Microkernel — privileged"]
+        direction LR
+        PM["Process Manager"]
+        MM["Memory Manager"]
+        SCHED["Scheduler"]
+        IPC["IPC&lt;br/&gt;Service · Topic"]
+    end
+    BASE["Exception handling · System clock"]
+    HAL["Hardware Abstraction Layer"]
+    HW[("AArch64 hardware&lt;br/&gt;RPi 3B · QEMU")]
+
+    APP --> KCI
+    SRV --> KCI
+    DRV --> KCI
+    KCI --> KERNEL
+    KERNEL --> BASE
+    BASE --> HAL
+    HAL --> HW
+
+    classDef kern fill:#e0f2fe,stroke:#06b6d4,color:#0f172a;
+    class PM,MM,SCHED,IPC kern;
+          </div>
         </div>
 
         <h3>Core services</h3>
@@ -115,7 +163,7 @@
         </p>
 
         <h3>Targets</h3>
-        <p>AArch64 and x86_64. Written in Rust, so memory-safety errors that plague C kernels are eliminated at compile time.</p>
+        <p>AArch64 (ARMv8-A) — Raspberry Pi 3B and QEMU <code>virt</code>/<code>raspi3b</code> today. Written in Rust, so memory-safety errors that plague C kernels are eliminated at compile time.</p>
 
         <h2 id="scheduler">Scheduler</h2>
         <p>
@@ -126,29 +174,57 @@
 
         <h3>Policy</h3>
         <ul>
-          <li><strong>64 priority levels</strong> (0 = idle, 63 = highest).</li>
+          <li><strong>256 priority levels</strong> (0 = lowest / idle, 255 = highest). New threads start at the default priority, <strong>31</strong>.</li>
           <li><strong>Highest-priority-first</strong> with <strong>FIFO ordering</strong> within a priority — threads run in the order they became ready.</li>
           <li><strong>FIFO or Round-Robin</strong> — system-wide policy. The default is Round-Robin with a 10&nbsp;ms quantum; switching to FIFO removes time slicing entirely.</li>
-          <li><strong>O(1) dispatch</strong> — the next thread is found with a single hardware count-leading-zeros instruction over a 64-bit ready bitmap, so dispatch latency is constant.</li>
+          <li><strong>O(1) dispatch</strong> — the next thread is found with a single hardware count-leading-zeros instruction over a priority bitmap, so dispatch latency is constant.</li>
         </ul>
+        <div class="diagram">
+          <div class="diagram__head">figure · dispatch (execution flow)</div>
+          <div class="mermaid">
+flowchart TB
+    TICK["Scheduling point&lt;br/&gt;tick · block · wake · yield"] --> SCAN["Find highest ready priority&lt;br/&gt;priority bitmap + CLZ — O(1)"]
+    SCAN --> Q{"Ready thread&lt;br/&gt;at that level?"}
+    Q -- yes --> PICK["Run FIFO head of that level"]
+    Q -- no --> IDLE["Run idle thread"]
+    PICK --> RR{"Round-Robin and&lt;br/&gt;quantum expired?"}
+    RR -- yes --> ROT["Requeue at tail · pick next"]
+    RR -- no --> RUN["Run until it blocks or is preempted"]
+          </div>
+        </div>
 
         <h3>Thread states</h3>
         <p>
-          A thread is always in exactly one of four states: <strong>Ready</strong> (waiting for the CPU),
-          <strong>Running</strong> (executing now), <strong>Blocked</strong> (waiting on IPC, I/O, a mutex, sleep, or a timeout),
+          A thread is always in exactly one of five states: <strong>Init</strong> (created, not yet runnable),
+          <strong>Ready</strong> (waiting for the CPU), <strong>Running</strong> (executing now),
+          <strong>Blocked</strong> (waiting on IPC, I/O, a mutex, sleep, or a timeout),
           or <strong>Terminated</strong>.
         </p>
+        <div class="diagram">
+          <div class="diagram__head">figure · thread state machine</div>
+          <div class="mermaid">
+stateDiagram-v2
+    [*] --> Init: create
+    Init --> Ready: admit
+    Ready --> Running: dispatch (highest priority)
+    Running --> Ready: preempt · quantum · yield
+    Running --> Blocked: IPC wait · mutex · sleep · I/O
+    Blocked --> Ready: event · timeout · reply
+    Running --> Terminated: exit
+    Terminated --> [*]
+          </div>
+        </div>
 
         <h3>Real-time properties</h3>
         <ul>
           <li><strong>Bounded ready-to-running latency</strong> — constant-time dispatch and a fully preemptible kernel keep the worst case computable.</li>
-          <li><strong>Priority inheritance</strong> — when a high-priority thread waits on a mutex held by a low-priority one, the holder temporarily inherits the higher priority. Same boost is applied automatically across synchronous IPC calls. This prevents classical priority inversion.</li>
+          <li><strong>Priority inheritance</strong> — when a high-priority thread waits on a mutex held by a low-priority one, the holder temporarily inherits the higher priority. The same boost is applied automatically across synchronous IPC calls. This prevents classical priority inversion.</li>
           <li><strong>Preemptible kernel</strong> — syscalls themselves can be preempted, so a long kernel operation doesn't hold off a higher-priority thread. Interrupts stay enabled across syscall execution.</li>
           <li><strong>SMP</strong> — a single global ready queue is shared across CPUs; threads honour a per-thread CPU affinity mask. Only CPU&nbsp;0 takes the periodic timer tick; secondaries are nudged by reschedule IPIs.</li>
           <li><strong>Sleep &amp; timeout queues</strong> — time-based blocking is sorted by wake deadline; expired entries are woken on every tick.</li>
         </ul>
 
-        <h2 id="ipc">IPC</h2>
+        <h2 id="ipc">IPC: Service &amp; Topic</h2>
         <p>
           TAIL OS provides two complementary IPC mechanisms: <strong>Service IPC</strong> for synchronous
           request/reply and <strong>Topic IPC</strong> for asynchronous publish/subscribe. Both share one
@@ -172,27 +248,63 @@
           A <strong>service</strong> is a named endpoint owned by a server thread. A client sends a request
           and blocks until the reply arrives; the kernel routes the call to the registered server, copies
           the request into a pool cell, and hands the server a read-only view. Use it for device drivers,
-          system services, and anything RPC-shaped.
+          system services, and anything RPC-shaped. See the <a href="#api-service">Service IPC API</a>.
         </p>
         <ul>
           <li><strong>Bounded queues.</strong> Each service has a 16-slot request queue; each process can have at most 8 requests in flight at once.</li>
           <li><strong>Priority inheritance.</strong> While the server handles a request, it runs at the client's priority — a low-priority server cannot hold off a high-priority client.</li>
           <li><strong>Per-request timeouts.</strong> Clients can attach a deadline to any send and get a clean <code>TimedOut</code> error instead of waiting forever.</li>
+          <li><strong>Register fastpath.</strong> Requests of 32&nbsp;bytes or fewer skip the pool and travel in registers; resolve the name once with <code>lookup_service</code>, then fast-send on the returned handle.</li>
           <li><strong>Clean teardown.</strong> If the server thread or process dies, the kernel drains its queue, releases the buffers, and unblocks every waiting client.</li>
         </ul>
+        <div class="diagram">
+          <div class="diagram__head">figure · service call (synchronous request / reply)</div>
+          <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant C as Client thread
+    participant K as Kernel · IPC
+    participant S as Server thread
+    Note over S: create_server, then&lt;br/&gt;receive_service_request (blocks)
+    C->>K: send request, then block
+    K->>K: copy into pool cell (read-only)
+    K->>S: deliver request + inherit client priority
+    S->>S: handle request
+    S->>K: reply_to_service_request
+    K-->>C: reply delivered · client unblocks
+          </div>
+        </div>
 
         <h3>Topic IPC — asynchronous publish / subscribe</h3>
         <p>
           A <strong>topic</strong> is a named channel. Any number of publishers send messages to it; every
           subscriber that was subscribed at publish time gets its own read-only view of the same kernel
-          buffer. Use it for sensor streams, event broadcasting, and data logging.
+          buffer. Use it for sensor streams, event broadcasting, and data logging. See the
+          <a href="#api-topic">Topic IPC API</a>.
         </p>
         <ul>
           <li><strong>Fire-and-forget.</strong> The publisher never blocks on subscribers. It returns as soon as the kernel has staged the message.</li>
           <li><strong>One copy, many readers.</strong> The kernel copies the payload once and refcounts the pool cell — fan-out to N subscribers stays cheap.</li>
           <li><strong>Drop-oldest queues.</strong> Each subscriber has an 8-slot pending ring. A slow subscriber loses its oldest unread message rather than slowing the publisher or the other subscribers.</li>
+          <li><strong>Non-blocking reads.</strong> A subscriber polls with <code>read()</code>; it returns the next message or nothing. Subscribers never stall the publisher.</li>
           <li><strong>Per-subscriber isolation.</strong> A crashed or stuck subscriber can't stall anyone else; the kernel cleans up its buffers on process death.</li>
         </ul>
+        <div class="diagram">
+          <div class="diagram__head">figure · topic fan-out (asynchronous publish / subscribe)</div>
+          <div class="mermaid">
+flowchart LR
+    P1["Publisher A"] --> T
+    P2["Publisher B"] --> T
+    subgraph K["Kernel"]
+        T["Topic buffer&lt;br/&gt;one copy · refcounted"]
+    end
+    T --> S1["Subscriber 1&lt;br/&gt;ring · drop-oldest"]
+    T --> S2["Subscriber 2&lt;br/&gt;ring · drop-oldest"]
+    T --> S3["Subscriber 3&lt;br/&gt;ring · drop-oldest"]
+    classDef pool fill:#e0f2fe,stroke:#06b6d4,color:#0f172a;
+    class T pool;
+          </div>
+        </div>
 
         <h3>Picking between them</h3>
         <p>
@@ -201,6 +313,269 @@
           <strong>Topic IPC</strong> when you have a continuous stream of data and the latest sample matters more
           than every sample — IMU readings, camera frames, status broadcasts.
         </p>
+
+        <h2 id="api-app">API reference — writing an app</h2>
+        <p>
+          A TAIL OS application is an ordinary Rust program. You define <code>fn main()</code>, build it against
+          the TAIL <code>std</code>, and the loader runs it — there is no <code>_start</code> to write and no custom
+          linker script. Compiled apps are placed in the root file system (RFS) image and launched from the
+          <code>tsh&gt;</code> shell by path.
+        </p>
+        <div class="diagram">
+          <div class="diagram__head">figure · app build and run lifecycle</div>
+          <div class="mermaid">
+flowchart LR
+    A["Write fn main()&lt;br/&gt;+ std::tail_core"] --> B["cargo build&lt;br/&gt;TAIL std · aarch64"]
+    B --> C["ELF binary"]
+    C --> D["Place in RFS image"]
+    D --> E["Boot TAIL OS"]
+    E --> F["tsh&gt; run by path"]
+          </div>
+        </div>
+        <p>
+          The general-purpose surface (<code>std::thread</code>, <code>std::process</code>, collections, formatting,
+          <code>println!</code>) works as you'd expect. The TAIL-specific IPC and process APIs live under
+          <code>std::tail_core::*</code> and are gated behind a feature flag, so a crate that uses them opens with:
+        </p>
+        <div class="code">
+          <div class="code__head"><span>main.rs</span><button class="copy" data-copy>Copy</button></div>
+<pre><code><span class="tk-comment">// Enables the std::tail_core::* modules (service, topic, process).</span>
+#![feature(tail_core)]
+
+fn main() {
+    println!("Hello from TAIL OS!");
+}</code></pre>
+        </div>
+        <p class="muted">
+          Under the hood, every wrapper below is a thin call over the kernel-call (syscall) interface — a small,
+          fixed set of entry points for thread and process lifecycle, memory mapping, IPC send/receive/reply,
+          topic create/publish/subscribe, mutexes, shared memory, sleep, and CPU affinity. The raw entry points
+          are exposed in <code>tail_core::syscall</code> for low-level use, but applications normally call the
+          higher-level wrappers shown here.
+        </p>
+
+        <h2 id="api-threads">Threads &amp; scheduling</h2>
+        <p>
+          Threads run inside your process and share its address space. Use the standard library; the TAIL
+          implementation maps these onto the kernel's thread and sleep calls.
+        </p>
+        <div class="code">
+          <div class="code__head"><span>std::thread</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>std::thread::spawn(f)         <span class="tk-comment">// -&gt; JoinHandle&lt;T&gt;; F: FnOnce() -&gt; T + Send + 'static</span>
+std::thread::current()       <span class="tk-comment">// -&gt; Thread (handle to the running thread)</span>
+std::thread::yield_now()     <span class="tk-comment">// hand the CPU back to the scheduler</span>
+std::thread::sleep(dur)      <span class="tk-comment">// block for a std::time::Duration</span>
+JoinHandle::join(self)       <span class="tk-comment">// -&gt; Result&lt;T, ..&gt;; wait for the thread, take its value</span></code></pre>
+        </div>
+        <ul>
+          <li>New threads inherit the default priority (<strong>31</strong> of 0–255); the active policy (Round-Robin by default) is described under <a href="#scheduler">Scheduler</a>.</li>
+          <li><code>std::thread::sleep(Duration::ZERO)</code> and <code>yield_now()</code> both yield to the scheduler.</li>
+          <li>A thread can be pinned to a set of CPUs with <code>tail_core::syscall::syscall_set_thread_affinity(tid, mask)</code>, and the current CPU read with <code>syscall_get_cpu_id()</code>.</li>
+        </ul>
+
+        <h2 id="api-process">Processes</h2>
+        <p>
+          Spawn other programs from the RFS and wait on their exit codes. These calls are served by the
+          <code>process_manager</code> over Service IPC; the wrappers live in <code>std::tail_core::process</code>.
+        </p>
+        <div class="code">
+          <div class="code__head"><span>std::tail_core::process</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>process::spawn(program: &amp;str)
+    -&gt; Result&lt;i64, ErrorKind&gt;                 <span class="tk-comment">// child PID; inherits the parent's cwd</span>
+
+process::spawn_with_cwd(program: &amp;str, cwd: &amp;str)
+    -&gt; Result&lt;i64, ErrorKind&gt;
+
+process::spawn_with_args(program: &amp;str, cwd: Option&lt;&amp;str&gt;, args: &amp;[&amp;str])
+    -&gt; Result&lt;i64, ErrorKind&gt;
+
+process::wait(pid: u64)
+    -&gt; Result&lt;i32, ErrorKind&gt;                 <span class="tk-comment">// block until the child exits; returns its code</span>
+
+process::try_wait(pid: u64)
+    -&gt; Result&lt;Option&lt;i32&gt;, ErrorKind&gt;         <span class="tk-comment">// Ok(None) while still running</span></code></pre>
+        </div>
+
+        <h2 id="api-service">Service IPC</h2>
+        <p>
+          A server registers a named endpoint and loops on incoming requests; a client sends a typed request
+          and blocks for the typed reply. Messages are described by <code>ServiceRequestData&lt;T&gt;</code> and
+          <code>ServiceReplyData&lt;T&gt;</code>, which hold a pointer + size and (for the reply) an optional error.
+          All of this lives under <code>std::tail_core::service</code>.
+        </p>
+        <div class="code">
+          <div class="code__head"><span>service::server</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>server::create_server(server_name: &amp;str)         <span class="tk-comment">// register a named endpoint</span>
+
+server::receive_service_request::&lt;T&gt;(server_name: &amp;str)
+    -&gt; Result&lt;(u64, u64, ServiceRequestData&lt;T&gt;, u64), ErrorKind&gt;
+    <span class="tk-comment">// blocks; tuple = (client_tid, request_type, request, client_pid)</span>
+
+server::reply_to_service_request::&lt;T&gt;(
+    server_name: &amp;str, client_tid: u64, reply: &amp;ServiceReplyData&lt;T&gt;)
+    -&gt; Result&lt;(), ErrorKind&gt;</code></pre>
+        </div>
+        <div class="code">
+          <div class="code__head"><span>service::client</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>client::send_service_request_and_wait_for_reply::&lt;T, U&gt;(
+    server_name: &amp;str, request_type: u64, request: &amp;ServiceRequestData&lt;T&gt;)
+    -&gt; Result&lt;ServiceReplyData&lt;U&gt;, ErrorKind&gt;       <span class="tk-comment">// blocks for the reply</span>
+
+client::send_service_request_and_wait_for_reply_with_timeout::&lt;T, U&gt;(
+    server_name: &amp;str, request_type: u64,
+    request: &amp;ServiceRequestData&lt;T&gt;, timeout_ms: u64)
+    -&gt; Result&lt;ServiceReplyData&lt;U&gt;, ErrorKind&gt;       <span class="tk-comment">// TimedOut on deadline (0 = wait forever)</span>
+
+client::lookup_service(server_name: &amp;str)
+    -&gt; Result&lt;u32, ErrorKind&gt;                       <span class="tk-comment">// resolve once to a reusable handle</span>
+
+client::send_request_reg::&lt;T, U&gt;(handle: u32, request_type: u64, request: &amp;T)
+    -&gt; Result&lt;U, ErrorKind&gt;                         <span class="tk-comment">// register fastpath; request must be &le; 32 bytes</span></code></pre>
+        </div>
+        <div class="code">
+          <div class="code__head"><span>message types</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>ServiceRequestData::&lt;T&gt;::new(ptr: *const T, size: usize)
+    .get_request_message_ref() -&gt; &amp;T
+
+ServiceReplyData::&lt;T&gt;::new(ptr: *const T, size: usize, error: Option&lt;ErrorKind&gt;)
+    .get_reply_message_ref()   -&gt; &amp;T</code></pre>
+        </div>
+        <p class="muted">
+          <code>ErrorKind</code> covers the IPC failure modes you'll handle — <code>NotFound</code> (no such service),
+          <code>InvalidInput</code> (e.g. a register request over 32&nbsp;bytes), and <code>TimedOut</code>, among others.
+        </p>
+
+        <h2 id="api-topic">Topic IPC</h2>
+        <p>
+          Publishers and subscribers attach to a topic by name. <code>publish</code> never blocks; <code>read</code>
+          is a non-blocking poll that returns the next message as a read-only <code>(pointer, size)</code> pair,
+          or <code>None</code> when the queue is empty. These live under <code>std::tail_core::topic</code>.
+        </p>
+        <div class="code">
+          <div class="code__head"><span>topic::{publisher, subscriber}</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>Publisher::new(topic_name: &amp;str) -&gt; Publisher
+Publisher::publish::&lt;T&gt;(&amp;self, message: &amp;T)        <span class="tk-comment">// copy &amp; stage; returns immediately</span>
+
+Subscriber::new(topic_name: &amp;str) -&gt; Subscriber
+Subscriber::read(&amp;self) -&gt; Option&lt;(*const u8, usize)&gt;   <span class="tk-comment">// non-blocking; None if empty</span></code></pre>
+        </div>
+        <p class="muted">
+          A zero-copy "loan" API (write directly into the shared buffer, hand subscribers a borrowed slice)
+          is in design and not part of this release; the copy-based <code>publish</code>/<code>read</code> API above
+          is the supported surface today.
+        </p>
+
+        <h2 id="ex-hello">Example — minimal app</h2>
+        <p>The smallest complete program. Build it against the TAIL <code>std</code>, drop the binary into the RFS, and run it from <code>tsh&gt;</code>.</p>
+        <div class="code">
+          <div class="code__head"><span>hello/src/main.rs</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>fn main() {
+    println!("Hello from TAIL OS!");
+}</code></pre>
+        </div>
+
+        <h2 id="ex-pubsub">Example — pub/sub over a topic</h2>
+        <p>
+          Publish a value to a named topic and read it back. Because Topic IPC is asynchronous,
+          <code>read()</code> is a non-blocking poll — loop until a sample arrives.
+        </p>
+        <div class="code">
+          <div class="code__head"><span>imu_demo/src/main.rs</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>#![feature(tail_core)]
+
+use std::thread;
+use std::time::Duration;
+use std::tail_core::topic::publisher::Publisher;
+use std::tail_core::topic::subscriber::Subscriber;
+
+const TOPIC: &amp;str = "sensor/imu";
+
+fn main() {
+    let publisher = Publisher::new(TOPIC);
+    let subscriber = Subscriber::new(TOPIC);
+
+    let sample: u32 = 0xCAFE_F00D;
+    publisher.publish(&amp;sample);
+
+    <span class="tk-comment">// read() is non-blocking (topic IPC is async); poll until a sample arrives.</span>
+    let (ptr, size) = loop {
+        if let Some(m) = subscriber.read() { break m; }
+        thread::sleep(Duration::from_millis(1));
+    };
+
+    let value = unsafe { core::ptr::read_unaligned(ptr as *const u32) };
+    println!("received 0x{:08X} ({} bytes)", value, size);
+}</code></pre>
+        </div>
+
+        <h2 id="ex-service">Example — service request/reply</h2>
+        <p>
+          A one-shot echo service: a server thread registers an endpoint and replies to a single request,
+          while the main thread sends a request and blocks for the reply. The request and reply are both a
+          <code>u64</code> here, but any <code>T</code> works.
+        </p>
+        <div class="code">
+          <div class="code__head"><span>echo/src/main.rs</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>#![feature(tail_core)]
+
+use std::thread;
+use std::tail_core::service::{server, client};
+use std::tail_core::service::service_request::ServiceRequestData;
+use std::tail_core::service::service_reply::ServiceReplyData;
+
+const SERVER_NAME: &amp;str = "echo_server";
+const REQUEST_TYPE: u64 = 1;
+
+fn main() {
+    <span class="tk-comment">// Server thread: register a named endpoint, then handle one request.</span>
+    let server = thread::spawn(|| {
+        server::create_server(SERVER_NAME);
+
+        let (client_tid, _req_type, request, _client_pid) =
+            server::receive_service_request::&lt;u64&gt;(SERVER_NAME).unwrap();
+
+        let value = *request.get_request_message_ref();
+        let reply = ServiceReplyData::new(
+            &amp;value as *const u64, core::mem::size_of::&lt;u64&gt;(), None);
+        server::reply_to_service_request(SERVER_NAME, client_tid, &amp;reply).unwrap();
+    });
+
+    <span class="tk-comment">// Client: send a request and block until the reply comes back.</span>
+    let value: u64 = 0xCAFE_BABE_1234_5678;
+    let request = ServiceRequestData::new(
+        &amp;value as *const u64, core::mem::size_of::&lt;u64&gt;());
+    let reply = client::send_service_request_and_wait_for_reply::&lt;u64, u64&gt;(
+        SERVER_NAME, REQUEST_TYPE, &amp;request).unwrap();
+
+    println!("echo replied 0x{:016X}", *reply.get_reply_message_ref());
+    let _ = server.join();
+}</code></pre>
+        </div>
+        <p class="muted">
+          One ordering note: the client must not send before the server has called <code>create_server</code>,
+          or <code>lookup</code>/<code>send</code> returns <code>ErrorKind::NotFound</code>. In real code, gate the
+          client on a "server ready" signal (e.g. an <code>AtomicBool</code> the server sets after registering, with
+          the client spinning on <code>thread::yield_now()</code> until it's set).
+        </p>
+
+        <h2 id="ex-spawn">Example — spawn a process and wait</h2>
+        <p>Launch another program from the RFS and block on its exit code.</p>
+        <div class="code">
+          <div class="code__head"><span>launcher/src/main.rs</span><button class="copy" data-copy>Copy</button></div>
+<pre><code>#![feature(tail_core)]
+
+use std::tail_core::process;
+
+fn main() {
+    match process::spawn("/usr/bin/pidls") {
+        Ok(pid) =&gt; {
+            let code = process::wait(pid as u64).unwrap();
+            println!("child {} exited with code {}", pid, code);
+        }
+        Err(e) =&gt; println!("spawn failed: {:?}", e),
+    }
+}</code></pre>
+        </div>
 
         <h2 id="cli">CLI reference</h2>
         <div class="code">
@@ -225,6 +600,9 @@ COMMANDS
 
         <h3>Why a microkernel?</h3>
         <p>Smaller attack surface, drivers can crash without taking the kernel down, and it's far easier to reason about determinism when the kernel only does three things.</p>
+
+        <h3>What language do I write apps in?</h3>
+        <p>Rust, against the TAIL <code>std</code>. Apps are ordinary <code>fn main()</code> programs; the IPC and process wrappers live under <code>std::tail_core::*</code> behind the <code>#![feature(tail_core)]</code> gate. See <a href="#api-app">Writing an app</a>.</p>
       </article>
     </div>
   </main>
@@ -249,11 +627,47 @@ COMMANDS
     <div class="footer__bottom">
       <div class="container">
         <span>&copy; <span id="year"></span> TAIL OS. Built with Rust &amp; care.</span>
-        <span class="muted">v0.1.0 · Early preview</span>
+        <span class="muted">v0.9.0 · Early preview</span>
       </div>
     </div>
   </footer>
 
   <script src="../assets/js/main.js" defer></script>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      securityLevel: 'loose',
+      theme: 'base',
+      fontFamily: 'Inter, system-ui, sans-serif',
+      themeVariables: {
+        background: '#ffffff',
+        primaryColor: '#f1f5f9',
+        primaryBorderColor: '#0ea5e9',
+        primaryTextColor: '#1e293b',
+        secondaryColor: '#e0f2fe',
+        secondaryBorderColor: '#06b6d4',
+        secondaryTextColor: '#0f172a',
+        tertiaryColor: '#f8fafc',
+        tertiaryBorderColor: '#cbd5e1',
+        tertiaryTextColor: '#334155',
+        lineColor: '#94a3b8',
+        textColor: '#475569',
+        actorBkg: '#f1f5f9',
+        actorBorder: '#0ea5e9',
+        actorTextColor: '#1e293b',
+        actorLineColor: '#94a3b8',
+        signalColor: '#64748b',
+        signalTextColor: '#475569',
+        noteBkgColor: '#e0f2fe',
+        noteTextColor: '#0f172a',
+        noteBorderColor: '#06b6d4',
+        clusterBkg: '#f8fafc',
+        clusterBorder: '#cbd5e1'
+      },
+      flowchart: { curve: 'basis', htmlLabels: true, padding: 14, useMaxWidth: true },
+      sequence: { useMaxWidth: true, wrap: true }
+    });
+  </script>
 </body>
 </html>
