@@ -16,6 +16,7 @@ import { assertRedacted, compileRules, redact } from './redact.mjs';
 import { buildIndex } from './bm25.mjs';
 import { chunkMarkdown } from './chunk.mjs';
 import { renderAsk, renderDoc, renderDocsIndex, renderHome, renderNotFound } from './render.mjs';
+import { sectionsFrom } from './sections.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // Redirectable so a test can build somewhere disposable instead of overwriting
@@ -128,9 +129,7 @@ for (const entry of bySourcePath.values()) {
     fail(`heading mismatch in ${entry.path}: chunker saw ${headings.length}, renderer saw ${parsed}`);
   }
 
-  const sections = headings
-    .filter((heading) => heading.level === 2 && heading.text)
-    .map((heading) => ({ title: heading.text.replace(/[*_`]/g, ''), anchor: heading.anchor }));
+  const sections = sectionsFrom(tokens, headings);
 
   const html = md.renderer.render(tokens, md.options, {});
   assertRedacted(html, redactionRules, entry.path);
