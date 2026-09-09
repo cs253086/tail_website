@@ -27,6 +27,14 @@
   --warn-border: rgba(180, 83, 9, 0.26);
   --warn-text: #7c4310;
   --warn-bar: #d97706;
+  /* The tagline names five things TAIL OS is. These are the only decorative
+     colours on the site: everywhere else a hue means one thing, so they are
+     kept to this one element and named for the word they mark. */
+  --kw-realtime: #0e7490;
+  --kw-kernel: #7c2fd4;
+  --kw-rust: #c2410c;
+  --kw-robot: #047857;
+  --kw-safety: #a16207;
   --code-bg: #0f172a;
   --code-text: #e2e8f0;
   --code-dim: #64748b;
@@ -60,6 +68,11 @@
     --warn-border: rgba(245, 190, 90, 0.30);
     --warn-text: #f0cf9a;
     --warn-bar: #f5be5a;
+    --kw-realtime: #22d3ee;
+    --kw-kernel: #c78bff;
+    --kw-rust: #ff9e64;
+    --kw-robot: #4ade80;
+    --kw-safety: #fbbf24;
     --code-bg: #060c17;
     --code-text: #dbe6f3;
   }
@@ -138,6 +151,12 @@ img, svg { display: block; max-width: 100%; }
   letter-spacing: -0.03em; font-weight: 600; text-align: center; text-wrap: pretty;
 }
 .lede { margin: 0; color: var(--text-dim); font-size: 17px; text-align: center; max-width: 560px; }
+.lede strong { font-weight: 650; }
+.kw-realtime { color: var(--kw-realtime); }
+.kw-kernel { color: var(--kw-kernel); }
+.kw-rust { color: var(--kw-rust); }
+.kw-robot { color: var(--kw-robot); }
+.kw-safety { color: var(--kw-safety); }
 
 .ask { width: 100%; max-width: 720px; display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 10px; }
 .ask-field {
