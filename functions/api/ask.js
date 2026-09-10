@@ -39,6 +39,38 @@ function retrieve(question, limit) {
     .filter(Boolean);
 }
 
+// A document's opening chunk: the part before its first section heading, which
+// is where it says what it is about.
+const openingOf = new Map();
+for (const chunk of corpus.chunks) {
+  if (chunk.headingPath.length === 1 && !openingOf.has(chunk.docSlug)) {
+    openingOf.set(chunk.docSlug, chunk);
+  }
+}
+
+// Ranking finds fragments; answering needs to know what document they came
+// from. An entry titled "Publisher" holding four lines of code ranks well and
+// defines nothing, so a question about the concept it demonstrates was handed
+// six such fragments and refused for want of the sentence that says what a
+// periodic node is. That sentence is always in the opening, so every document
+// that scores contributes one -- at most a handful of extra passages, and the
+// cheapest correct form of ranking on fragments while answering from sections.
+function withOpenings(ranked) {
+  const seen = new Set(ranked.map((chunk) => chunk.id));
+  const openings = [];
+
+  for (const slug of new Set(ranked.map((chunk) => chunk.docSlug))) {
+    const opening = openingOf.get(slug);
+    if (opening && !seen.has(opening.id)) {
+      seen.add(opening.id);
+      openings.push(opening);
+    }
+  }
+
+  // Openings lead, so passage [1] is context rather than a fragment.
+  return [...openings, ...ranked];
+}
+
 // Every limit lands here: results, never an error. The site becomes less
 // clever until the quota resets, and never broken.
 const degraded = (question, reason, results) =>
@@ -56,10 +88,13 @@ export async function onRequestPost({ request, env }) {
 
   const kv = env.ANSWER_CACHE ?? null;
   const now = Date.now();
-  const passages = retrieve(question, PASSAGES);
-  const results = passages.slice(0, RESULTS);
+  const ranked = retrieve(question, PASSAGES);
+  // What the reader is shown when there is no answer stays the ranked hits: an
+  // opening is context for the model, not a search result.
+  const results = ranked.slice(0, RESULTS);
+  const passages = withOpenings(ranked);
 
-  if (passages.length === 0) {
+  if (ranked.length === 0) {
     return json({
       status: 'unsupported',
       question,

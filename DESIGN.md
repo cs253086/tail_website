@@ -68,7 +68,8 @@ issue thread something to link.
         ├── static assets, served from the edge, free and unmetered
         └── functions/api/ask.js  ← Pages Function
                   ├─ 1. normalize question, look up KV answer cache
-                  ├─ 2. BM25 retrieve top-K chunks from the bundled corpus
+                  ├─ 2. BM25 retrieve top-K chunks, plus the opening of
+                  │     every document among them
                   ├─ 3. call Gemini Flash with those chunks only
                   ├─ 4. reject any answer carrying no citation
                   └─ 5. on quota exhaustion, rate limit, or API failure:
@@ -159,6 +160,19 @@ The tokenizer also expands the concatenated spelling of the product name. The
 documentation writes both "TAIL OS" (`get_started.md`) and "TailOS"
 (`install_qemu.md`), and readers type either. Without the expansion, a question
 about "TAIL OS on QEMU" scored zero against the QEMU document's own title.
+
+**Passages.** Ranking finds fragments; answering needs to know which document a
+fragment came from. An entry titled "Publisher" holding four lines of code ranks
+well and defines nothing, so a question about the concept it demonstrates was
+handed six such fragments and refused for want of the sentence that says what a
+periodic node is. Every document with a ranked chunk therefore also contributes
+its opening — the part before its first heading, which is where a document says
+what it is about. Openings lead, so passage [1] is context rather than a fragment.
+
+They are added for the model, not for the reader: the results a degraded answer
+shows stay the ranked hits alone, so an opening pulled in for context never
+displaces a section someone could have been sent to. An opening that ranks on its
+own merits is already a hit and is not added twice.
 
 **Index.** A BM25 index is built over the chunks. It is written twice: as
 `search-index.json` for browser-side search, and as `chunks.json` bundled into the

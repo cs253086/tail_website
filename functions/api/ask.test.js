@@ -10,6 +10,19 @@ const CORPUS = {
   buildId: 'build-one',
   coverage: [{ slug: 'qemu', title: 'Running TAIL OS in QEMU', summary: 'Boot under QEMU.' }],
   chunks: [
+    // Openings: the chunk before a document's first heading. Production corpora
+    // always have one, and the handler gives it to the model alongside the
+    // ranked fragments.
+    {
+      id: 'qemu#:0', docSlug: 'qemu', docTitle: 'Running TAIL OS in QEMU',
+      headingPath: ['Running TAIL OS in QEMU'], anchor: 'running-tail-os-in-qemu',
+      text: 'Emulation, for a developer with no board on the desk yet.',
+    },
+    {
+      id: 'rpi#:0', docSlug: 'raspberry-pi-3', docTitle: 'Installing on Raspberry Pi 3',
+      headingPath: ['Installing on Raspberry Pi 3'], anchor: 'installing-on-raspberry-pi-3',
+      text: 'Deployment onto a physical single-board computer.',
+    },
     {
       id: 'qemu#run:0', docSlug: 'qemu', docTitle: 'Running TAIL OS in QEMU',
       headingPath: ['Running TAIL OS in QEMU', 'Run TailOS'], anchor: 'run-tailos',
@@ -223,6 +236,57 @@ describe('POST /api/ask', () => {
 
     expect(payload.status).toBe('answered');
     expect(payload.citations.map((citation) => citation.n)).toEqual([1, 2]);
+  });
+
+  it("gives the model a matched document's opening even when it did not rank", async () => {
+    // Ranking finds fragments. An entry that is four lines of code ranks well
+    // and defines nothing, so the sentence saying what the document is about
+    // has to come along or the model refuses for want of it.
+    // A query reaching only a section body: the opening's own heading is the
+    // document title, which would otherwise match almost anything.
+    modelMock.answer.mockResolvedValue({ text: 'Launch it [3].' });
+    await ask('launch the prebuilt image with one command');
+
+    const { passages } = modelMock.answer.mock.calls[0][0];
+    expect(passages.map((passage) => passage.id)).toContain('qemu#:0');
+  });
+
+  it('leads with the openings, so passage one is context rather than a fragment', async () => {
+    modelMock.answer.mockResolvedValue({ text: 'Launch it [3].' });
+    await ask('launch the prebuilt image with one command');
+
+    const { passages } = modelMock.answer.mock.calls[0][0];
+    expect(passages[0].headingPath).toHaveLength(1);
+  });
+
+  it('never sends the same opening twice', async () => {
+    // An opening that ranks on its own is already there; adding it again would
+    // spend a passage slot on a duplicate and give the model two numbers for
+    // one piece of text.
+    modelMock.answer.mockResolvedValue({ text: 'Emulation [1].' });
+    await ask('emulation for a developer with no board');
+
+    const { passages } = modelMock.answer.mock.calls[0][0];
+    expect(new Set(passages.map((passage) => passage.id)).size).toBe(passages.length);
+  });
+
+  it('keeps an unranked opening out of the results a degraded answer shows', async () => {
+    // An opening pulled in for context is not a search hit; showing one would
+    // displace a section the reader could actually have been sent to.
+    modelMock.answer.mockResolvedValue({ text: 'No citation here at all.' });
+    const payload = await (await ask('launch the prebuilt image with one command')).json();
+
+    expect(payload.status).toBe('degraded');
+    expect(payload.results.map((result) => result.anchor)).not.toContain('running-tail-os-in-qemu');
+  });
+
+  it('still refuses a question nothing matches, openings notwithstanding', async () => {
+    // withOpenings runs on the ranked hits, so no hits means no passages and
+    // the unsupported answer stands.
+    const payload = await (await ask('xylophone tuning schedules')).json();
+
+    expect(payload.status).toBe('unsupported');
+    expect(modelMock.answer).not.toHaveBeenCalled();
   });
 
   it('discards an uncited answer instead of showing it', async () => {
