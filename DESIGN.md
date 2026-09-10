@@ -142,6 +142,19 @@ A section *titled* "Run TailOS (one command)" is a far stronger signal of what i
 answers than the same words appearing once in a paragraph; weighting frequency alone
 would break length normalisation, so field weight applies to document length too.
 
+Terms are reduced to a common root by the Porter stemmer, at index and query time
+alike, so `install`, `installing` and `installation` are one term. Without it a
+reader typing "installation" reached 2 chunks where "installing" reached 22 — the
+same intent, an eleven-fold difference, decided by which inflection they happened
+to pick. Only English words are stemmed: anything carrying a digit, underscore,
+hyphen or dot is left exactly as written, because taking a suffix off
+`qemu-system-aarch64` or `on_overrun` would leave it unfindable by its own name.
+
+The stemmer is inline rather than a dependency. `tools/bm25.mjs` is copied verbatim
+into the browser bundle with no bundler, so it cannot take one; a named algorithm was
+chosen over a bespoke list of suffixes so its behaviour can be looked up, and its
+output is pinned in tests against the published reference vocabulary.
+
 The tokenizer also expands the concatenated spelling of the product name. The
 documentation writes both "TAIL OS" (`get_started.md`) and "TailOS"
 (`install_qemu.md`), and readers type either. Without the expansion, a question

@@ -1,5 +1,48 @@
 import { describe, expect, it } from 'vitest';
-import { buildIndex, search, tokenize } from './bm25.mjs';
+import { buildIndex, search, stem, tokenize } from './bm25.mjs';
+
+describe('stem', () => {
+  it('collapses the forms a reader might type for one word', () => {
+    // The reported failure: "installation" reached 2 chunks where
+    // "installing" reached 22, because they were unrelated terms.
+    const forms = ['install', 'installs', 'installed', 'installing', 'installation'];
+    expect(new Set(forms.map(stem)).size).toBe(1);
+  });
+
+  it.each([
+    ['caresses', 'caress'], ['ponies', 'poni'], ['cats', 'cat'], ['feed', 'feed'],
+    ['agreed', 'agre'], ['plastered', 'plaster'], ['bled', 'bled'], ['motoring', 'motor'],
+    ['sing', 'sing'], ['conflated', 'conflat'], ['sized', 'size'], ['hopping', 'hop'],
+    ['falling', 'fall'], ['filing', 'file'], ['happy', 'happi'], ['sky', 'sky'],
+    ['relational', 'relat'], ['rational', 'ration'], ['predication', 'predic'],
+    ['operator', 'oper'], ['hopefulness', 'hope'], ['formality', 'formal'],
+    ['electrical', 'electr'], ['goodness', 'good'], ['allowance', 'allow'],
+    ['adjustable', 'adjust'], ['replacement', 'replac'], ['adoption', 'adopt'],
+    ['effective', 'effect'], ['controlling', 'control'], ['rolling', 'roll'],
+  ])('stems %s to %s, as Porter specifies', (word, expected) => {
+    // Pinned against the published reference vocabulary, so a future edit that
+    // quietly turns this into a bespoke suffix stripper fails here.
+    expect(stem(word)).toBe(expected);
+  });
+
+  it('leaves anything that is not an English word alone', () => {
+    for (const symbol of ['qemu-system-aarch64', 'on_overrun', 'v0.9.0', 'aarch64', 'os', 'ms']) {
+      expect(stem(symbol)).toBe(symbol);
+    }
+  });
+});
+
+describe('tokenize with stemming', () => {
+  it('emits one term for a word however the reader inflected it', () => {
+    expect(tokenize('installation')).toEqual(tokenize('installing'));
+  });
+
+  it('still keeps an identifier exactly as written', () => {
+    // Stripping a suffix from a symbol would leave it unfindable by its name.
+    expect(tokenize('on_overrun')).toContain('on_overrun');
+    expect(tokenize('qemu-system-aarch64')).toContain('qemu-system-aarch64');
+  });
+});
 
 describe('tokenize', () => {
   it('keeps technical compounds whole and also indexes their parts', () => {
