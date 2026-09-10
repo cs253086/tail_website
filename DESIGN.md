@@ -223,7 +223,7 @@ only once it is exceeded. Three mechanisms keep the system inside it:
 
 | Mechanism | Storage | Behaviour |
 |---|---|---|
-| Answer cache | KV, 30-day TTL | Identical questions never reach Gemini. A docs site repeats the same ~50 questions indefinitely. |
+| Answer cache | KV, 30-day TTL | Identical questions never reach Gemini. A docs site repeats the same ~50 questions indefinitely. The key names every input that determines an answer — corpus, model, system prompt, the passages retrieval assembled, and the question — so changing any of them retires the affected entries rather than serving an answer its inputs no longer support. Naming the passages is what covers retrieval: a version constant would hold only until someone changed how passages are built and forgot to bump it, which is exactly how a refusal produced before document openings were added went on being served after they were. |
 | Per-IP rate limit | KV token bucket | Caps one visitor's share. Prevents a scraper draining the daily quota. |
 | Global daily ceiling | KV counter, 200/day | Deliberately conservative: the lite model's exact allowance has not been read off the provider's dashboard. The gap also absorbs eventual-consistency overshoot, since KV offers no compare-and-set; see `_limits.js`. |
 

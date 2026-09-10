@@ -107,7 +107,13 @@ export async function onRequestPost({ request, env }) {
   // Resolved here rather than inside answer(), because the cache key has to
   // name the model that actually produced the entry.
   const model = env.GEMINI_MODEL || DEFAULT_MODEL;
-  const key = await cacheKey(question, corpus.buildId, model, SYSTEM_PROMPT);
+  const key = await cacheKey(
+    question,
+    corpus.buildId,
+    model,
+    SYSTEM_PROMPT,
+    passages.map((passage) => passage.id),
+  );
   const cached = await readCache(kv, key);
   if (cached) return json(cached);
 

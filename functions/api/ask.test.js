@@ -142,6 +142,21 @@ describe('cache keys', () => {
     expect(await cacheKey('How do I run QEMU?', 'b1', 'm1')).not.toBe(await cacheKey('How do I run QEMU?', 'b2', 'm1'));
   });
 
+  it('retires a cached answer when retrieval sends different passages', async () => {
+    // The failure this prevents: openings were added to the passages, every
+    // affected answer changed, and a refusal produced before the change went on
+    // being served because the key knew nothing about retrieval.
+    expect(await cacheKey('q', 'b1', 'm1', 'p', ['a#1', 'a#2']))
+      .not.toBe(await cacheKey('q', 'b1', 'm1', 'p', ['a#1', 'a#2', 'a#0']));
+  });
+
+  it('shares one entry when the same passages come back in a different order', async () => {
+    // Rank order decides which passage is [1]; it does not decide whether the
+    // answer is still the right one.
+    expect(await cacheKey('q', 'b1', 'm1', 'p', ['a#2', 'a#1']))
+      .toBe(await cacheKey('q', 'b1', 'm1', 'p', ['a#1', 'a#2']));
+  });
+
   it('retires cached answers when the model changes, so a switch takes effect', async () => {
     // Without the model in the key, replacing a model kept serving thirty days
     // of answers produced by the one it replaced.

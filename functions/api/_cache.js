@@ -3,8 +3,9 @@
 // and exhausting it by lunchtime.
 //
 // The key covers every input that determines the answer — the corpus (via the
-// build hash), the model, the system prompt and the question — so changing any
-// of them retires the affected entries without an explicit purge step. Leaving
+// build hash), the model, the system prompt, the passages retrieval assembled,
+// and the question — so changing any of them retires the affected entries
+// without an explicit purge step. Leaving
 // the model out once meant a model switch kept serving thirty days of answers
 // from the model it replaced. Fields are NUL-separated so no combination of
 // values can collide with a different one.
@@ -20,9 +21,18 @@ export function normalizeQuestion(question) {
     .trim();
 }
 
-export async function cacheKey(question, buildId, model, systemPrompt = '') {
+export async function cacheKey(question, buildId, model, systemPrompt = '', passageIds = []) {
+  // The passages are the input the answer is made from, so naming them is what
+  // makes the key cover retrieval as well. A version constant would do the same
+  // job only until somebody changed how passages are assembled and forgot to
+  // bump it -- which is how a refusal produced before openings were added went
+  // on being served after they were.
+  //
+  // Sorted, because rank order decides which passage is [1] but not whether the
+  // answer is still valid; two identical sets should share one entry.
+  const passages = [...passageIds].sort().join('\u001f');
   const data = new TextEncoder().encode(
-    [buildId, model, systemPrompt, normalizeQuestion(question)].join('\u0000'),
+    [buildId, model, systemPrompt, passages, normalizeQuestion(question)].join('\u0000'),
   );
   const digest = await crypto.subtle.digest('SHA-256', data);
   const hex = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
