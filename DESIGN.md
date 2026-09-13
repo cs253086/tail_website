@@ -268,7 +268,7 @@ unchanged.
 
 | Route | Content |
 |---|---|
-| `/` | Question box, five suggested questions drawn from the current corpus, a short description of TAIL OS, and links into the documents. No sidebar, and no repository link (§5.0). |
+| `/` | Question box, a one-line description of TAIL OS, the front-page facts, and links into the documents. No sidebar, and no repository link (§5.0). |
 | `/404.html` | The documentation shell with a route back in. Replaces the error document the retired Apache config provided. |
 | `/ask/?q=...` | Answer with inline citations, source cards linking into `/docs/`, keyword results below. Shareable URL. `noindex`, and disallowed in `robots.txt`. |
 | `/docs/` | Generated index of every published document, grouped by the same hierarchy as the sidebar. |
@@ -301,17 +301,22 @@ Answers are generated per request, so `/ask/` is excluded from indexing *and* fr
 crawling: a crawler walking generated answers would drain the daily model quota for
 pages that are `noindex` anyway.
 
-The suggested questions answer the cold-start problem directly: a first-time visitor
-who does not yet know what to ask is shown what is worth asking. They are generated from
-the allowlist rather than hardcoded, so they cannot drift into advertising topics the
-corpus no longer covers.
+Suggested questions are supported but none are published. They were removed once the
+search box carried a real question as its placeholder and the chips had become links
+competing with the box they were meant to explain. Adding a `questions` list to an
+allowlist entry restores them: they come from the allowlist rather than being hardcoded,
+so they cannot advertise a topic the corpus no longer covers, and their container is
+emitted only when there is something to put in it.
 
 Documentation pages are static HTML and work without JavaScript, which is what keeps
 them indexable. The question box is progressive enhancement over a plain form.
 
-**Visual direction.** Light-first and theme-aware, one accent colour, generous
-whitespace, IBM Plex Sans for text and IBM Plex Mono for code. The home page is
-close to empty by design.
+**Visual direction.** Light-first and theme-aware, generous whitespace, IBM Plex Sans
+for text and IBM Plex Mono for code, and colour that carries meaning rather than
+decoration: each hue means one thing — blue navigates, violet marks an identifier, green
+marks something sourced, amber cautions. The five words of the home-page tagline are the
+only decorative colours, kept to that one element and named for the word they mark. The
+home page is close to empty by design.
 
 Front-page claims live in `content/allowlist.json`, not in the generator. Anything
 asserted there reaches a reader uncited, which on a site whose whole thesis is §5.3
