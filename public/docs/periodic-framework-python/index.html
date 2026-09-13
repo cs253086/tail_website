@@ -12,11 +12,11 @@
 <meta property="og:url" content="https://tail-os.com/docs/periodic-framework-python/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/a0cdeee7a5ad/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/20d9de7ae834/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/a0cdeee7a5ad/css/style.css">
+<link rel="stylesheet" href="/assets/20d9de7ae834/css/style.css">
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -69,7 +69,7 @@
         <li><a href="/docs/periodic-framework-python/#safety">Safety</a></li>
         <li><a href="/docs/periodic-framework-python/#cost">Cost</a></li>
         <li><a href="/docs/periodic-framework-python/#errors">Errors</a></li>
-        <li><a href="/docs/periodic-framework-python/#init-has-no-equivalent-and-does-not-need-one-rust-needs-init-because-a-bare-fn-cannot-own-state-between-calls-a-python-closure-a">init has no equivalent, and does not need one Rust needs init because a bare fn cannot own state between calls. A Python closure, a</a></li>
+        <li><a href="/docs/periodic-framework-python/#init-has-no-equivalent-and-does-not-need-one">init has no equivalent, and does not need one</a></li>
       </ul>
     </li>
       </ul>
@@ -418,8 +418,9 @@ supervisor can tell a node that never started from one that stopped cleanly.</p>
 </tr>
 </tbody>
 </table>
-<h2 id="init-has-no-equivalent-and-does-not-need-one-rust-needs-init-because-a-bare-fn-cannot-own-state-between-calls-a-python-closure-a"><code>init</code> has no equivalent, and does not need one Rust needs <code>init</code> because a bare <code>fn</code> cannot own state between calls. A Python closure, a</h2>
-<p>module global or a bound method already does:</p>
+<h2 id="init-has-no-equivalent-and-does-not-need-one"><code>init</code> has no equivalent, and does not need one</h2>
+<p>Rust needs <code>init</code> because a bare <code>fn</code> cannot own state between calls. A Python closure, a
+module global or a bound method already does:</p>
 <pre><code class="language-python">cycles = 0
 
 @periodic(every=&quot;20ms&quot;, publish=Topic(&quot;diag/count&quot;, Count), lane=&quot;safe&quot;, on_overrun=Skip)
@@ -444,7 +445,7 @@ def counter():
     <li><a href="#safety">Safety</a></li>
     <li><a href="#cost">Cost</a></li>
     <li><a href="#errors">Errors</a></li>
-    <li><a href="#init-has-no-equivalent-and-does-not-need-one-rust-needs-init-because-a-bare-fn-cannot-own-state-between-calls-a-python-closure-a">init has no equivalent, and does not need one Rust needs init because a bare fn cannot own state between calls. A Python closure, a</a></li>
+    <li><a href="#init-has-no-equivalent-and-does-not-need-one">init has no equivalent, and does not need one</a></li>
   </ul>
 </nav>
 </div>
