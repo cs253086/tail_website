@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Periodic Framework (Python) — TAIL OS</title>
+<meta name="description" content="Write periodic nodes in Python, with the same keys as the Rust API and on the same topics.">
+<link rel="canonical" href="https://tail-os.com/docs/periodic-framework-python/">
+<meta property="og:title" content="Periodic Framework (Python) — TAIL OS">
+<meta property="og:description" content="Write periodic nodes in Python, with the same keys as the Rust API and on the same topics.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tail-os.com/docs/periodic-framework-python/">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="/assets/a0cdeee7a5ad/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/assets/a0cdeee7a5ad/css/style.css">
+</head>
+<body class="page-shell">
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 32" width="22" height="22" fill="none" aria-hidden="true"><path d="M4 8h24M4 16h16M4 24h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span>TAIL OS</span><span class="ver">v0.9.0</span></a>
+    <form class="hdr-search" action="/ask/" method="get" role="search">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" name="q" placeholder="Search or ask a question" aria-label="Search or ask a question" autocomplete="off">
+    </form>
+    <nav class="hdr-nav" aria-label="Primary">
+      <a href="/docs/">Docs</a>
+    </nav>
+  </div>
+</header>
+<div class="shell">
+<aside class="side">
+  <nav aria-label="Documentation">
+    <ul class="nav-docs">
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/getting-started/">Getting Started</a>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">BSP</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/qemu/">QEMU</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/raspberry-pi-3/">Raspberry Pi 3</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Development guide</span>
+      <ul class="nav-list">
+        <li class="nav-group">
+      <span class="nav-label">Periodic</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-rust/">Rust</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-python/" aria-current="page">Python</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/periodic-framework-python/#quick-start">Quick start</a></li>
+        <li><a href="/docs/periodic-framework-python/#keys">Keys</a></li>
+        <li><a href="/docs/periodic-framework-python/#payloads">Payloads</a></li>
+        <li><a href="/docs/periodic-framework-python/#cycle">Cycle</a></li>
+        <li><a href="/docs/periodic-framework-python/#run">run()</a></li>
+        <li><a href="/docs/periodic-framework-python/#safety">Safety</a></li>
+        <li><a href="/docs/periodic-framework-python/#cost">Cost</a></li>
+        <li><a href="/docs/periodic-framework-python/#errors">Errors</a></li>
+        <li><a href="/docs/periodic-framework-python/#init-has-no-equivalent-and-does-not-need-one-rust-needs-init-because-a-bare-fn-cannot-own-state-between-calls-a-python-closure-a">init has no equivalent, and does not need one Rust needs init because a bare fn cannot own state between calls. A Python closure, a</a></li>
+      </ul>
+    </li>
+      </ul>
+    </li>
+      </ul>
+    </li>
+    </ul>
+  </nav>
+</aside>
+<main class="content">
+<div class="doc-wrap">
+<article class="doc">
+<h1 id="periodic-framework-python-api">Periodic Framework — Python API</h1>
+<p>Declare a period; the framework owns the timing loop, topic admission, freshness and the
+publish. A node is a function with a decorator — there is no loop to write.</p>
+<p>This is the Python half of <a href="/docs/periodic-framework-rust/">the Rust API</a>. The keys mean the
+same things and are spelled the same way, so a reader of that page already knows this one.
+Where the two differ, this page says why.</p>
+<h2 id="quick-start">Quick start</h2>
+<p>Two programs on the same topic, one in each language. Neither writes a loop or a sleep.</p>
+<h3 id="a-rust-publisher">A Rust publisher</h3>
+<pre><code class="language-rust">#[derive(Clone, Copy)]
+#[repr(C)]
+struct Range { stamp: u64, range_mm: u32, quality: u32 }
+
+// SAFETY: `repr(C)`, all-integer, every bit pattern valid.
+unsafe impl std::tail_core::sync::shared_mutex::ShmSafe for Range {}
+
+#[periodic(every = &quot;20ms&quot;, publish = &quot;sensor/range&quot;, lane = safe, on_overrun = Skip)]
+fn lidar() -&gt; Range {
+    Range { stamp: 0x1234_5678, range_mm: 4200, quality: 97 }
+}
+</code></pre>
+<h3 id="a-python-subscriber">A Python subscriber</h3>
+<p>The whole program:</p>
+<pre><code class="language-python">from periodic import periodic, run, Skip, Payload, Topic
+
+Range = Payload(&quot;stamp:u64 range_mm:u32 quality:u32&quot;)
+
+@periodic(every=&quot;20ms&quot;, subscribe=Topic(&quot;sensor/range&quot;, Range), lane=&quot;safe&quot;,
+          stale_after=&quot;60ms&quot;, on_overrun=Skip)
+def brake(lidar):
+    reading = lidar.get()
+    brake_for(reading.range_mm if reading else 0)
+
+run()
+</code></pre>
+<p>Six lines. Neither program names the other, and they may start in either order: each end
+retries admission until the topic appears.</p>
+<p><strong>These two are files, not snippets.</strong> <code>framework/periodic/python/examples/publisher.py</code>
+and <code>subscriber.py</code> are compiled into <code>test/integration_test/tests/periodic_python_pair</code>
+with <code>include_str!</code> and run on target, so the quick start you copy is the code that is
+tested. An example nobody runs is a claim rather than a demonstration.</p>
+<p><code>get()</code> returns <code>None</code> both when nothing has arrived and when what is held is older than
+<code>stale_after</code>. The two collapse on purpose, so the fail-safe branch is the branch that runs
+when the sensor goes quiet.</p>
+<h2 id="keys">Keys</h2>
+<p>The same set as the Rust attribute, with two differences noted below.</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>every</code></td>
+<td>required</td>
+<td>Release period: <code>&quot;20ms&quot;</code>. Releases fall on <code>start + n * period</code>, never drifting</td>
+</tr>
+<tr>
+<td><code>lane</code></td>
+<td>required</td>
+<td><code>&quot;kernel&quot;</code>, <code>&quot;safe&quot;</code> or <code>&quot;fast&quot;</code> — which transport carries the topic</td>
+</tr>
+<tr>
+<td><code>on_overrun</code></td>
+<td>required</td>
+<td><code>Skip</code>, <code>CatchUp</code> or <code>Fault</code>. No default</td>
+</tr>
+<tr>
+<td><code>publish</code></td>
+<td></td>
+<td><code>Topic(name, payload)</code> to publish the body's return value on</td>
+</tr>
+<tr>
+<td><code>subscribe</code></td>
+<td></td>
+<td><code>Topic(name, payload)</code> to read from. The body receives a <code>Cycle</code></td>
+</tr>
+<tr>
+<td><code>stale_after</code></td>
+<td>required with <code>subscribe</code></td>
+<td>How old a sample may be before it reads as absent</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Every one of these is checked when the function is decorated</strong> — which is import time,
+before a topic is opened and before a release is taken. Rust refuses them at compile time;
+import is the earliest equivalent Python has.</p>
+<h3 id="two-differences-from-rust-both-deliberate">Two differences from Rust, both deliberate</h3>
+<p><strong>A topic names its own payload.</strong> Rust infers it from the body's signature; Python has
+nothing to infer it from, and a transport cannot carry a shape nobody named. So a topic is
+<code>Topic(&quot;sensor/range&quot;, Range)</code> rather than a bare string — which is also where the payload
+actually belongs, since a topic has one layout and a node may touch two.</p>
+<p><strong>There is no <code>safety</code> key.</strong> Asking for one is an error, and this is a design position
+rather than an omission — see <a href="#safety">Safety</a>.</p>
+<h3 id="a-node-that-converts">A node that converts</h3>
+<p>Each end names its own payload, so a filter reading 16 bytes and publishing 4 is ordinary:</p>
+<pre><code>  sensor/range              estimate/distance
+  Range { stamp: u64,  ──►  Distance { mm: u32 }
+          range_mm: u32,
+          quality: u32 }
+  16 bytes                  4 bytes
+</code></pre>
+<pre><code class="language-python">Range = Payload(&quot;stamp:u64 range_mm:u32 quality:u32&quot;)
+Distance = Payload(&quot;mm:u32&quot;)
+
+@periodic(every=&quot;20ms&quot;,
+          subscribe=Topic(&quot;sensor/range&quot;, Range),
+          publish=Topic(&quot;estimate/distance&quot;, Distance),
+          lane=&quot;safe&quot;, stale_after=&quot;60ms&quot;, on_overrun=Skip)
+def filter(raw):
+    reading = raw.get()
+    return Distance.instance(mm=reading.range_mm if reading else 0)
+</code></pre>
+<h2 id="payloads">Payloads</h2>
+<p>A payload crosses shared memory to a peer that may be written in Rust, so its layout is
+<code>repr(C)</code>'s. Declare the fields and the framework computes it:</p>
+<pre><code class="language-python">Range = Payload(&quot;stamp:u64 range_mm:u32 quality:u32&quot;)
+Range.size    # 16 -- the same as the Rust struct
+Range.align   # 8
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Declaration</th>
+<th>Rust</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>u8 i8 u16 i16 u32 i32 u64 i64</code></td>
+<td>the same</td>
+</tr>
+<tr>
+<td><code>f32 f64</code></td>
+<td>the same</td>
+</tr>
+<tr>
+<td><code>bool</code></td>
+<td><code>bool</code></td>
+</tr>
+<tr>
+<td><code>name:u8[32]</code></td>
+<td><code>[u8; 32]</code> — arrives as <code>bytes</code></td>
+</tr>
+<tr>
+<td><code>name:u32[4]</code></td>
+<td><code>[u32; 4]</code> — arrives as a tuple</td>
+</tr>
+</tbody>
+</table>
+<p>Nested payloads are not supported; flatten them.</p>
+<p><strong>Why not a <code>struct</code> format string.</strong> <code>struct</code> pads with native alignment only under <code>@</code>;
+under <code>&lt;</code>, <code>&gt;</code>, <code>=</code> and <code>!</code> it packs tight. So <code>repr(C) { u32, u64 }</code> is 16 bytes while
+<code>struct.calcsize(&quot;&lt;IQ&quot;)</code> is 12, and a wrong prefix would give you a subscriber reading a
+shifted field. There is no prefix to get wrong here. (<code>ctypes</code> is not available on TailOS:
+there is no libffi.)</p>
+<p><strong>What is checked, and what is not.</strong> The payload's <em>size</em> is checked against the topic on
+every lane — at open on <code>safe</code> and <code>fast</code>, and per sample on <code>kernel</code> — so a declaration
+with the wrong number of fields fails loudly at startup. Field <strong>order</strong> at an identical
+total size is checked by nothing, in any language pair. Keep the two declarations beside
+each other in review.</p>
+<h3 id="publishing-a-value">Publishing a value</h3>
+<pre><code class="language-python">@periodic(every=&quot;20ms&quot;, publish=Topic(&quot;sensor/range&quot;, Range), lane=&quot;safe&quot;, on_overrun=Skip)
+def lidar():
+    return Range.instance(stamp=0x1234_5678, range_mm=4200, quality=97)
+</code></pre>
+<p>Return <code>None</code> to publish nothing this cycle; that is not an overrun.</p>
+<h2 id="cycle"><code>Cycle</code></h2>
+<p>Everything about this activation, passed to any node that subscribes.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>get()</code></td>
+<td>The sample, or <code>None</code> if absent <strong>or</strong> stale</td>
+</tr>
+<tr>
+<td><code>copied()</code></td>
+<td>The same sample, in an object of its own</td>
+</tr>
+<tr>
+<td><code>since_received()</code></td>
+<td>Seconds since a sample last arrived at this node, or <code>None</code></td>
+</tr>
+<tr>
+<td><code>was_stale()</code></td>
+<td>Whether data was held but had aged out</td>
+</tr>
+<tr>
+<td><code>missed()</code></td>
+<td>Publications lost since the previous cycle. <strong>Not</strong> a running total</td>
+</tr>
+<tr>
+<td><code>rejected()</code></td>
+<td>Publications the transport refused since the previous cycle</td>
+</tr>
+<tr>
+<td><code>overruns()</code></td>
+<td>Releases missed since the previous cycle ran</td>
+</tr>
+<tr>
+<td><code>is_healthy()</code></td>
+<td>No loss, no rejection, no overrun</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>get()</code> borrows.</strong> It returns the same object every cycle with its fields rewritten, which
+mirrors Rust's <code>get() -&gt; Option&lt;&amp;T&gt;</code>. A body that keeps it and reads it next cycle sees new
+data — use <code>copied()</code> to keep one. Rust's borrow checker catches that mistake; Python's
+cannot, so it is stated here instead.</p>
+<p>That reuse is not an optimisation detail you can ignore: it is what keeps a cycle free of
+allocation the garbage collector has to walk. See <a href="#cost">Cost</a>.</p>
+<h2 id="run"><code>run()</code></h2>
+<pre><code class="language-python">run()
+</code></pre>
+<p>Runs the declared node, and does not return until its policy stops it.</p>
+<p>Decoration cannot do this itself: a module whose import never finishes is never entered into
+<code>sys.modules</code>, and every traceback from it is reported inside an import. <code>rclpy.spin</code> exists
+for the same reason.</p>
+<p>A process is <strong>one</strong> node — which is what the Rust attribute enforces by generating <code>main</code>.
+Declaring two raises, naming both.</p>
+<h2 id="safety">Safety</h2>
+<p><strong>A Python node cannot declare a topic safety-relevant, and this is deliberate.</strong></p>
+<p>A safety classification asserts that a bound on cycle time exists and is known. Measured on
+target, under QEMU:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A full collection, against a <em>bare</em> interpreter heap</td>
+<td><strong>6.6 ms</strong> worst, 4.4 ms median</td>
+</tr>
+<tr>
+<td>An incidental collection inside a 20 ms release grid</td>
+<td><strong>2.5 ms — 12.7% of the period</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Both the pause and its frequency scale with <strong>your</strong> live heap, which this framework neither
+observes nor bounds. There is no bound to assert, so the claim is not available to make.</p>
+<p>A Python node is Quality Managed by construction, in the way the <code>fast</code> lane is by its own
+design. It <strong>may</strong> subscribe to a topic another node has classified safety-relevant —
+consuming safety-relevant data at QM is an ordinary architecture. What it may not do is
+claim the classification for what it publishes. Put that node in Rust.</p>
+<h2 id="cost">Cost</h2>
+<p>Measured on target under QEMU on 2026-09-09. <strong>These are not board numbers</strong> — QEMU's CPU is
+not a Raspberry Pi 3's. The ratios should hold; the absolute milliseconds should not be
+quoted.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Smallest period with no overruns</td>
+<td><strong>5 ms</strong> (1 ms overran 35 cycles in 200)</td>
+</tr>
+<tr>
+<td>Lateness against the grid</td>
+<td>median ~0.9–1.0 ms, p99 ~1.7 ms, at every period</td>
+</tr>
+<tr>
+<td>Time to the first release</td>
+<td><strong>cold ~4.2 s, warm ~1.4–1.9 s</strong></td>
+</tr>
+</tbody>
+</table>
+<p>That last row matters to a system integrator: a Python node is not ready for seconds after
+it is spawned. It is interpreter startup, not this framework — TAIL-326 — and the framework's
+admission retry already spans it, which is why a Python subscriber may still be started
+before its Rust publisher.</p>
+<p><strong>What the framework does about the collector</strong>, so you do not have to:</p>
+<ul>
+<li><code>run()</code> calls <code>gc.freeze()</code> before the first release, moving the interpreter's whole
+startup heap out of the generations the collector walks. Measured: a full collection costs
+6.6 ms before that call and 0.018 ms after it.</li>
+<li>Nothing the collector walks is allocated per cycle. The cycle object, the sample <code>get()</code>
+returns and both payload buffers are created once.</li>
+</ul>
+<p><strong>What you can do.</strong> A body that does not retain what it makes triggers no collection at all
+— CPython collects on allocations <em>minus</em> deallocations. Keeping a rolling window of samples
+is what makes the collector run; if you need one, that is the cost to measure.</p>
+<h2 id="errors">Errors</h2>
+<p><code>NodeError</code> for anything wrong with a declaration, raised at decoration. <code>OSError</code> for a
+node that cannot start, carrying which topic and why. An uncaught one exits non-zero, so a
+supervisor can tell a node that never started from one that stopped cleanly.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A duration that will not parse</td>
+<td><code>NodeError</code> at decoration</td>
+</tr>
+<tr>
+<td>A missing or unknown key</td>
+<td><code>NodeError</code> at decoration, naming it</td>
+</tr>
+<tr>
+<td><code>safety=True</code></td>
+<td><code>NodeError</code> at decoration, with the reason above</td>
+</tr>
+<tr>
+<td>A topic that never appears</td>
+<td><code>OSError</code> from <code>run()</code> after the admission attempts</td>
+</tr>
+<tr>
+<td>A payload that disagrees with the publisher's</td>
+<td><code>OSError</code> from <code>run()</code>, or refused per sample on <code>kernel</code></td>
+</tr>
+<tr>
+<td>A cycle overrunning under <code>Fault</code></td>
+<td><code>NodeError</code> from <code>run()</code> — the ABI reports it as an <code>OSError</code>, restated in the framework's vocabulary because you asked for <code>Fault</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="init-has-no-equivalent-and-does-not-need-one-rust-needs-init-because-a-bare-fn-cannot-own-state-between-calls-a-python-closure-a"><code>init</code> has no equivalent, and does not need one Rust needs <code>init</code> because a bare <code>fn</code> cannot own state between calls. A Python closure, a</h2>
+<p>module global or a bound method already does:</p>
+<pre><code class="language-python">cycles = 0
+
+@periodic(every=&quot;20ms&quot;, publish=Topic(&quot;diag/count&quot;, Count), lane=&quot;safe&quot;, on_overrun=Skip)
+def counter():
+    global cycles
+    cycles += 1
+    return Count.instance(cycles=cycles)
+</code></pre>
+
+<footer class="doc-src">
+  <span>Generated from <span class="mono">framework/periodic/doc/periodic_python_public.md</span> in the TAIL OS repository.</span>
+</footer>
+</article>
+<nav class="toc" aria-label="On this page">
+  <span class="toc-h">On this page</span>
+  <ul>
+    <li><a href="#quick-start">Quick start</a></li>
+    <li><a href="#keys">Keys</a></li>
+    <li><a href="#payloads">Payloads</a></li>
+    <li><a href="#cycle">Cycle</a></li>
+    <li><a href="#run">run()</a></li>
+    <li><a href="#safety">Safety</a></li>
+    <li><a href="#cost">Cost</a></li>
+    <li><a href="#errors">Errors</a></li>
+    <li><a href="#init-has-no-equivalent-and-does-not-need-one-rust-needs-init-because-a-bare-fn-cannot-own-state-between-calls-a-python-closure-a">init has no equivalent, and does not need one Rust needs init because a bare fn cannot own state between calls. A Python closure, a</a></li>
+  </ul>
+</nav>
+</div>
+</main>
+</div>
+<footer class="ftr">
+  <span>TAIL OS &mdash; real-time microkernel in Rust</span>
+  <span class="ftr-sep">/</span>
+  <span class="mono">v0.9.0</span>
+</footer>
+
+</body>
+</html>

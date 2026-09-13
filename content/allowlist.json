@@ -37,12 +37,6 @@
   },
   "documents": [
     {
-      "path": "framework/periodic/doc/periodic_framework_public.md",
-      "slug": "periodic-framework-rust",
-      "title": "Periodic Framework (Rust)",
-      "summary": "Declare a period and let the framework own the timing loop, admission, freshness and the publish."
-    },
-    {
       "path": "doc/get_started.md",
       "slug": "getting-started",
       "title": "Getting Started",
@@ -52,13 +46,43 @@
       "path": "doc/install_qemu.md",
       "slug": "qemu",
       "title": "Running TAIL OS in QEMU",
-      "summary": "Boot the prebuilt image under QEMU on Ubuntu with a single command."
+      "summary": "Boot the prebuilt image under QEMU on Ubuntu with a single command.",
+      "nav": [
+        "BSP"
+      ],
+      "navTitle": "QEMU"
     },
     {
       "path": "doc/install_rpi3.md",
       "slug": "raspberry-pi-3",
       "title": "Installing on Raspberry Pi 3",
-      "summary": "Flash the SD card image, wire the serial console, and boot on real hardware."
+      "summary": "Flash the SD card image, wire the serial console, and boot on real hardware.",
+      "nav": [
+        "BSP"
+      ],
+      "navTitle": "Raspberry Pi 3"
+    },
+    {
+      "path": "framework/periodic/doc/periodic_framework_public.md",
+      "slug": "periodic-framework-rust",
+      "title": "Periodic Framework (Rust)",
+      "summary": "Declare a period and let the framework own the timing loop, admission, freshness and the publish.",
+      "nav": [
+        "Development guide",
+        "Periodic"
+      ],
+      "navTitle": "Rust"
+    },
+    {
+      "path": "framework/periodic/doc/periodic_python_public.md",
+      "slug": "periodic-framework-python",
+      "title": "Periodic Framework (Python)",
+      "summary": "Write periodic nodes in Python, with the same keys as the Rust API and on the same topics.",
+      "nav": [
+        "Development guide",
+        "Periodic"
+      ],
+      "navTitle": "Python"
     }
   ]
 }

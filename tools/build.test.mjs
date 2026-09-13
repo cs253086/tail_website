@@ -130,27 +130,24 @@ describe.skipIf(!existsSync(sourceRoot))('generator', () => {
     // it names no document's content so it holds for whatever is allowlisted
     // next.
     //
-    // One page carries the section list of every document, so the slug in each
-    // link is what says which source to check a title against.
-    const html = readFileSync(join(out, 'docs/index.html'), 'utf8');
-    const links = [...html.matchAll(/href="\/docs\/([^/"]+)\/#[^"]*">([^<]+)</g)];
-    expect(links.length).toBeGreaterThan(0);
-
-    const bySlug = new Map();
-    for (const [, slug, title] of links) {
-      const text = title
-        .replaceAll('&lt;', '<').replaceAll('&gt;', '>')
-        .replaceAll('&amp;', '&').replaceAll('&#39;', "'").replaceAll('&quot;', '"');
-      bySlug.set(slug, [...(bySlug.get(slug) ?? []), text]);
-    }
-
+    // A document's sections are listed only in its own page's sidebar, so each
+    // page is where its titles are read -- and with one list per page, the list
+    // found is necessarily that document's.
+    let checked = 0;
     for (const doc of allowlist.documents) {
+      const html = readFileSync(join(out, `docs/${doc.slug}/index.html`), 'utf8');
+      const nav = /<ul class="nav-sections">([\s\S]*?)<\/ul>/.exec(html)?.[1] ?? '';
+      const titles = [...nav.matchAll(/>([^<]+)<\/a>/g)].map(([, title]) => title
+        .replaceAll('&lt;', '<').replaceAll('&gt;', '>')
+        .replaceAll('&amp;', '&').replaceAll('&#39;', "'").replaceAll('&quot;', '"'));
+      checked += titles.length;
+
       // Backticks are legitimately gone from a title: the delimiters of a code
       // span are not part of its text. Everything else must have survived.
       const source = readFileSync(join(sourceRoot, doc.path), 'utf8').replaceAll('`', '');
-      const titles = bySlug.get(doc.slug) ?? [];
       expect({ slug: doc.slug, absent: titles.filter((title) => !source.includes(title)) })
         .toEqual({ slug: doc.slug, absent: [] });
     }
+    expect(checked).toBeGreaterThan(0);
   });
 });

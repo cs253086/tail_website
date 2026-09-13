@@ -6,6 +6,26 @@ const exists = () => true;
 const entry = (path, slug) => ({ path, slug, title: 'T', summary: 'S' });
 
 describe('validateAllowlist', () => {
+  it('accepts a place in the hierarchy and a navigation title', () => {
+    const list = { documents: [{ ...entry('doc/a.md', 'a'), nav: ['BSP'], navTitle: 'QEMU' }] };
+    expect(() => validateAllowlist(list, SOURCE_ROOT, exists)).not.toThrow();
+  });
+
+  it('refuses nav written as a string, which would nest the page one group per character', () => {
+    const list = { documents: [{ ...entry('doc/a.md', 'a'), nav: 'BSP' }] };
+    expect(() => validateAllowlist(list, SOURCE_ROOT, exists)).toThrow(/nav must be a list/);
+  });
+
+  it('refuses a blank group name', () => {
+    const list = { documents: [{ ...entry('doc/a.md', 'a'), nav: ['Development guide', ' '] }] };
+    expect(() => validateAllowlist(list, SOURCE_ROOT, exists)).toThrow(/nav must be a list/);
+  });
+
+  it('refuses a blank navigation title, which would publish a link with no text', () => {
+    const list = { documents: [{ ...entry('doc/a.md', 'a'), navTitle: '' }] };
+    expect(() => validateAllowlist(list, SOURCE_ROOT, exists)).toThrow(/navTitle/);
+  });
+
   it('accepts a well-formed list', () => {
     const map = validateAllowlist({ documents: [entry('doc/a.md', 'a')] }, SOURCE_ROOT, exists);
     expect(map.get('doc/a.md').absolute).toBe('/src/tailos/doc/a.md');

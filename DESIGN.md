@@ -271,15 +271,31 @@ unchanged.
 | `/` | Question box, five suggested questions drawn from the current corpus, a short description of TAIL OS, and links into the documents. No sidebar, and no repository link (§5.0). |
 | `/404.html` | The documentation shell with a route back in. Replaces the error document the retired Apache config provided. |
 | `/ask/?q=...` | Answer with inline citations, source cards linking into `/docs/`, keyword results below. Shareable URL. `noindex`, and disallowed in `robots.txt`. |
-| `/docs/` | Generated index of every published document. |
+| `/docs/` | Generated index of every published document, grouped by the same hierarchy as the sidebar. |
 | `/docs/<slug>/` | One generated page per allowlisted document. Plain HTML, readable with JavaScript disabled. |
 
 The home page and the documentation shell are deliberately different layouts. `/`
 is the front door — what search engines index and what a stranger lands on — and a
-sidebar there is noise. Every other route carries the persistent section nav,
+sidebar there is noise. Every other route carries the documentation navigation,
 because once a reader is inside the documentation they want the map. Asking a
 question therefore navigates to `/ask/` rather than re-skinning `/` in place, so
 each route has exactly one layout.
+
+**Navigation.** The hierarchy is data, not markup. Each allowlist entry names its place
+with `nav`, a path of group labels — `["BSP"]`, `["Development guide", "Periodic"]`, or
+none for a page at the top level — and allowlist order is navigation order: a group
+appears where its first document does. A group exists only because a document is in it,
+so an empty group cannot be built and nothing guards against one. `navTitle` names a page
+within its group, so a leaf reads *Periodic → Rust* rather than repeating its ancestors
+as *Periodic → Periodic Framework (Rust)*.
+
+Only the page being read lists its sections. With every document's sections expanded at
+once the sidebar was already long at four documents; grouped, it would bury the groups
+under headings from pages nobody has opened.
+
+`nav` written as a string is refused at build time rather than coerced. A string
+iterates by character, so `"nav": "BSP"` would otherwise publish the page nested under
+groups named B, S and P, and nothing downstream would object.
 
 Answers are generated per request, so `/ask/` is excluded from indexing *and* from
 crawling: a crawler walking generated answers would drain the daily model quota for
@@ -339,7 +355,7 @@ pulled in. Nothing ships to the browser except the site's own code.
 
 | Suite | Covers |
 |---|---|
-| `tools/*.test.mjs` | Allowlist enforcement (a non-allowlisted path fails the build), chunk boundaries and heading paths, BM25 ranking against a fixture corpus, sitemap and slug generation. |
+| `tools/*.test.mjs` | Allowlist enforcement (a non-allowlisted path fails the build), chunk boundaries and heading paths, BM25 ranking against a fixture corpus, sitemap and slug generation, the navigation tree and which sections the sidebar lists. |
 | `functions/api/ask.test.js` | Citation rejection (uncited and out-of-range answers are discarded), cache key derivation and build-hash invalidation, rate-limit bucket arithmetic, every degradation path returns results rather than an error. |
 | `assets/js/answer-format.test.js` | Answer parsing: fenced commands kept whole, citation markers extracted, brackets inside inline code not mistaken for citations, markup treated as literal text. |
 | `tools/redact.test.mjs` | Private URLs replaced wherever they appear including inside fenced commands, unrelated URLs untouched, and output that escaped redaction failing the build. |

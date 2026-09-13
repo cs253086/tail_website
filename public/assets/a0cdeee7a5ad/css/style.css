@@ -235,27 +235,41 @@ img, svg { display: block; max-width: 100%; }
   border-right: 1px solid var(--border);
   background: var(--bg-soft);
 }
-.nav-docs, .nav-sections { list-style: none; margin: 0; padding: 0; }
-.nav-docs { display: flex; flex-direction: column; gap: 22px; }
-.nav-doc {
+.nav-docs, .nav-list, .nav-sections { list-style: none; margin: 0; padding: 0; }
+.nav-docs { display: flex; flex-direction: column; gap: 16px; }
+.nav-list { display: flex; flex-direction: column; gap: 1px; margin-top: 4px; }
+
+/* A top-level group: the parts of the documentation a reader chooses between. */
+.nav-label {
   display: block; padding: 5px 10px;
   font-size: 12px; font-weight: 600; letter-spacing: 0.07em;
   text-transform: uppercase; color: var(--text-mute);
 }
-.nav-doc:hover { color: var(--text); text-decoration: none; }
-.nav-doc[aria-current="page"] { color: var(--accent); }
-.nav-docs > li[aria-current="true"] > .nav-doc,
-.nav-docs > li:has(.nav-sections a[aria-current="true"]) > .nav-doc { color: var(--accent); }
-.nav-sections { display: flex; flex-direction: column; gap: 1px; margin-top: 4px; }
-.nav-sections a {
+/* A group within a group is one step down, not a second top-level heading. */
+.nav-list .nav-label {
+  margin-top: 6px; padding: 3px 10px;
+  font-size: 12.5px; letter-spacing: 0; text-transform: none; color: var(--text-dim);
+}
+.nav-list .nav-list { margin: 2px 0 0 10px; padding-left: 8px; border-left: 1px solid var(--border); }
+
+.nav-link {
   display: block; padding: 5px 10px; border-radius: var(--radius-sm);
-  font-size: 13.5px; color: var(--text-dim);
+  font-size: 14px; color: var(--text-dim);
+}
+/* A page standing at the top level is a destination in its own right. */
+.nav-docs > .nav-page > .nav-link { font-weight: 600; color: var(--text); }
+.nav-link:hover { background: var(--bg-sunken); color: var(--text); text-decoration: none; }
+.nav-link[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+.nav-sections {
+  display: flex; flex-direction: column; gap: 1px;
+  margin: 2px 0 6px 10px; padding-left: 8px; border-left: 2px solid var(--accent-line);
+}
+.nav-sections a {
+  display: block; padding: 4px 10px; border-radius: var(--radius-sm);
+  font-size: 13px; color: var(--text-dim);
 }
 .nav-sections a:hover { background: var(--bg-sunken); color: var(--text); text-decoration: none; }
-.nav-sections a[aria-current="true"] {
-  background: var(--accent-soft); color: var(--accent);
-  box-shadow: inset 2px 0 0 var(--accent); font-weight: 600;
-}
 
 .content { min-width: 0; padding: 36px 40px 96px; }
 /* Bounded so the table of contents sits beside the prose rather than adrift
@@ -334,6 +348,12 @@ img, svg { display: block; max-width: 100%; }
 .idx { list-style: none; margin: 28px 0 0; padding: 0; display: flex; flex-direction: column; gap: 20px; }
 .idx-t { font-size: 17px; font-weight: 600; }
 .idx-d { margin: 4px 0 0; font-size: 14.5px; color: var(--text-mute); }
+.idx-group { list-style: none; }
+.doc .idx-g { margin: 12px 0 0; }
+/* The index's subgroup heads a list of pages; it is not an API entry, so it
+   does not take the violet bar document h3s carry. */
+.doc h3.idx-g { border-left: 0; padding-left: 0; font-size: 16px; color: var(--text-dim); }
+.idx .idx { margin-top: 14px; padding-left: 14px; border-left: 1px solid var(--border); }
 
 /* ---------- answer view ---------- */
 .ask-root { max-width: 940px; }

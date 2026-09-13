@@ -19,6 +19,17 @@ export function validateAllowlist(allowlist, sourceRoot, exists) {
       if (!entry[field]) throw new AllowlistError(`allowlist entry is missing ${field}: ${JSON.stringify(entry)}`);
     }
 
+    // Refused rather than coerced. `"nav": "BSP"` is the natural slip, and a
+    // string iterates by character: it would publish a sidebar nesting the page
+    // under groups named B, S and P, and nothing downstream would object.
+    const isLabel = (value) => typeof value === 'string' && value.trim() !== '';
+    if (entry.nav !== undefined && !(Array.isArray(entry.nav) && entry.nav.every(isLabel))) {
+      throw new AllowlistError(`nav must be a list of group names, e.g. ["BSP"]: ${entry.path}`);
+    }
+    if (entry.navTitle !== undefined && !isLabel(entry.navTitle)) {
+      throw new AllowlistError(`navTitle must be a non-empty string: ${entry.path}`);
+    }
+
     const absolute = resolve(sourceRoot, entry.path);
     const inside = relative(sourceRoot, absolute);
     if (inside === '' || inside.startsWith('..') || resolve(sourceRoot, inside) !== absolute) {

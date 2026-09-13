@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { renderHome } from './render.mjs';
+import { renderDoc, renderDocsIndex, renderHome } from './render.mjs';
 
 const site = { origin: 'https://tail-os.com', version: 'v0.9.0', assets: '/assets/abc', buildId: 'abc' };
 const docs = [{ slug: 'qemu', title: 'Running TAIL OS in QEMU', summary: 'Boot under QEMU.', sections: [] }];
@@ -20,5 +20,52 @@ describe('renderHome', () => {
 
   it('publishes no reference to the private repository', () => {
     expect(html).not.toMatch(/github|cs253086/i);
+  });
+});
+
+describe('documentation navigation', () => {
+  const page = (slug, nav, navTitle, sections) => ({
+    slug, title: `Title of ${slug}`, summary: `About ${slug}.`, path: `doc/${slug}.md`, nav, navTitle, sections,
+  });
+  const docs = [
+    page('getting-started', undefined, undefined, [{ title: 'Prerequisites', anchor: 'prerequisites' }]),
+    page('qemu', ['BSP'], 'QEMU', [{ title: 'Try the Shell', anchor: 'try-the-shell' }]),
+    page('periodic-framework-rust', ['Development guide', 'Periodic'], 'Rust', [{ title: 'Quick start', anchor: 'quick-start' }]),
+  ];
+  const sidebarOf = (html) => /<aside class="side">([\s\S]*?)<\/aside>/.exec(html)[1];
+  const reading = (doc) => sidebarOf(renderDoc({ site, docs, doc, html: '<h1>x</h1>' }));
+
+  it('lists sections for the page being read and for no other', () => {
+    // Every document's sections at once would bury the groups under headings
+    // from pages nobody has opened.
+    const html = reading(docs[1]);
+    expect(html).toContain('/docs/qemu/#try-the-shell');
+    expect(html).not.toContain('#prerequisites');
+    expect(html).not.toContain('/docs/periodic-framework-rust/#quick-start');
+  });
+
+  it('names a page by its navigation title, so a leaf does not repeat its ancestors', () => {
+    expect(reading(docs[0])).toMatch(/<a class="nav-link" href="\/docs\/periodic-framework-rust\/">Rust<\/a>/);
+  });
+
+  it('renders groups as labels, nested and in allowlist order', () => {
+    const labels = [...reading(docs[0]).matchAll(/<span class="nav-label">([^<]+)<\/span>/g)].map((m) => m[1]);
+    expect(labels).toEqual(['BSP', 'Development guide', 'Periodic']);
+  });
+
+  it('marks the page being read as current', () => {
+    expect(reading(docs[1])).toMatch(/href="\/docs\/qemu\/" aria-current="page">QEMU</);
+  });
+
+  it('lists no sections on the documentation index, where no page is being read', () => {
+    expect(sidebarOf(renderDocsIndex({ site, docs }))).not.toContain('nav-sections');
+  });
+
+  it('groups the documentation index the same way as the sidebar', () => {
+    const html = renderDocsIndex({ site, docs });
+    const main = html.slice(html.indexOf('<article'));
+    expect(main.indexOf('BSP')).toBeLessThan(main.indexOf('Development guide'));
+    expect(main.indexOf('Development guide')).toBeLessThan(main.indexOf('Periodic'));
+    expect(main).toContain('href="/docs/qemu/"');
   });
 });

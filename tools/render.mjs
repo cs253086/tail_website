@@ -2,6 +2,8 @@
 // sidebar) and the documentation shell (persistent section nav) used by /ask/
 // and every /docs/ page.
 
+import { buildNavTree } from './nav.mjs';
+
 export function esc(text) {
   return String(text)
     .replace(/&/g, '&amp;')
@@ -55,24 +57,41 @@ function header({ site, compact }) {
 </header>`;
 }
 
-function sidebar({ docs, activeSlug }) {
-  const groups = docs.map((doc) => {
-    const isActive = doc.slug === activeSlug;
-    const sections = doc.sections
-      .map((section) => `<li><a href="/docs/${esc(doc.slug)}/#${esc(section.anchor)}">${esc(section.title)}</a></li>`)
-      .join('\n        ');
-    return `<li class="nav-group">
-      <a class="nav-doc" href="/docs/${esc(doc.slug)}/"${isActive ? ' aria-current="page"' : ''}>${esc(doc.title)}</a>
-      <ul class="nav-sections">
-        ${sections}
+function navNodes(nodes, activeSlug) {
+  return nodes.map((node) => {
+    if (node.type === 'group') {
+      // A group names a part of the documentation. It is not a page, so it is
+      // not a link.
+      return `<li class="nav-group">
+      <span class="nav-label">${esc(node.label)}</span>
+      <ul class="nav-list">
+        ${navNodes(node.children, activeSlug)}
       </ul>
     </li>`;
-  }).join('\n    ');
+    }
 
+    const { doc } = node;
+    const isActive = doc.slug === activeSlug;
+    // Only the page being read lists its sections. Every document's sections at
+    // once was already a long sidebar at four documents; grouped, it would bury
+    // the groups under headings from pages nobody has opened.
+    const sections = isActive && doc.sections.length
+      ? `
+      <ul class="nav-sections">
+        ${doc.sections.map((section) => `<li><a href="/docs/${esc(doc.slug)}/#${esc(section.anchor)}">${esc(section.title)}</a></li>`).join('\n        ')}
+      </ul>`
+      : '';
+    return `<li class="nav-page">
+      <a class="nav-link" href="/docs/${esc(doc.slug)}/"${isActive ? ' aria-current="page"' : ''}>${esc(doc.navTitle ?? doc.title)}</a>${sections}
+    </li>`;
+  }).join('\n    ');
+}
+
+function sidebar({ docs, activeSlug }) {
   return `<aside class="side">
   <nav aria-label="Documentation">
     <ul class="nav-docs">
-    ${groups}
+    ${navNodes(buildNavTree(docs), activeSlug)}
     </ul>
   </nav>
 </aside>`;
@@ -226,19 +245,35 @@ export function renderNotFound({ site, docs }) {
   });
 }
 
+function indexNodes(nodes, depth) {
+  return nodes.map((node) => {
+    if (node.type === 'group') {
+      const tag = depth === 0 ? 'h2' : 'h3';
+      return `<li class="idx-group">
+      <${tag} class="idx-g">${esc(node.label)}</${tag}>
+      <ul class="idx">
+        ${indexNodes(node.children, depth + 1)}
+      </ul>
+    </li>`;
+    }
+    return `<li>
+      <a class="idx-t" href="/docs/${esc(node.doc.slug)}/">${esc(node.doc.title)}</a>
+      <p class="idx-d">${esc(node.doc.summary)}</p>
+    </li>`;
+  }).join('\n    ');
+}
+
 export function renderDocsIndex({ site, docs }) {
-  const items = docs
-    .map((doc) => `<li>
-      <a class="idx-t" href="/docs/${esc(doc.slug)}/">${esc(doc.title)}</a>
-      <p class="idx-d">${esc(doc.summary)}</p>
-    </li>`)
-    .join('\n    ');
+  const tree = buildNavTree(docs);
+  const items = indexNodes(tree, 0);
+  // Derived from the hierarchy, so it cannot go stale when a document is added.
+  const parts = tree.map((node) => (node.type === 'group' ? node.label : node.doc.title));
 
   return shell({
     site,
     docs,
     title: 'Documentation — TAIL OS',
-    description: 'Published TAIL OS documentation: getting started, running under QEMU, and installing on a Raspberry Pi 3B.',
+    description: `TAIL OS documentation: ${parts.join(', ')}.`,
     canonical: `${site.origin}/docs/`,
     activeSlug: null,
     main: `<article class="doc">
