@@ -85,7 +85,10 @@ ensure() {
 
     printf '    fetching %s\n' "$BASE_URL/$name.gz"
     download "$BASE_URL/$name.gz" "$work/$name.gz"
-    gzip -dc "$work/$name.gz" > "$work/$name" || die "$name.gz is damaged; nothing was cached"
+    # gzip fails the same way for a download cut short and for a disk that fills while
+    # unpacking; its own message, printed just above, says which.
+    gzip -dc "$work/$name.gz" > "$work/$name" \
+        || die "could not unpack $name.gz (see the error above); nothing was cached"
     [[ "$(sha256 "$work/$name")" == "$want" ]] \
         || die "$name does not match its published checksum; nothing was cached"
     mv -f "$work/$name" "$path"
