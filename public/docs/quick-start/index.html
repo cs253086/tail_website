@@ -12,11 +12,11 @@
 <meta property="og:url" content="https://tail-os.com/docs/quick-start/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/c49fb114d319/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/f744004fb412/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/c49fb114d319/css/style.css">
+<link rel="stylesheet" href="/assets/f744004fb412/css/style.css">
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -145,7 +145,8 @@ PID    PPID   STATE      THREADS  NAME
 2      -      RUNNING    2        uart_pl011
 3      -      RUNNING    3        log_server
 4      -      RUNNING    1        pipe_server
-6      -      RUNNING    3        network
+5      -      RUNNING    2        dwc2_rpi3
+6      -      RUNNING    4        network
 8      -      RUNNING    5        gpio_rpi3
 9      -      RUNNING    1        sd_sdhost_rpi3
 10     -      RUNNING    1        read_only_file_system_server
@@ -153,9 +154,9 @@ PID    PPID   STATE      THREADS  NAME
 13     -      RUNNING    1        tsh
 14     13     RUNNING    1        pidls
 </code></pre>
-<p>This is what a microkernel looks like from the inside. The serial driver, the SD card
-driver, both filesystems and the network stack are not part of <code>kernel</code>; each is a process
-of its own, listed here beside the shell.</p>
+<p>This is what a microkernel looks like from the inside. The serial driver, the USB and SD
+card drivers, both filesystems and the network stack are not part of <code>kernel</code>; each is a
+process of its own, listed here beside the shell.</p>
 <h3 id="python">Python</h3>
 <pre><code>/$ python /hello.py
 hello from tailos
