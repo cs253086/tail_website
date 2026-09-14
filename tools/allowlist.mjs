@@ -6,6 +6,15 @@ import { posix, relative, resolve } from 'node:path';
 
 export class AllowlistError extends Error {}
 
+// The one test of whether a listed path lies inside the checkout. Documents and
+// downloads cross the same boundary, so they share it rather than each holding a
+// copy that could come to disagree.
+function insideSourceRoot(sourceRoot, path) {
+  const absolute = resolve(sourceRoot, path);
+  const inside = relative(sourceRoot, absolute);
+  return inside !== '' && !inside.startsWith('..') && resolve(sourceRoot, inside) === absolute ? absolute : null;
+}
+
 export function validateAllowlist(allowlist, sourceRoot, exists) {
   if (!Array.isArray(allowlist.documents) || allowlist.documents.length === 0) {
     throw new AllowlistError('allowlist contains no documents');
@@ -30,9 +39,8 @@ export function validateAllowlist(allowlist, sourceRoot, exists) {
       throw new AllowlistError(`navTitle must be a non-empty string: ${entry.path}`);
     }
 
-    const absolute = resolve(sourceRoot, entry.path);
-    const inside = relative(sourceRoot, absolute);
-    if (inside === '' || inside.startsWith('..') || resolve(sourceRoot, inside) !== absolute) {
+    const absolute = insideSourceRoot(sourceRoot, entry.path);
+    if (!absolute) {
       throw new AllowlistError(`allowlist entry escapes the source root: ${entry.path}`);
     }
     if (bySourcePath.has(entry.path)) {
@@ -99,4 +107,33 @@ export function validateOrigin(origin) {
   }
 
   return parsed.origin;
+}
+
+// Files published for download cross the same boundary as documents: nothing is
+// published unless it is listed here, and a listed file that escapes the source
+// root or does not exist fails the build rather than publishing nothing.
+export function validateDownloads(allowlist, sourceRoot, exists) {
+  const entries = allowlist.downloads ?? [];
+  if (!Array.isArray(entries)) throw new AllowlistError('downloads must be a list');
+
+  const publishedNames = new Set();
+  return entries.map((entry) => {
+    if (!entry?.path) throw new AllowlistError(`download entry is missing path: ${JSON.stringify(entry)}`);
+    if (entry.compress !== undefined && typeof entry.compress !== 'boolean') {
+      throw new AllowlistError(`compress must be true or false: ${entry.path}`);
+    }
+    const absolute = insideSourceRoot(sourceRoot, entry.path);
+    if (!absolute) throw new AllowlistError(`download escapes the source root: ${entry.path}`);
+    if (!exists(absolute)) throw new AllowlistError(`download does not exist: ${entry.path}`);
+
+    const name = posix.basename(entry.path);
+    const published = entry.compress ? `${name}.gz` : name;
+    // Two files with one basename would publish to one URL, and the second
+    // would silently replace the first.
+    if (publishedNames.has(published)) {
+      throw new AllowlistError(`two downloads would publish as ${published}`);
+    }
+    publishedNames.add(published);
+    return { path: entry.path, absolute, name, published, compress: entry.compress === true };
+  });
 }

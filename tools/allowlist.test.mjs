@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AllowlistError, assertAllowlisted, rewriteLink, validateAllowlist, validateOrigin } from './allowlist.mjs';
+import { AllowlistError, assertAllowlisted, rewriteLink, validateAllowlist, validateDownloads, validateOrigin } from './allowlist.mjs';
 
 const SOURCE_ROOT = '/src/tailos';
 const exists = () => true;
@@ -133,5 +133,38 @@ describe('validateOrigin', () => {
   it('rejects an origin carrying a path', () => {
     expect(() => validateOrigin('https://tail-os.com/docs')).toThrow(/bare scheme and host/);
     expect(() => validateOrigin('https://tail-os.com/?a=1')).toThrow(/bare scheme and host/);
+  });
+});
+
+describe('validateDownloads', () => {
+  const downloads = (list, exist = exists) => validateDownloads({ downloads: list }, SOURCE_ROOT, exist);
+
+  it('treats a missing list as no downloads', () => {
+    expect(validateDownloads({}, SOURCE_ROOT, exists)).toEqual([]);
+  });
+
+  it('publishes a compressed file with .gz and a plain one under its own name', () => {
+    expect(downloads([{ path: 'tail_disk.img', compress: true }, { path: 'scripts/run_tailos_qemu.sh' }])
+      .map(({ name, published, compress }) => ({ name, published, compress })))
+      .toEqual([
+        { name: 'tail_disk.img', published: 'tail_disk.img.gz', compress: true },
+        { name: 'run_tailos_qemu.sh', published: 'run_tailos_qemu.sh', compress: false },
+      ]);
+  });
+
+  it('refuses a download that escapes the source root', () => {
+    expect(() => downloads([{ path: '../elsewhere/secret.img' }])).toThrow(/escapes the source root/);
+  });
+
+  it('refuses a download that does not exist, rather than publishing nothing', () => {
+    expect(() => downloads([{ path: 'tail_qemu.rfs' }], () => false)).toThrow(/does not exist/);
+  });
+
+  it('refuses two downloads that would publish to one URL', () => {
+    expect(() => downloads([{ path: 'a/README.md' }, { path: 'b/README.md' }])).toThrow(/would publish as README.md/);
+  });
+
+  it('refuses a compress flag that is not a boolean', () => {
+    expect(() => downloads([{ path: 'tail_disk.img', compress: 'yes' }])).toThrow(/compress must be true or false/);
   });
 });

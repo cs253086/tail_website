@@ -1,8 +1,10 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gunzipSync } from 'node:zlib';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -50,6 +52,16 @@ describe('published output', () => {
       .filter((file) => file.includes('/public/docs/') && file.endsWith('index.html'))
       .map((file) => file.replace(/.*\/public\/docs\/?/, '').replace(/index\.html$/, '').replace(/\/$/, ''));
     expect(new Set(pages)).toEqual(new Set(['', ...allowlist.documents.map((doc) => doc.slug)]));
+  });
+
+  it('publishes nothing under /downloads but the allowlisted files and their checksums', () => {
+    const dir = join(ROOT, 'public/downloads');
+    const expected = (allowlist.downloads ?? []).map(({ path, compress }) => {
+      const name = path.split('/').pop();
+      return compress ? `${name}.gz` : name;
+    });
+    const present = existsSync(dir) ? readdirSync(dir).sort() : [];
+    expect(present).toEqual([...expected, ...(expected.length ? ['SHA256SUMS'] : [])].sort());
   });
 
   it('lists every document in the sitemap', () => {
@@ -115,6 +127,75 @@ describe.skipIf(!existsSync(sourceRoot))('generator', () => {
   it('reproduces the committed output byte for byte', () => {
     const built = readFileSync(join(out, 'index.html'), 'utf8');
     expect(built).toBe(readFileSync(join(ROOT, 'public/index.html'), 'utf8'));
+  });
+
+  it('publishes each download as its source bytes, compressed where the allowlist says', () => {
+    for (const { path, compress } of allowlist.downloads ?? []) {
+      const name = path.split('/').pop();
+      const published = readFileSync(join(out, 'downloads', compress ? `${name}.gz` : name));
+      const reader = compress ? gunzipSync(published) : published;
+      expect({ path, identical: reader.equals(readFileSync(join(sourceRoot, path))) }).toEqual({ path, identical: true });
+    }
+  });
+
+  it('lists the checksum of every download as a reader holds it after decompressing', () => {
+    const downloads = allowlist.downloads ?? [];
+    const manifest = join(out, 'downloads', 'SHA256SUMS');
+    if (downloads.length === 0) {
+      expect(existsSync(manifest)).toBe(false);
+      return;
+    }
+    const sums = readFileSync(manifest, 'utf8');
+    for (const { path } of downloads) {
+      const hash = createHash('sha256').update(readFileSync(join(sourceRoot, path))).digest('hex');
+      expect(sums).toContain(`${hash}  ${path.split('/').pop()}\n`);
+    }
+  });
+
+  it('reproduces the committed downloads byte for byte, so an unchanged image never churns', () => {
+    // gzip output must be deterministic: if compressing the same image twice gave
+    // different bytes, every regeneration would commit another copy of it.
+    const dir = join(out, 'downloads');
+    for (const file of existsSync(dir) ? readdirSync(dir) : []) {
+      const identical = readFileSync(join(dir, file)).equals(readFileSync(join(ROOT, 'public/downloads', file)));
+      expect({ file, identical }).toEqual({ file, identical: true });
+    }
+  });
+
+  it('fails the build when a download carries a private repository URL', () => {
+    // Downloads are copied or compressed, never rendered, so the redaction that
+    // guards documents never sees them. Building from a copy of the source root
+    // with one URL planted in the launcher is what shows the scan is wired in,
+    // rather than merely written.
+    const root = mkdtempSync(join(tmpdir(), 'tailos-leak-'));
+    const site = mkdtempSync(join(tmpdir(), 'tailos-leak-site-'));
+    try {
+      const listed = [...allowlist.documents, ...(allowlist.downloads ?? [])].map((entry) => entry.path);
+      for (const path of listed) {
+        mkdirSync(dirname(join(root, path)), { recursive: true });
+        symlinkSync(join(sourceRoot, path), join(root, path));
+      }
+      const launcher = (allowlist.downloads ?? []).find((entry) => entry.path.endsWith('.sh'));
+      expect(launcher).toBeDefined();
+      rmSync(join(root, launcher.path));
+      writeFileSync(join(root, launcher.path),
+        `${readFileSync(join(sourceRoot, launcher.path), 'utf8')}\n# mirror: https://github.com/cs253086/tailos/releases\n`);
+
+      let failure;
+      try {
+        execFileSync('node', [join(ROOT, 'tools/generate.mjs')], {
+          cwd: ROOT,
+          stdio: 'pipe',
+          env: { ...process.env, TAILOS_ROOT: root, SITE_OUT: join(site, 'public'), CORPUS_OUT: join(site, 'generated') },
+        });
+      } catch (error) {
+        failure = String(error.stderr);
+      }
+      expect(failure).toMatch(/redaction escaped into scripts\/run_tailos_qemu\.sh: https:\/\/github\.com\/cs253086\/tailos/);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+      rmSync(site, { recursive: true, force: true });
+    }
   });
 
   it('redacts every private URL out of the rendered documents', () => {

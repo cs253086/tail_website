@@ -9,9 +9,10 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync, cpSync, existsSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gzipSync } from 'node:zlib';
 import MarkdownIt from 'markdown-it';
 
-import { assertAllowlisted, rewriteLink, validateAllowlist, validateOrigin } from './allowlist.mjs';
+import { assertAllowlisted, rewriteLink, validateAllowlist, validateDownloads, validateOrigin } from './allowlist.mjs';
 import { assertRedacted, compileRules, redact } from './redact.mjs';
 import { buildIndex } from './bm25.mjs';
 import { chunkMarkdown } from './chunk.mjs';
@@ -45,9 +46,11 @@ if (!existsSync(sourceRoot)) {
 
 let bySourcePath;
 let origin;
+let downloads;
 try {
   bySourcePath = validateAllowlist(allowlist, sourceRoot, existsSync);
   origin = validateOrigin(allowlist.origin);
+  downloads = validateDownloads(allowlist, sourceRoot, existsSync);
 } catch (error) {
   fail(error.message);
 }
@@ -234,6 +237,29 @@ write(
 );
 
 // Tests live beside the code they cover; they are not part of the site.
+// --- downloads -------------------------------------------------------------
+
+// A download is copied or compressed, never rendered, so the redaction check
+// that guards documents never sees it. Scanning its source bytes is what keeps a
+// private URL out of a published script -- or out of a string inside an image.
+// latin1 maps every byte to one character, so a binary scans without a decoding
+// error and without a byte skipped.
+const checksums = [];
+for (const download of downloads) {
+  const bytes = readFileSync(download.absolute);
+  assertRedacted(bytes.toString('latin1'), redactionRules, download.path);
+  checksums.push(`${createHash('sha256').update(bytes).digest('hex')}  ${download.name}`);
+  // Level 6 rather than 9: measured on the QEMU disk image, 9 saved 0.04 MiB of 8.6 and
+  // cost a second on every generate.
+  write(join(PUBLIC, 'downloads', download.published), download.compress ? gzipSync(bytes, { level: 6 }) : bytes);
+}
+// Checksums of the files as a reader holds them after decompressing, which is
+// also what the launcher compares its cache against.
+if (checksums.length) {
+  write(join(PUBLIC, 'downloads', 'SHA256SUMS'), `${checksums.join('\n')}\n`);
+  console.log(`generate: ${downloads.length} download(s), checksums in /downloads/SHA256SUMS`);
+}
+
 cpSync(join(ROOT, 'assets'), join(PUBLIC, 'assets', buildId), {
   recursive: true,
   filter: (source) => !source.endsWith('.test.js'),

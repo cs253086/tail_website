@@ -111,6 +111,23 @@ generator fails the build if it is asked to emit anything not on that list.
 The consequence is that `git diff` before a push *is* the publication review: the
 website repo contains exactly what the public can read, and nothing else.
 
+**Downloads cross the same boundary.** Files published for download — the QEMU kernel,
+its data disk and the launcher script — are listed under `downloads` in
+`content/allowlist.json` and read from the tailos checkout exactly as documents are.
+Nothing under `/downloads/` exists unless it is listed, and a listed file that escapes
+the source root or is missing fails the build. They are published verbatim or
+gzip-compressed, never rendered, so the redaction check that guards rendered documents
+never sees them; the generator scans each download's source bytes against the same
+rules instead, which is what keeps a private URL out of a published script or a string
+inside an image. Compression is deterministic, so regenerating an unchanged image
+produces identical bytes and commits nothing.
+
+The kernel and disk are committed to tailos through Git LFS, built as a pair by one
+recipe (`make build-release BOARD=rpi3 IMAGE=qemu`) and booted to the shell before they
+are committed. The build's `os_image/` directory is shared with test runners, so the
+newest file there is not necessarily an image with a shell — the one found there during
+this work booted a regression test and never reached a prompt.
+
 ### 5.2 Retrieval runs server-side, never in the browser
 
 The client sends only a question string. It cannot supply passages.
@@ -273,6 +290,7 @@ unchanged.
 | `/ask/?q=...` | Answer with inline citations, source cards linking into `/docs/`, keyword results below. Shareable URL. `noindex`, and disallowed in `robots.txt`. |
 | `/docs/` | Generated index of every published document, grouped by the same hierarchy as the sidebar. |
 | `/docs/<slug>/` | One generated page per allowlisted document. Plain HTML, readable with JavaScript disabled. |
+| `/downloads/` | Allowlisted files: `tail_qemu.rfs.gz`, `tail_disk.img.gz`, `run_tailos_qemu.sh`, and `SHA256SUMS` giving the checksum of each as a reader holds it after decompressing. |
 
 The home page and the documentation shell are deliberately different layouts. `/`
 is the front door — what search engines index and what a stranger lands on — and a
@@ -334,6 +352,16 @@ because the path changes every build, and a build that emitted assets to a fixed
 path would serve returning visitors stale CSS and JavaScript indefinitely. A test
 asserts the two stay together.
 
+Downloads are deliberately **not** immutable. They keep stable names across rebuilds,
+because the launcher and Quick start name them, so a year-long immutable cache would
+keep serving a superseded image. They get the default revalidation, and the launcher
+does not lean on HTTP caching for correctness: it fetches `SHA256SUMS` on every run,
+verifies each decompressed download against it before moving it into its cache, and
+records the checksum it verified. A cached file is reused only while that checksum is
+still the published one — so a new image is noticed, a download cut short is never
+cached, and a disk the guest has written to is kept until an image is actually
+republished.
+
 ### 9.2 Rendering model output
 
 Model output never reaches `innerHTML`. `answer-format.js` parses an answer into a
@@ -360,7 +388,7 @@ pulled in. Nothing ships to the browser except the site's own code.
 
 | Suite | Covers |
 |---|---|
-| `tools/*.test.mjs` | Allowlist enforcement (a non-allowlisted path fails the build), chunk boundaries and heading paths, BM25 ranking against a fixture corpus, sitemap and slug generation, the navigation tree and which sections the sidebar lists. |
+| `tools/*.test.mjs` | Allowlist enforcement (a non-allowlisted path fails the build), chunk boundaries and heading paths, BM25 ranking against a fixture corpus, sitemap and slug generation, the navigation tree and which sections the sidebar lists, which files are published under `/downloads/`, that each decompresses to its source bytes, and that `SHA256SUMS` matches them. |
 | `functions/api/ask.test.js` | Citation rejection (uncited and out-of-range answers are discarded), cache key derivation and build-hash invalidation, rate-limit bucket arithmetic, every degradation path returns results rather than an error. |
 | `assets/js/answer-format.test.js` | Answer parsing: fenced commands kept whole, citation markers extracted, brackets inside inline code not mistaken for citations, markup treated as literal text. |
 | `tools/redact.test.mjs` | Private URLs replaced wherever they appear including inside fenced commands, unrelated URLs untouched, and output that escaped redaction failing the build. |
