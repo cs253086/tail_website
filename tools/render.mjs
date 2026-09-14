@@ -153,13 +153,13 @@ ${(home.highlights ?? []).map((item) => `    <div class="stat"><span class="stat
 ${header({ site, compact: false })}
 <main>
   <section class="hero">
-    <h1>Ask anything about TAIL OS</h1>
+    <h1>TAIL OS</h1>
     <p class="lede">TAIL OS is <strong class="kw-realtime">Real-Time</strong> &amp; <strong class="kw-kernel">Microkernel</strong>, in <strong class="kw-rust">RUST</strong>, for <strong class="kw-robot">Robot</strong> &amp; <strong class="kw-safety">Safety</strong></p>
 
     <form class="ask" action="/ask/" method="get" role="search">
       <label class="ask-field">
         ${SEARCH_GLYPH}
-        <input type="search" name="q" placeholder="How do I run TAIL OS on QEMU?" aria-label="Ask a question about TAIL OS" autocomplete="off" autofocus>
+        <input type="search" name="q" placeholder="Ask anything about TAIL OS" aria-label="Ask a question about TAIL OS" autocomplete="off" autofocus>
       </label>
       <button class="ask-go" type="submit" aria-label="Ask">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
