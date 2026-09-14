@@ -105,10 +105,21 @@ say "Booting TailOS (exit with Ctrl-A then X)"
 # behind QEMU's user-mode networking, which needs no privileges on the host. Without
 # it the USB root port is empty, and the guest reports "[FAIL] usb no device on the
 # root port" and refuses its default route on every boot.
-exec qemu-system-aarch64 \
-    -M raspi3b \
-    -kernel "$CACHE_DIR/tail_qemu.rfs" \
-    -serial mon:stdio \
-    -drive file="$CACHE_DIR/tail_disk.img",format=raw,if=sd \
-    -netdev user,id=tailnet0 \
-    -device usb-net,netdev=tailnet0
+qemu=(qemu-system-aarch64
+    -M raspi3b
+    -kernel "$CACHE_DIR/tail_qemu.rfs"
+    -serial mon:stdio
+    -drive "file=$CACHE_DIR/tail_disk.img,format=raw,if=sd"
+    -netdev user,id=tailnet0
+    -device usb-net,netdev=tailnet0)
+
+# `curl … | bash` leaves this script's stdin as the download pipe, and QEMU would
+# inherit it: the guest boots to its prompt, but nothing typed reaches it and Ctrl-A X
+# cannot quit. When there is a terminal, QEMU is given that instead. Only QEMU's stdin
+# is redirected -- bash is still reading the rest of this script from the pipe, and
+# an `exec </dev/tty` would make it wait for the remaining lines to be typed. The
+# whole if-block is parsed before any of it runs, so it is safe to read from a pipe.
+if [[ ! -t 0 ]] && { : </dev/tty; } 2>/dev/null; then
+    exec "${qemu[@]}" </dev/tty
+fi
+exec "${qemu[@]}"
