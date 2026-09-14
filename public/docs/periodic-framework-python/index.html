@@ -12,11 +12,11 @@
 <meta property="og:url" content="https://tail-os.com/docs/periodic-framework-python/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/20d9de7ae834/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/c49fb114d319/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/20d9de7ae834/css/style.css">
+<link rel="stylesheet" href="/assets/c49fb114d319/css/style.css">
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -35,6 +35,9 @@
 <aside class="side">
   <nav aria-label="Documentation">
     <ul class="nav-docs">
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/quick-start/">Quick Start</a>
+    </li>
     <li class="nav-page">
       <a class="nav-link" href="/docs/getting-started/">Getting Started</a>
     </li>
@@ -89,40 +92,49 @@ publish. A node is a function with a decorator — there is no loop to write.</p
 same things and are spelled the same way, so a reader of that page already knows this one.
 Where the two differ, this page says why.</p>
 <h2 id="quick-start">Quick start</h2>
-<p>Two programs on the same topic, one in each language. Neither writes a loop or a sleep.</p>
-<h3 id="a-rust-publisher">A Rust publisher</h3>
-<pre><code class="language-rust">#[derive(Clone, Copy)]
-#[repr(C)]
-struct Range { stamp: u64, range_mm: u32, quality: u32 }
-
-// SAFETY: `repr(C)`, all-integer, every bit pattern valid.
-unsafe impl std::tail_core::sync::shared_mutex::ShmSafe for Range {}
-
-#[periodic(every = &quot;20ms&quot;, publish = &quot;sensor/range&quot;, lane = safe, on_overrun = Skip)]
-fn lidar() -&gt; Range {
-    Range { stamp: 0x1234_5678, range_mm: 4200, quality: 97 }
-}
-</code></pre>
-<h3 id="a-python-subscriber">A Python subscriber</h3>
-<p>The whole program:</p>
+<p>Two programs, one of each shape: a node that only publishes and a node that only
+subscribes. Neither writes a loop or a sleep.</p>
+<h3 id="a-python-publisher">A Python publisher</h3>
 <pre><code class="language-python">from periodic import periodic, run, Skip, Payload, Topic
 
-Range = Payload(&quot;stamp:u64 range_mm:u32 quality:u32&quot;)
+Reading = Payload(&quot;stamp:u64 counter:u32&quot;, &quot;Reading&quot;)
 
-@periodic(every=&quot;20ms&quot;, subscribe=Topic(&quot;sensor/range&quot;, Range), lane=&quot;safe&quot;,
-          stale_after=&quot;60ms&quot;, on_overrun=Skip)
+count = 0
+
+
+@periodic(every=&quot;20ms&quot;, publish=Topic(&quot;pair/from_python&quot;, Reading),
+          lane=&quot;kernel&quot;, on_overrun=Skip)
+def sensor():
+    global count
+    count += 1
+    return Reading.instance(stamp=0x1234_5678_0000_0000 | count, counter=count)
+
+
+run()
+</code></pre>
+<p>A node that returns a value publishes it. <code>count</code> lives at module level, which is how a
+Python node keeps state between cycles; <a href="#init-has-no-equivalent-and-does-not-need-one">below</a>
+is why Python needs no <code>init</code> for that.</p>
+<h3 id="a-python-subscriber">A Python subscriber</h3>
+<pre><code class="language-python">from periodic import periodic, run, Skip, Payload, Topic
+
+Range = Payload(&quot;stamp:u64 range_mm:u32 quality:u32&quot;, &quot;Range&quot;)
+
+@periodic(every=&quot;20ms&quot;, subscribe=Topic(&quot;sensor/range&quot;, Range),
+          lane=&quot;safe&quot;, stale_after=&quot;200ms&quot;, on_overrun=Skip)
 def brake(lidar):
     reading = lidar.get()
     brake_for(reading.range_mm if reading else 0)
 
 run()
 </code></pre>
-<p>Six lines. Neither program names the other, and they may start in either order: each end
-retries admission until the topic appears.</p>
-<p><strong>These two are files, not snippets.</strong> <code>framework/periodic/python/examples/publisher.py</code>
-and <code>subscriber.py</code> are compiled into <code>test/integration_test/tests/periodic_python_pair</code>
-with <code>include_str!</code> and run on target, so the quick start you copy is the code that is
-tested. An example nobody runs is a claim rather than a demonstration.</p>
+<p>Each node retries admission until its topic appears, so it may start before or after the
+node at the other end.</p>
+<p><strong>These are the tested examples.</strong> <code>framework/periodic/python/examples/publisher.py</code> and
+<code>subscriber.py</code> are compiled into <code>test/integration_test/tests/periodic_python_pair</code> with
+<code>include_str!</code> and run on target, each against a Rust peer. The publisher above is that
+file without its docstring. The subscriber file wraps the same declaration in a few lines
+that let the test read a verdict from its exit status, so only its body differs.</p>
 <p><code>get()</code> returns <code>None</code> both when nothing has arrived and when what is held is older than
 <code>stale_after</code>. The two collapse on purpose, so the fail-safe branch is the branch that runs
 when the sensor goes quiet.</p>

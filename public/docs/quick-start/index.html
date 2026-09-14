@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quick Start — TAIL OS</title>
+<meta name="description" content="Boot TAIL OS in QEMU with one command, then look around its shell.">
+<link rel="canonical" href="https://tail-os.com/docs/quick-start/">
+<meta property="og:title" content="Quick Start — TAIL OS">
+<meta property="og:description" content="Boot TAIL OS in QEMU with one command, then look around its shell.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tail-os.com/docs/quick-start/">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="/assets/c49fb114d319/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/assets/c49fb114d319/css/style.css">
+</head>
+<body class="page-shell">
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 32" width="22" height="22" fill="none" aria-hidden="true"><path d="M4 8h24M4 16h16M4 24h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span>TAIL OS</span><span class="ver">v0.9.0</span></a>
+    <form class="hdr-search" action="/ask/" method="get" role="search">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" name="q" placeholder="Search or ask a question" aria-label="Search or ask a question" autocomplete="off">
+    </form>
+    <nav class="hdr-nav" aria-label="Primary">
+      <a href="/docs/">Docs</a>
+    </nav>
+  </div>
+</header>
+<div class="shell">
+<aside class="side">
+  <nav aria-label="Documentation">
+    <ul class="nav-docs">
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/quick-start/" aria-current="page">Quick Start</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/quick-start/#1-install-qemu">1. Install QEMU</a></li>
+        <li><a href="/docs/quick-start/#2-boot-tail-os">2. Boot TAIL OS</a></li>
+        <li><a href="/docs/quick-start/#3-look-around">3. Look around</a></li>
+        <li><a href="/docs/quick-start/#without-the-launcher">Without the launcher</a></li>
+        <li><a href="/docs/quick-start/#where-next">Where next</a></li>
+      </ul>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/getting-started/">Getting Started</a>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">BSP</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/qemu/">QEMU</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/raspberry-pi-3/">Raspberry Pi 3</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Development guide</span>
+      <ul class="nav-list">
+        <li class="nav-group">
+      <span class="nav-label">Periodic</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-rust/">Rust</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-python/">Python</a>
+    </li>
+      </ul>
+    </li>
+      </ul>
+    </li>
+    </ul>
+  </nav>
+</aside>
+<main class="content">
+<div class="doc-wrap">
+<article class="doc">
+<h1 id="quick-start">Quick Start</h1>
+<p>See TAIL OS run on a Linux machine with QEMU — no board, no toolchain, no build. Every
+command on this page was run against the published image, and the output shown is what
+it printed.</p>
+<h2 id="1-install-qemu">1. Install QEMU</h2>
+<pre><code class="language-bash">sudo apt-get install -y qemu-system-aarch64 qemu-utils
+</code></pre>
+<h2 id="2-boot-tail-os">2. Boot TAIL OS</h2>
+<pre><code class="language-bash">curl -sSL https://tail-os.com/downloads/run_tailos_qemu.sh | bash
+</code></pre>
+<p>The launcher downloads the kernel and data disk into <code>~/.cache/tailos/</code>, checks each
+against the published <code>SHA256SUMS</code>, and boots them. The first run downloads about 10 MB.
+Later runs start from the cache, which the launcher replaces only when a new image is
+published.</p>
+<p>Boot takes a few seconds. When the shell starts you see:</p>
+<pre><code>TAIL OS Shell (tsh)
+Type 'exit' to quit, 'help' for built-in commands.
+
+/$
+</code></pre>
+<p>To leave QEMU at any point, press <strong>Ctrl-A</strong>, then <strong>X</strong>.</p>
+<h2 id="3-look-around">3. Look around</h2>
+<h3 id="the-shell">The shell</h3>
+<pre><code>/$ help
+Built-in commands:
+  exit [code]    - Exit the shell (optionally with exit code)
+  cd [dir]       - Change current working directory
+  pwd            - Print current working directory
+  echo [-n] args - Print arguments ($VAR expanded)
+  export K=V     - Set (and export) an environment variable
+  cat &lt;file...&gt;  - Display file contents
+  clear          - Clear the terminal screen
+  history        - Show command history
+  mkdir &lt;dir...&gt; - Create directories
+  touch &lt;file..&gt; - Create empty files
+  test EXPR      - Evaluate a conditional expression
+  [ EXPR ]       - Same as 'test', with a closing ']'
+  true / false   - Yield success / failure status
+  help           - Show this help message
+
+Scripting: 'tsh &lt;file&gt; [args]' runs a script; if/while/for, &amp;&amp;, ||,
+';', $?, $1..$@ and '#!/rfs/tsh' shebangs are supported.
+
+External commands are executed as separate processes.
+</code></pre>
+<h3 id="the-filesystem">The filesystem</h3>
+<pre><code>/$ ls /
+etc       hello.py  usr
+/$ ls /usr/bin
+bluetoothctl    isrfat          netstat         route           waitfor
+cp              kill            pidls           shutdown        wcetdump
+dhcp            list-root-long  ping            sleep           which
+fetch           logview         python          time            wifi
+find            ls              reboot          top
+grep            mv              rm              vi
+</code></pre>
+<h3 id="the-processes">The processes</h3>
+<pre><code>/$ pidls
+PID    PPID   STATE      THREADS  NAME
+0      -      LOADING    0        startup
+1      -      RUNNING    11       kernel
+2      -      RUNNING    2        uart_pl011
+3      -      RUNNING    3        log_server
+4      -      RUNNING    1        pipe_server
+6      -      RUNNING    3        network
+8      -      RUNNING    5        gpio_rpi3
+9      -      RUNNING    1        sd_sdhost_rpi3
+10     -      RUNNING    1        read_only_file_system_server
+11     -      RUNNING    1        fat_file_system_server
+13     -      RUNNING    1        tsh
+14     13     RUNNING    1        pidls
+</code></pre>
+<p>This is what a microkernel looks like from the inside. The serial driver, the SD card
+driver, both filesystems and the network stack are not part of <code>kernel</code>; each is a process
+of its own, listed here beside the shell.</p>
+<h3 id="python">Python</h3>
+<pre><code>/$ python /hello.py
+hello from tailos
+</code></pre>
+<h3 id="the-network">The network</h3>
+<pre><code>/$ ping -c 3 10.0.2.2
+PING 10.0.2.2 (10.0.2.2)
+reply from 10.0.2.2: seq=0 time=7.199 ms
+reply from 10.0.2.2: seq=1 time=3.441 ms
+reply from 10.0.2.2: seq=2 time=2.982 ms
+--- 10.0.2.2 statistics ---
+3 sent, 3 received, 0% lost
+</code></pre>
+<p><code>10.0.2.2</code> is QEMU's gateway on the emulated network. The replies travel through the
+guest's USB network device, its driver and the <code>network</code> process above.</p>
+<h2 id="without-the-launcher">Without the launcher</h2>
+<p>If you would rather not pipe a script into your shell, the same steps by hand:</p>
+<pre><code class="language-bash">curl -fsSLO https://tail-os.com/downloads/tail_qemu.rfs.gz
+curl -fsSLO https://tail-os.com/downloads/tail_disk.img.gz
+curl -fsSLO https://tail-os.com/downloads/SHA256SUMS
+gunzip tail_qemu.rfs.gz tail_disk.img.gz
+sha256sum -c --ignore-missing SHA256SUMS
+
+qemu-system-aarch64 \
+    -M raspi3b \
+    -kernel tail_qemu.rfs \
+    -serial mon:stdio \
+    -drive file=tail_disk.img,format=raw,if=sd \
+    -netdev user,id=tailnet0 \
+    -device usb-net,netdev=tailnet0
+</code></pre>
+<p><code>-M raspi3b</code> emulates a Raspberry Pi 3B. The last two flags give the guest a USB network
+device behind QEMU's user-mode networking, which needs no special permissions on your
+machine; without them the guest boots with no network.</p>
+<h2 id="where-next">Where next</h2>
+<ul>
+<li><a href="/docs/periodic-framework-rust/">Periodic framework — Rust</a>:
+write a node that runs on a fixed period.</li>
+<li><a href="/docs/periodic-framework-python/">Periodic framework — Python</a>:
+the same, in Python.</li>
+</ul>
+
+<footer class="doc-src">
+  <span>Generated from <span class="mono">doc/quick_start_public.md</span> in the TAIL OS repository.</span>
+</footer>
+</article>
+<nav class="toc" aria-label="On this page">
+  <span class="toc-h">On this page</span>
+  <ul>
+    <li><a href="#1-install-qemu">1. Install QEMU</a></li>
+    <li><a href="#2-boot-tail-os">2. Boot TAIL OS</a></li>
+    <li><a href="#3-look-around">3. Look around</a></li>
+    <li><a href="#without-the-launcher">Without the launcher</a></li>
+    <li><a href="#where-next">Where next</a></li>
+  </ul>
+</nav>
+</div>
+</main>
+</div>
+<footer class="ftr">
+  <span>TAIL OS &mdash; real-time microkernel in Rust</span>
+  <span class="ftr-sep">/</span>
+  <span class="mono">v0.9.0</span>
+</footer>
+
+</body>
+</html>

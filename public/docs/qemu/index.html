@@ -12,11 +12,11 @@
 <meta property="og:url" content="https://tail-os.com/docs/qemu/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/20d9de7ae834/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/c49fb114d319/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/20d9de7ae834/css/style.css">
+<link rel="stylesheet" href="/assets/c49fb114d319/css/style.css">
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -35,6 +35,9 @@
 <aside class="side">
   <nav aria-label="Documentation">
     <ul class="nav-docs">
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/quick-start/">Quick Start</a>
+    </li>
     <li class="nav-page">
       <a class="nav-link" href="/docs/getting-started/">Getting Started</a>
     </li>
@@ -110,13 +113,14 @@ toolchain. For installing TailOS on real Raspberry Pi 3 hardware, see
 </table>
 <p>That's it. Everything else is bundled in the prebuilt images.</p>
 <h2 id="run-tailos-one-command">Run TailOS (one command)</h2>
-<pre><code class="language-bash">curl -sSL (private repository) | bash
+<pre><code class="language-bash">curl -sSL https://tail-os.com/downloads/run_tailos_qemu.sh | bash
 </code></pre>
 <p>The launcher will:</p>
 <ol>
 <li>Check that QEMU is installed.</li>
-<li>Download <code>tail.rfs</code> (kernel) and <code>tail_disk.img</code> (data disk) into
-<code>~/.cache/tailos/</code> on first run. Later runs reuse the cache.</li>
+<li>Download <code>tail_qemu.rfs</code> (kernel) and <code>tail_disk.img</code> (data disk) into
+<code>~/.cache/tailos/</code>, verifying each against the published <code>SHA256SUMS</code>. Later runs
+reuse the cache until a new image is published.</li>
 <li>Boot TailOS in QEMU with the correct flags.</li>
 </ol>
 <p>When you see <code>/$</code>, the system is ready. Exit QEMU with <strong>Ctrl-A, then X</strong>.</p>
@@ -136,20 +140,25 @@ with <code>&amp;</code>.</p>
 <pre><code class="language-bash"># 1. Install QEMU
 sudo apt-get install -y qemu-system-aarch64 qemu-utils
 
-# 2. Download the images
-wget https://tail-os.com/wp-content/uploads/2025/09/tail.rfs
-wget https://tail-os.com/wp-content/uploads/2025/09/tail_disk.img
+# 2. Download the images, unpack them, and check them
+curl -fsSLO https://tail-os.com/downloads/tail_qemu.rfs.gz
+curl -fsSLO https://tail-os.com/downloads/tail_disk.img.gz
+curl -fsSLO https://tail-os.com/downloads/SHA256SUMS
+gunzip tail_qemu.rfs.gz tail_disk.img.gz
+sha256sum -c --ignore-missing SHA256SUMS
 
 # 3. Boot
 qemu-system-aarch64 \
     -M raspi3b \
-    -kernel tail.rfs \
+    -kernel tail_qemu.rfs \
     -serial mon:stdio \
-    -drive file=tail_disk.img,format=raw,if=sd
+    -drive file=tail_disk.img,format=raw,if=sd \
+    -netdev user,id=tailnet0 \
+    -device usb-net,netdev=tailnet0
 </code></pre>
 <h2 id="whats-inside-the-images">What's Inside the Images</h2>
-<p><code>tail.rfs</code> is a custom ELF container that bundles the entire OS:</p>
-<pre><code>tail.rfs
+<p><code>tail_qemu.rfs</code> is a custom ELF container that bundles the entire OS:</p>
+<pre><code>tail_qemu.rfs
 ├── startup_rpi3              Early boot (EL3 -&gt; EL1, MMU, jump to kernel)
 ├── kernel                    Microkernel (process, thread, IPC, scheduler)
 ├── uart_pl011                UART + TTY server (user-space)
@@ -167,7 +176,7 @@ qemu-system-aarch64 \
 <pre><code>qemu-system-aarch64 -M raspi3b
   |
   v
-QEMU loads tail.rfs at 0x80000 (raspi3b entry point)
+QEMU loads tail_qemu.rfs at 0x80000 (raspi3b entry point)
   |
   v
 TailOS startup (_start.S)

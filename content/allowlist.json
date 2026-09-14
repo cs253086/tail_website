@@ -37,6 +37,12 @@
   },
   "documents": [
     {
+      "path": "doc/quick_start_public.md",
+      "slug": "quick-start",
+      "title": "Quick Start",
+      "summary": "Boot TAIL OS in QEMU with one command, then look around its shell."
+    },
+    {
       "path": "doc/get_started.md",
       "slug": "getting-started",
       "title": "Getting Started",
@@ -83,6 +89,19 @@
         "Periodic"
       ],
       "navTitle": "Python"
+    }
+  ],
+  "downloads": [
+    {
+      "path": "tail_qemu.rfs",
+      "compress": true
+    },
+    {
+      "path": "tail_disk.img",
+      "compress": true
+    },
+    {
+      "path": "scripts/run_tailos_qemu.sh"
     }
   ]
 }
