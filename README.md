@@ -33,19 +33,20 @@ generated/chunks.json    retrieval corpus, bundled into the Function
 
 ## Publishing a change
 
-The generator reads the tailos repository from `../tailos`, or from `TAILOS_ROOT`.
-It runs here, not in CI, so Cloudflare never holds credentials for that repository
-and can never see a file that was not generated.
+Publishing is automatic. `.github/workflows/publish.yml` rebuilds and deploys the site
+when this repository is pushed, and whenever tailos pushes to its main; a tailos push
+that touches no allowlisted file stops within seconds. Every publish is a commit here,
+so `git log -- public` shows what became visible and when. DESIGN.md §5.4 has the
+details.
+
+To see a change before it goes out, build it locally. The generator reads the tailos
+repository from `../tailos`, or from `TAILOS_ROOT`:
 
 ```bash
 npm install
 npm run build          # regenerates public/ and generated/
-git diff               # this is the publication review
-git commit && git push # Cloudflare Pages deploys public/
+git diff               # exactly what the next publish makes visible
 ```
-
-**`git diff` before pushing is the point.** The repository contains exactly what the
-public can read, so the diff shows precisely what is about to become visible.
 
 ### Publishing another document
 
@@ -81,8 +82,16 @@ npx wrangler pages project create tail-os
 npx wrangler pages secret put GEMINI_API_KEY --project-name tail-os
 ```
 
-Then connect the repository in the Cloudflare dashboard, with build output `public/`
-and no build command — the site is already built and committed.
+Publishing then needs three secrets, each set under the repository's
+**Settings → Secrets and variables → Actions**:
+
+| Repository | Secret | What it holds |
+|---|---|---|
+| tail_website | `TAILOS_READ_TOKEN` | A GitHub fine-grained token with Contents: read on tailos |
+| tail_website | `CLOUDFLARE_API_TOKEN` | A Cloudflare API token with Cloudflare Pages: Edit |
+| tailos | `SITE_PUBLISH_TOKEN` | A GitHub fine-grained token with Actions: read and write on tail_website |
+
+Until they exist, both workflows skip with a warning naming what is missing.
 
 ### Cost
 

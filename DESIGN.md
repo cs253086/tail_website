@@ -55,14 +55,14 @@ issue thread something to link.
   source root (default ~/src/tailos, configurable)
         │  allowlist.json names exactly which files may be published
         ▼
-  tools/generate.mjs          ← runs on the maintainer's machine, never in CI
+  tools/generate.mjs          ← runs in the publish workflow, or locally
         │
         ├──► public/docs/<slug>/index.html   static pages, one per allowlisted doc
         ├──► public/search-index.json        browser-side keyword search
         ├──► public/sitemap.xml
         └──► generated/chunks.json           retrieval corpus, bundled into the Function
         │
-        │  git commit  (the diff is the publication review)
+        │  git commit, then wrangler deploy  (every publish is a commit)
         ▼
   Cloudflare Pages
         ├── static assets, served from the edge, free and unmetered
@@ -97,19 +97,23 @@ them may not be. Every redaction is printed at build time, because a redaction m
 a published document still instructs the reader to fetch something they cannot
 reach — a content problem in the source that a placeholder hides rather than solves.
 
-### 5.1 The publication boundary is physical
+### 5.1 The publication boundary is the allowlist
 
-The generator runs locally, where both repos exist. Its output is committed to the
-website repo. Cloudflare never has credentials for the tailos repo and never sees a
-file that was not generated.
+The generator reads tailos only through `content/allowlist.json`, and its output is
+committed to the website repo. It runs in the publish workflow (§5.4), which checks
+out nothing but the allowlisted files, or on a maintainer's machine. Cloudflare never
+has credentials for the tailos repo and never sees a file that was not generated.
 
 This is deliberate. tailos contains `kernel_design_internal.md`, `TODO.md`, `ROADMAP.md`
 and per-module internal design docs. A denylist would leak anything not yet marked.
 Instead, `content/allowlist.json` names every publishable file explicitly, and the
 generator fails the build if it is asked to emit anything not on that list.
 
-The consequence is that `git diff` before a push *is* the publication review: the
-website repo contains exactly what the public can read, and nothing else.
+Every publish is a commit, so the website repo's history holds exactly what the public
+could read at each point, and a bad publish is reverted like any other commit.
+Publishing is automatic: a change to an allowlisted document goes live without anyone
+reading its rendered diff first. The allowlist, the redaction check (§5.0) and the full
+test suite stand in for that review, and each fails the publish rather than warning.
 
 **Downloads cross the same boundary.** Files published for download — the QEMU kernel,
 its data disk and the launcher script — are listed under `downloads` in
@@ -147,6 +151,42 @@ The Function then parses the response. An answer containing zero valid citation 
 or a marker pointing outside the supplied passage range, is discarded and the request
 degrades to retrieval results. Prompt instructions can be ignored by a model; this check
 cannot. A fabricated answer cannot reach the reader while still appearing sourced.
+
+### 5.4 Publishing
+
+`.github/workflows/publish.yml` builds and deploys the site. It runs when the website
+repo is pushed, and when tailos asks: tailos's `site-publish` workflow requests a publish
+on every push to its main. One publish runs at a time; a request that arrives
+mid-publish waits, then builds whatever is newest.
+
+Most tailos pushes touch nothing the site publishes, so a publish first decides whether
+it has anything to do (`tools/publish.mjs`). It compares the tailos commit it last built,
+recorded in `generated/source.json`, with tailos's newest commit, and stops if no
+allowlisted document or download changed, renames included. It builds whenever it
+cannot be sure: no recorded build, a history that was rewritten rather than moved
+forward, or a comparison at GitHub's 300-file limit. A push to the website repo always
+builds. The list of published files lives only in the allowlist; neither workflow
+repeats it.
+
+A build checks out only the allowlisted tailos files, shallow and sparse, because tailos
+is 1.7 GB. The two QEMU images are Git LFS objects whose downloads count against the
+tailos owner's bandwidth, so they are cached by LFS object id and downloaded only when
+they change. Each is restored from its own pointer, never by a command that scans the
+checkout (in a blobless clone that fetches every tailos file to inspect it), and must
+hash to the id its pointer names; the generator refuses any download that is still a
+pointer. The workflow then generates, runs the full test suite, records the tailos
+commit, commits `public/` and `generated/`, deploys with `wrangler pages deploy`, and
+checks that tail-os.com serves the new build id. If the website repo's main moved during
+the build, the publish started by that push deploys instead.
+
+| Secret | Repository | Grants |
+|---|---|---|
+| `TAILOS_READ_TOKEN` | tail_website | Contents read on tailos |
+| `CLOUDFLARE_API_TOKEN` | tail_website | Cloudflare Pages edit |
+| `SITE_PUBLISH_TOKEN` | tailos | Actions write on tail_website |
+
+Until a secret exists, the workflow that needs it skips with a warning naming it, so
+neither repository's pushes fail before publishing is configured.
 
 ## 6. Content pipeline
 
@@ -398,6 +438,7 @@ pulled in. Nothing ships to the browser except the site's own code.
 | `assets/js/answer-format.test.js` | Answer parsing: fenced commands kept whole, citation markers extracted, brackets inside inline code not mistaken for citations, markup treated as literal text. |
 | `assets/js/copy-text.test.js` | What a copy button copies: a block as shown less the newline markdown leaves after it, blank lines kept, and `data-copy` in place of a block that shows a prompt. |
 | `tools/redact.test.mjs` | Private URLs replaced wherever they appear including inside fenced commands, unrelated URLs untouched, and output that escaped redaction failing the build. |
+| `tools/publish.test.mjs` | When a publish builds: every push to the website repo; a tailos move only if a published document or download changed, a rename counting; and always when it cannot compare — no recorded build, rewritten history, or a comparison at GitHub's 300-file limit. |
 | `tools/build.test.mjs` | Runs the generator and asserts on its output: a page per allowlisted document and no others, no reference to the private repository anywhere, no test file published, assets carrying the current build hash, no unpublished repository file present, `/ask/` disallowed in robots.txt. |
 
 The model call is faked at the `answer()` boundary. No test performs network I/O.

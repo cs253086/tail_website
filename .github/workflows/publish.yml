@@ -1,0 +1,159 @@
+name: Publish site
+
+# Builds the site from tailos and deploys it to Cloudflare Pages. Runs when this
+# repository is pushed, and when tailos asks (its site-publish workflow runs on
+# every push to its main). A request that changed nothing the site publishes
+# stops at the first step; tools/publish.mjs decides.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tailos_sha:
+        description: The tailos commit whose push asked for this publish (for the log)
+        required: false
+        default: ''
+
+# One publish at a time. A request that arrives mid-publish waits, then builds
+# whatever is newest by then.
+concurrency:
+  group: publish-site
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  TAILOS_REPO: cs253086/tailos
+  CLOUDFLARE_ACCOUNT_ID: b29c90540212d56e8460ffe83b93ed06
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the site
+        uses: actions/checkout@v4
+
+      # Before the secrets exist every push would otherwise fail. Once they do,
+      # a real failure anywhere below still fails the run.
+      - name: Check publishing is configured
+        id: configured
+        env:
+          CONFIGURED: ${{ secrets.TAILOS_READ_TOKEN != '' && secrets.CLOUDFLARE_API_TOKEN != '' }}
+        run: |
+          if [ "$CONFIGURED" = true ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Publishing is not configured: set the TAILOS_READ_TOKEN and CLOUDFLARE_API_TOKEN secrets."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node
+        if: steps.configured.outputs.ready == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Decide whether anything the site publishes changed
+        id: source
+        if: steps.configured.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.TAILOS_READ_TOKEN }}
+          EVENT: ${{ github.event_name }}
+        run: node tools/publish.mjs decide >> "$GITHUB_OUTPUT"
+
+      # Only the published files: tailos is 1.7 GB, and the site reads nine files of it.
+      - name: Check out the published tailos files
+        if: steps.source.outputs.build == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.TAILOS_REPO }}
+          ref: ${{ steps.source.outputs.sha }}
+          token: ${{ secrets.TAILOS_READ_TOKEN }}
+          path: tailos
+          fetch-depth: 1
+          filter: blob:none
+          sparse-checkout: ${{ steps.source.outputs.paths }}
+          sparse-checkout-cone-mode: false
+
+      # LFS downloads count against the tailos owner's bandwidth quota, so the images
+      # are cached under a key that changes only when one of them does.
+      - name: Key the download images by their LFS pointers
+        id: downloads
+        if: steps.source.outputs.build == 'true'
+        run: node tools/publish.mjs downloads-key tailos >> "$GITHUB_OUTPUT"
+
+      - name: Restore the download images from cache
+        if: steps.source.outputs.build == 'true'
+        uses: actions/cache@v4
+        with:
+          path: tailos/.git/lfs/objects
+          key: tailos-downloads-${{ steps.downloads.outputs.key }}
+
+      # Never git lfs pull or ls-files here: in this blobless clone they fetch every
+      # tailos file to find the pointers.
+      - name: Restore each download image from its pointer
+        if: steps.source.outputs.build == 'true'
+        run: node tools/publish.mjs restore-downloads tailos
+
+      - name: Install
+        if: steps.source.outputs.build == 'true'
+        run: npm ci
+
+      - name: Generate
+        if: steps.source.outputs.build == 'true'
+        env:
+          TAILOS_ROOT: tailos
+        run: node tools/generate.mjs
+
+      - name: Test
+        if: steps.source.outputs.build == 'true'
+        env:
+          TAILOS_ROOT: tailos
+        run: npm test
+
+      - name: Commit what was built
+        id: commit
+        if: steps.source.outputs.build == 'true'
+        env:
+          TAILOS_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          node tools/publish.mjs record "$TAILOS_SHA"
+          git add public generated
+          if ! git diff --cached --quiet; then
+            git -c user.name="tail-os publish" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -q -m "Publish from tailos ${TAILOS_SHA:0:9}"
+            if ! git push -q origin HEAD:main; then
+              git fetch -q origin main
+              if [ "$(git rev-parse origin/main)" != "$GITHUB_SHA" ]; then
+                echo "::notice::main moved during this publish; the run started by that push publishes it."
+                echo "deploy=false" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              exit 1
+            fi
+          fi
+          echo "deploy=true" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to Cloudflare Pages
+        if: steps.commit.outputs.deploy == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npx wrangler pages deploy public --project-name=tail-os --branch=main --commit-hash="$(git rev-parse HEAD)" --commit-dirty=true
+
+      - name: Check tail-os.com serves this build
+        if: steps.commit.outputs.deploy == 'true'
+        run: |
+          build=$(node -p 'require("./generated/chunks.json").buildId')
+          for attempt in 1 2 3 4 5 6; do
+            if curl -fsS https://tail-os.com/ | grep -q "/assets/$build/"; then
+              echo "tail-os.com serves build $build"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::tail-os.com does not serve build $build a minute after deploying"
+          exit 1

@@ -1,9 +1,10 @@
 // Generates the entire public site from an explicit allowlist of tailos files.
 //
-// This runs on a maintainer's machine, where both repositories exist, and its
-// output is committed. Cloudflare never holds credentials for the source
-// repository and never sees a file that was not generated here, so `git diff`
-// before a push is the publication review.
+// It runs wherever both repositories are checked out: in the publish workflow
+// (.github/workflows/publish.yml), which checks out only the allowlisted tailos
+// files, or on a maintainer's machine. Its output is committed, so every publish
+// is a reviewable, revertible commit, and Cloudflare never sees a file that was
+// not generated here.
 
 import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync, cpSync, existsSync, statSync } from 'node:fs';
