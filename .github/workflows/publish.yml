@@ -34,7 +34,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Check out the site
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Before the secrets exist every push would otherwise fail. Once they do,
       # a real failure anywhere below still fails the run.
@@ -52,7 +52,7 @@ jobs:
 
       - name: Set up Node
         if: steps.configured.outputs.ready == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -68,7 +68,7 @@ jobs:
       # Only the published files: tailos is 1.7 GB, and the site reads nine files of it.
       - name: Check out the published tailos files
         if: steps.source.outputs.build == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ env.TAILOS_REPO }}
           ref: ${{ steps.source.outputs.sha }}
@@ -88,7 +88,7 @@ jobs:
 
       - name: Restore the download images from cache
         if: steps.source.outputs.build == 'true'
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: tailos/.git/lfs/objects
           key: tailos-downloads-${{ steps.downloads.outputs.key }}
