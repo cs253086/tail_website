@@ -12,12 +12,12 @@
 <meta property="og:url" content="https://tail-os.com/docs/qemu/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/5934ca909341/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/2811ec263a5d/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/5934ca909341/css/style.css">
-<script type="module" src="/assets/5934ca909341/js/copy.js"></script>
+<link rel="stylesheet" href="/assets/2811ec263a5d/css/style.css">
+<script type="module" src="/assets/2811ec263a5d/js/copy.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -49,7 +49,7 @@
       <a class="nav-link" href="/docs/qemu/" aria-current="page">QEMU</a>
       <ul class="nav-sections">
         <li><a href="/docs/qemu/#prerequisites">Prerequisites</a></li>
-        <li><a href="/docs/qemu/#run-tailos-one-command">Run TailOS (one command)</a></li>
+        <li><a href="/docs/qemu/#run-tailos">Run TailOS</a></li>
         <li><a href="/docs/qemu/#try-the-shell">Try the Shell</a></li>
         <li><a href="/docs/qemu/#manual-launch-alternative">Manual Launch (alternative)</a></li>
         <li><a href="/docs/qemu/#whats-inside-the-images">What's Inside the Images</a></li>
@@ -113,8 +113,11 @@ toolchain. For installing TailOS on real Raspberry Pi 3 hardware, see
 </tbody>
 </table>
 <p>That's it. Everything else is bundled in the prebuilt images.</p>
-<h2 id="run-tailos-one-command">Run TailOS (one command)</h2>
-<pre><code class="language-bash">curl -sSL https://tail-os.com/downloads/run_tailos_qemu.sh | bash
+<h2 id="run-tailos">Run TailOS</h2>
+<p>Download the launcher, then run it:</p>
+<pre><code class="language-bash">curl -O https://tail-os.com/downloads/run_tailos_qemu.sh
+chmod +x run_tailos_qemu.sh
+./run_tailos_qemu.sh
 </code></pre>
 <p>The launcher will:</p>
 <ol>
@@ -124,7 +127,8 @@ toolchain. For installing TailOS on real Raspberry Pi 3 hardware, see
 reuse the cache until a new image is published.</li>
 <li>Boot TailOS in QEMU with the correct flags.</li>
 </ol>
-<p>When you see <code>/$</code>, the system is ready. Exit QEMU with <strong>Ctrl-A, then X</strong>.</p>
+<p>When you see <code>/$</code>, the system is ready. Exit QEMU with <strong>Ctrl-A, then X</strong>. Booting it
+again is <code>./run_tailos_qemu.sh</code>: it starts from the cached images.</p>
 <h2 id="try-the-shell">Try the Shell</h2>
 <pre><code>/$ help
 /$ pwd
@@ -223,7 +227,7 @@ the QEMU monitor (type <code>quit</code>).</p>
   <span class="toc-h">On this page</span>
   <ul>
     <li><a href="#prerequisites">Prerequisites</a></li>
-    <li><a href="#run-tailos-one-command">Run TailOS (one command)</a></li>
+    <li><a href="#run-tailos">Run TailOS</a></li>
     <li><a href="#try-the-shell">Try the Shell</a></li>
     <li><a href="#manual-launch-alternative">Manual Launch (alternative)</a></li>
     <li><a href="#whats-inside-the-images">What's Inside the Images</a></li>

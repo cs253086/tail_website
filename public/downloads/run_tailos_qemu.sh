@@ -6,10 +6,12 @@
 # them in QEMU.
 #
 # Usage:
-#   # Run remotely:
-#   curl -sSL https://tail-os.com/downloads/run_tailos_qemu.sh | bash
+#   # Download it, then run it:
+#   curl -O https://tail-os.com/downloads/run_tailos_qemu.sh
+#   chmod +x run_tailos_qemu.sh
+#   ./run_tailos_qemu.sh
 #
-#   # Or locally:
+#   # From a checkout:
 #   ./scripts/run_tailos_qemu.sh
 #
 # Environment overrides:
