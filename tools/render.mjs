@@ -36,6 +36,7 @@ function head({ site, title, description, canonical, extraHead = '' }) {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="${esc(site.assets)}/css/style.css">
+<script type="module" src="${esc(site.assets)}/js/copy.js"></script>
 ${extraHead}</head>`;
 }
 
@@ -130,7 +131,7 @@ ${(home.highlights ?? []).map((item) => `    <div class="stat"><span class="stat
       <h2>${esc(home.quickstart.title)}</h2>
       <a href="/docs/${esc(home.quickstart.doc)}/">Read the full guide</a>
     </div>
-    <pre class="term"><code>${home.quickstart.commands.map((line) => `<span class="pr">$</span> ${esc(line)}`).join('\n')}</code></pre>
+    <pre class="term" data-copy="${esc(home.quickstart.commands.join('\n'))}"><code>${home.quickstart.commands.map((line) => `<span class="pr">$</span> ${esc(line)}`).join('\n')}</code></pre>
     <p class="quick-note">${esc(home.quickstart.note)}</p>
   </section>
 `

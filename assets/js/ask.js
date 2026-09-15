@@ -6,6 +6,7 @@
 
 import { parseAnswer } from './answer-format.js';
 import { search } from './bm25.js';
+import { addCopyButton } from './copy.js';
 
 const root = document.getElementById('ask-root');
 const headerInput = document.querySelector('.hdr-search input');
@@ -63,6 +64,7 @@ function renderAnswer(text, citations) {
       const pre = el('pre');
       pre.append(el('code', null, block.text));
       container.append(pre);
+      addCopyButton(pre);
       continue;
     }
     const paragraph = el('p');

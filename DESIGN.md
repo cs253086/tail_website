@@ -327,7 +327,11 @@ so they cannot advertise a topic the corpus no longer covers, and their containe
 emitted only when there is something to put in it.
 
 Documentation pages are static HTML and work without JavaScript, which is what keeps
-them indexable. The question box is progressive enhancement over a plain form.
+them indexable. The question box is progressive enhancement over a plain form, and so
+are the copy buttons on code blocks: `copy.js` adds one to every `<pre>` when it runs,
+so without JavaScript a block is simply shown without one. The home page's command box
+names its commands in `data-copy`, so the `$` prompts it displays are never pasted
+into a terminal.
 
 **Visual direction.** Light-first and theme-aware, generous whitespace, IBM Plex Sans
 for text and IBM Plex Mono for code, and colour that carries meaning rather than
@@ -369,7 +373,8 @@ render tree of text, inline-code and citation pieces; the renderer walks that tr
 setting `textContent` only. Parsing is separated from rendering so the shape of an
 answer is testable without a DOM, and so the renderer stays small enough to audit
 at a glance. Markup in an answer is therefore displayed as literal text by
-construction, not by escaping.
+construction, not by escaping. The copy button `copy.js` adds to an answer's code
+block is built the same way, and copies the text the renderer set.
 
 ## 10. Dependencies
 
@@ -391,6 +396,7 @@ pulled in. Nothing ships to the browser except the site's own code.
 | `tools/*.test.mjs` | Allowlist enforcement (a non-allowlisted path fails the build), chunk boundaries and heading paths, BM25 ranking against a fixture corpus, sitemap and slug generation, the navigation tree and which sections the sidebar lists, which files are published under `/downloads/`, that each decompresses to its source bytes, and that `SHA256SUMS` matches them. |
 | `functions/api/ask.test.js` | Citation rejection (uncited and out-of-range answers are discarded), cache key derivation and build-hash invalidation, rate-limit bucket arithmetic, every degradation path returns results rather than an error. |
 | `assets/js/answer-format.test.js` | Answer parsing: fenced commands kept whole, citation markers extracted, brackets inside inline code not mistaken for citations, markup treated as literal text. |
+| `assets/js/copy-text.test.js` | What a copy button copies: a block as shown less the newline markdown leaves after it, blank lines kept, and `data-copy` in place of a block that shows a prompt. |
 | `tools/redact.test.mjs` | Private URLs replaced wherever they appear including inside fenced commands, unrelated URLs untouched, and output that escaped redaction failing the build. |
 | `tools/build.test.mjs` | Runs the generator and asserts on its output: a page per allowlisted document and no others, no reference to the private repository anywhere, no test file published, assets carrying the current build hash, no unpublished repository file present, `/ask/` disallowed in robots.txt. |
 
