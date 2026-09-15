@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 import MarkdownIt from 'markdown-it';
 
-import { assertAllowlisted, rewriteLink, validateAllowlist, validateDownloads, validateOrigin } from './allowlist.mjs';
+import { assertAllowlisted, assertNotLfsPointer, rewriteLink, validateAllowlist, validateDownloads, validateOrigin } from './allowlist.mjs';
 import { assertRedacted, compileRules, redact } from './redact.mjs';
 import { buildIndex } from './bm25.mjs';
 import { chunkMarkdown } from './chunk.mjs';
@@ -247,6 +247,7 @@ write(
 const checksums = [];
 for (const download of downloads) {
   const bytes = readFileSync(download.absolute);
+  assertNotLfsPointer(bytes, download.path);
   assertRedacted(bytes.toString('latin1'), redactionRules, download.path);
   checksums.push(`${createHash('sha256').update(bytes).digest('hex')}  ${download.name}`);
   // Level 6 rather than 9: measured on the QEMU disk image, 9 saved 0.04 MiB of 8.6 and

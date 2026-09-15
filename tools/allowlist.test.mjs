@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AllowlistError, assertAllowlisted, rewriteLink, validateAllowlist, validateDownloads, validateOrigin } from './allowlist.mjs';
+import { AllowlistError, assertAllowlisted, assertNotLfsPointer, rewriteLink, validateAllowlist, validateDownloads, validateOrigin } from './allowlist.mjs';
 
 const SOURCE_ROOT = '/src/tailos';
 const exists = () => true;
@@ -166,5 +166,22 @@ describe('validateDownloads', () => {
 
   it('refuses a compress flag that is not a boolean', () => {
     expect(() => downloads([{ path: 'tail_disk.img', compress: 'yes' }])).toThrow(/compress must be true or false/);
+  });
+});
+
+describe('assertNotLfsPointer', () => {
+  const pointer = Buffer.from(
+    'version https://git-lfs.github.com/spec/v1\n'
+      + 'oid sha256:a58d3d552fef0112070f4fda10bb6772a702dbd5707f902297e3af531adccc77\n'
+      + 'size 6713264\n',
+  );
+
+  it('refuses a download that is still a Git LFS pointer', () => {
+    expect(() => assertNotLfsPointer(pointer, 'tail_qemu.rfs')).toThrow(/tail_qemu\.rfs is a Git LFS pointer/);
+  });
+
+  it('accepts the files a download actually holds', () => {
+    expect(() => assertNotLfsPointer(Buffer.from('#!/usr/bin/env bash\n# TailOS QEMU one-command launcher.\n'), 'scripts/run_tailos_qemu.sh')).not.toThrow();
+    expect(() => assertNotLfsPointer(Buffer.alloc(4096), 'tail_disk.img')).not.toThrow();
   });
 });

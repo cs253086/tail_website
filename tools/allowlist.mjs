@@ -137,3 +137,16 @@ export function validateDownloads(allowlist, sourceRoot, exists) {
     return { path: entry.path, absolute, name, published, compress: entry.compress === true };
   });
 }
+
+// A clone made without Git LFS content holds a short text pointer where each large
+// file should be. Published, a pointer would be checksummed and served as though it
+// were the image, and only a reader booting it would find out.
+export function isLfsPointer(bytes) {
+  return bytes.length < 1024 && bytes.subarray(0, 64).toString('latin1').startsWith('version https://git-lfs.github.com/spec/');
+}
+
+export function assertNotLfsPointer(bytes, path) {
+  if (isLfsPointer(bytes)) {
+    throw new AllowlistError(`download ${path} is a Git LFS pointer, not the file: fetch its content (git lfs pull) before generating`);
+  }
+}
