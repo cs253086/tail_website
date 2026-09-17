@@ -11,3 +11,9 @@ pages_build_output_dir = "public"
 [[kv_namespaces]]
 binding = "ANSWER_CACHE"
 id = "934fdb4ada1f45edb722e2c03e74399b"
+
+# Downloads too large for Pages' 25 MiB file limit, such as the SDK installer.
+# Served by functions/downloads/[name].js; upload with tools/upload-download.mjs.
+[[r2_buckets]]
+binding = "DOWNLOADS"
+bucket_name = "tail-os-downloads"

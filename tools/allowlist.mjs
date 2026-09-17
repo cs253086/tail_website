@@ -112,12 +112,26 @@ export function validateOrigin(origin) {
 // Files published for download cross the same boundary as documents: nothing is
 // published unless it is listed here, and a listed file that escapes the source
 // root or does not exist fails the build rather than publishing nothing.
+// A download stored in R2 is published under this name, so it must be one plain
+// path segment.
+export const R2_DOWNLOAD_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
 export function validateDownloads(allowlist, sourceRoot, exists) {
   const entries = allowlist.downloads ?? [];
   if (!Array.isArray(entries)) throw new AllowlistError('downloads must be a list');
 
   const publishedNames = new Set();
+  // Two files with one name would publish to one URL, and the second would
+  // silently replace the first.
+  const claim = (published) => {
+    if (publishedNames.has(published)) throw new AllowlistError(`two downloads would publish as ${published}`);
+    publishedNames.add(published);
+  };
   return entries.map((entry) => {
+    if (entry?.storage === 'r2') return validateR2Download(entry, claim);
+    if (entry?.storage !== undefined) {
+      throw new AllowlistError(`unknown download storage: ${JSON.stringify(entry)}`);
+    }
     if (!entry?.path) throw new AllowlistError(`download entry is missing path: ${JSON.stringify(entry)}`);
     if (entry.compress !== undefined && typeof entry.compress !== 'boolean') {
       throw new AllowlistError(`compress must be true or false: ${entry.path}`);
@@ -128,14 +142,27 @@ export function validateDownloads(allowlist, sourceRoot, exists) {
 
     const name = posix.basename(entry.path);
     const published = entry.compress ? `${name}.gz` : name;
-    // Two files with one basename would publish to one URL, and the second
-    // would silently replace the first.
-    if (publishedNames.has(published)) {
-      throw new AllowlistError(`two downloads would publish as ${published}`);
-    }
-    publishedNames.add(published);
+    claim(published);
     return { path: entry.path, absolute, name, published, compress: entry.compress === true };
   });
+}
+
+// A download too large for Pages is stored in R2 and served by
+// functions/downloads/[name].js. Its bytes are not in tailos, so the entry
+// carries the checksum tools/upload-download.mjs verified the uploaded object
+// against, and SHA256SUMS publishes that.
+function validateR2Download(entry, claim) {
+  if (entry.path !== undefined || entry.compress !== undefined) {
+    throw new AllowlistError(`an R2 download has a name, not a path or compress flag: ${JSON.stringify(entry)}`);
+  }
+  if (typeof entry.name !== 'string' || !R2_DOWNLOAD_NAME.test(entry.name)) {
+    throw new AllowlistError(`an R2 download needs a plain file name: ${JSON.stringify(entry)}`);
+  }
+  if (typeof entry.sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(entry.sha256)) {
+    throw new AllowlistError(`R2 download ${entry.name} needs its sha256 as 64 lowercase hex digits`);
+  }
+  claim(entry.name);
+  return { storage: 'r2', name: entry.name, published: entry.name, sha256: entry.sha256 };
 }
 
 // A clone made without Git LFS content holds a short text pointer where each large

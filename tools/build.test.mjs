@@ -10,6 +10,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const allowlist = JSON.parse(readFileSync(join(ROOT, 'content/allowlist.json'), 'utf8'));
 const sourceRoot = resolve(ROOT, process.env.TAILOS_ROOT ?? allowlist.sourceRoot);
+const fromTailos = (allowlist.downloads ?? []).filter((download) => download.path);
+const fromR2 = (allowlist.downloads ?? []).filter((download) => download.storage === 'r2');
 
 function walk(dir) {
   return readdirSync(dir).flatMap((entry) => {
@@ -54,14 +56,26 @@ describe('published output', () => {
     expect(new Set(pages)).toEqual(new Set(['', ...allowlist.documents.map((doc) => doc.slug)]));
   });
 
-  it('publishes nothing under /downloads but the allowlisted files and their checksums', () => {
+  it('publishes nothing under /downloads but the allowlisted tailos files and their checksums', () => {
     const dir = join(ROOT, 'public/downloads');
-    const expected = (allowlist.downloads ?? []).map(({ path, compress }) => {
+    const expected = fromTailos.map(({ path, compress }) => {
       const name = path.split('/').pop();
       return compress ? `${name}.gz` : name;
     });
     const present = existsSync(dir) ? readdirSync(dir).sort() : [];
-    expect(present).toEqual([...expected, ...(expected.length ? ['SHA256SUMS'] : [])].sort());
+    expect(present).toEqual([...expected, ...((allowlist.downloads ?? []).length ? ['SHA256SUMS'] : [])].sort());
+  });
+
+  it('routes only the API and the R2 downloads to Functions, so every other download stays static', () => {
+    const names = fromR2.map((download) => download.name);
+    expect(JSON.parse(read(join(ROOT, 'public/_routes.json'))))
+      .toEqual({ version: 1, include: ['/api/*', ...names.map((name) => `/downloads/${name}`)], exclude: [] });
+    expect(JSON.parse(read(join(ROOT, 'generated/downloads.json')))).toEqual({ r2: names });
+  });
+
+  it('lists every R2 download in SHA256SUMS with the checksum its upload was verified against', () => {
+    const sums = fromR2.length ? read(join(ROOT, 'public/downloads/SHA256SUMS')) : '';
+    for (const { name, sha256 } of fromR2) expect(sums).toContain(`${sha256}  ${name}\n`);
   });
 
   it('lists every document in the sitemap', () => {
@@ -130,7 +144,7 @@ describe.skipIf(!existsSync(sourceRoot))('generator', () => {
   });
 
   it('publishes each download as its source bytes, compressed where the allowlist says', () => {
-    for (const { path, compress } of allowlist.downloads ?? []) {
+    for (const { path, compress } of fromTailos) {
       const name = path.split('/').pop();
       const published = readFileSync(join(out, 'downloads', compress ? `${name}.gz` : name));
       const reader = compress ? gunzipSync(published) : published;
@@ -146,7 +160,7 @@ describe.skipIf(!existsSync(sourceRoot))('generator', () => {
       return;
     }
     const sums = readFileSync(manifest, 'utf8');
-    for (const { path } of downloads) {
+    for (const { path } of fromTailos) {
       const hash = createHash('sha256').update(readFileSync(join(sourceRoot, path))).digest('hex');
       expect(sums).toContain(`${hash}  ${path.split('/').pop()}\n`);
     }
@@ -170,7 +184,7 @@ describe.skipIf(!existsSync(sourceRoot))('generator', () => {
     const root = mkdtempSync(join(tmpdir(), 'tailos-leak-'));
     const site = mkdtempSync(join(tmpdir(), 'tailos-leak-site-'));
     try {
-      const listed = [...allowlist.documents, ...(allowlist.downloads ?? [])].map((entry) => entry.path);
+      const listed = [...allowlist.documents, ...fromTailos].map((entry) => entry.path);
       for (const path of listed) {
         mkdirSync(dirname(join(root, path)), { recursive: true });
         symlinkSync(join(sourceRoot, path), join(root, path));

@@ -126,6 +126,17 @@ rules instead, which is what keeps a private URL out of a published script or a 
 inside an image. Compression is deterministic, so regenerating an unchanged image
 produces identical bytes and commits nothing.
 
+**A download too large for Pages is stored in R2.** Pages refuses any file over 25 MiB,
+and the SDK installer is 289 MiB, so it lives in the `tail-os-downloads` bucket and is
+listed as `{ "storage": "r2", "name", "sha256" }` rather than by tailos path: it is a
+build product (`make sdk-installer REPACKAGE=1`), not a file in the repository.
+`tools/upload-download.mjs` uploads it, reads the object back, and records its checksum
+only if the two match, so `SHA256SUMS` never publishes a checksum the served file would
+fail. `functions/downloads/[name].js` serves it, but only under a name the generator
+published: `public/_routes.json` sends just those names to the Function, and the Function
+checks `generated/downloads.json` as well, so no other object in the bucket is reachable.
+Every other download stays a static file.
+
 The kernel and disk are committed to tailos through Git LFS, built as a pair by one
 recipe (`make build-release BOARD=rpi3 IMAGE=qemu`) and booted to the shell before they
 are committed. The build's `os_image/` directory is shared with test runners, so the
@@ -330,7 +341,7 @@ unchanged.
 | `/ask/?q=...` | Answer with inline citations, source cards linking into `/docs/`, keyword results below. Shareable URL. `noindex`, and disallowed in `robots.txt`. |
 | `/docs/` | Generated index of every published document, grouped by the same hierarchy as the sidebar. |
 | `/docs/<slug>/` | One generated page per allowlisted document. Plain HTML, readable with JavaScript disabled. |
-| `/downloads/` | Allowlisted files: `tail_qemu.rfs.gz`, `tail_disk.img.gz`, `run_tailos_qemu.sh`, and `SHA256SUMS` giving the checksum of each as a reader holds it after decompressing. |
+| `/downloads/` | Allowlisted files: `tail_qemu.rfs.gz`, `tail_disk.img.gz` and `run_tailos_qemu.sh` as static files, `tail-sdk-installer-0.1.0.tar.gz` from R2 through `functions/downloads/[name].js`, and `SHA256SUMS` giving the checksum of each as a reader holds it after decompressing. |
 
 The home page and the documentation shell are deliberately different layouts. `/`
 is the front door — what search engines index and what a stranger lands on — and a
@@ -406,6 +417,11 @@ still the published one — so a new image is noticed, a download cut short is n
 cached, and a disk the guest has written to is kept until an image is actually
 republished.
 
+A download served from R2 is revalidated the same way. Its etag lets a client
+revalidate cheaply, and the Function answers a single byte range so an interrupted
+289 MiB download resumes; a resume whose `If-Range` names an earlier build gets the
+whole new file instead of a spliced one.
+
 ### 9.2 Rendering model output
 
 Model output never reaches `innerHTML`. `answer-format.js` parses an answer into a
@@ -439,6 +455,8 @@ pulled in. Nothing ships to the browser except the site's own code.
 | `assets/js/copy-text.test.js` | What a copy button copies: a block as shown less the newline markdown leaves after it, blank lines kept, and `data-copy` in place of a block that shows a prompt. |
 | `tools/redact.test.mjs` | Private URLs replaced wherever they appear including inside fenced commands, unrelated URLs untouched, and output that escaped redaction failing the build. |
 | `tools/publish.test.mjs` | When a publish builds: every push to the website repo; a tailos move only if a published document or download changed, a rename counting; and always when it cannot compare — no recorded build, rewritten history, or a comparison at GitHub's 300-file limit. |
+| `functions/downloads/[name].test.js` | Serving from R2: only published names, the rest left to the static site; HEAD without a body; single ranges (closed, open, suffix, past the end); 416 past the end; multiple or malformed ranges ignored; a stale `If-Range` answered with the whole file; `If-None-Match` answered with 304. |
+| `tools/upload-download.test.mjs` | The bucket read from `wrangler.toml`, the content type an upload is given, and a re-upload replacing its allowlist entry in place. |
 | `tools/build.test.mjs` | Runs the generator and asserts on its output: a page per allowlisted document and no others, no reference to the private repository anywhere, no test file published, assets carrying the current build hash, no unpublished repository file present, `/ask/` disallowed in robots.txt. |
 
 The model call is faked at the `answer()` boundary. No test performs network I/O.

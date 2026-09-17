@@ -167,6 +167,43 @@ describe('validateDownloads', () => {
   it('refuses a compress flag that is not a boolean', () => {
     expect(() => downloads([{ path: 'tail_disk.img', compress: 'yes' }])).toThrow(/compress must be true or false/);
   });
+
+  const sha256 = 'dd7d551749e1f69ca0209045d836fe4651fff0013149966cb3682bb5bf3457e6';
+  const installer = { storage: 'r2', name: 'tail-sdk-installer-0.1.0.tar.gz', sha256 };
+
+  it('records an R2 download by name and checksum, reading nothing from tailos', () => {
+    expect(downloads([installer], () => false)).toEqual([
+      { storage: 'r2', name: installer.name, published: installer.name, sha256 },
+    ]);
+  });
+
+  it.each([
+    ['missing', undefined],
+    ['short', 'dd7d5517'],
+    ['upper case', sha256.toUpperCase()],
+  ])('refuses an R2 download whose checksum is %s', (_, value) => {
+    expect(() => downloads([{ ...installer, sha256: value }])).toThrow(/needs its sha256/);
+  });
+
+  it.each([['a path', 'sdk/tail-sdk-installer-0.1.0.tar.gz'], ['a parent reference', '../tail-sdk.tar.gz'], ['no name', undefined]])(
+    'refuses an R2 download named with %s',
+    (_, name) => {
+      expect(() => downloads([{ ...installer, name }])).toThrow(/needs a plain file name/);
+    },
+  );
+
+  it('refuses an R2 download that also names a tailos file', () => {
+    expect(() => downloads([{ ...installer, path: 'tail_disk.img' }])).toThrow(/has a name, not a path/);
+  });
+
+  it('refuses a storage it does not know', () => {
+    expect(() => downloads([{ ...installer, storage: 's3' }])).toThrow(/unknown download storage/);
+  });
+
+  it('refuses an R2 download and a tailos file that would publish to one URL', () => {
+    expect(() => downloads([{ path: 'scripts/run_tailos_qemu.sh' }, { ...installer, name: 'run_tailos_qemu.sh' }]))
+      .toThrow(/would publish as run_tailos_qemu.sh/);
+  });
 });
 
 describe('assertNotLfsPointer', () => {

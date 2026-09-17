@@ -8,7 +8,11 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 const allowlist = {
   documents: [{ path: 'doc/quick_start_public.md' }, { path: 'framework/periodic/doc/periodic_python_public.md' }],
-  downloads: [{ path: 'tail_disk.img' }, { path: 'scripts/run_tailos_qemu.sh' }],
+  downloads: [
+    { path: 'tail_disk.img' },
+    { path: 'scripts/run_tailos_qemu.sh' },
+    { storage: 'r2', name: 'tail-sdk-installer-0.1.0.tar.gz', sha256: '0'.repeat(64) },
+  ],
 };
 const lastBuilt = '4621c0b13a1f0c2d9e8b7a6f5e4d3c2b1a0f9e8d';
 const newest = 'f51d0274890ab1c2d3e4f5a6b7c8d9e0f1a2b3c4';
@@ -17,7 +21,7 @@ const decide = (overrides) =>
   needsBuild({ event: 'workflow_dispatch', lastBuilt, newest, comparison: ahead(), allowlist, ...overrides });
 
 describe('publishedPaths', () => {
-  it('lists every document and download, in allowlist order', () => {
+  it('lists every document and tailos download, in allowlist order, and no R2 download', () => {
     expect(publishedPaths(allowlist)).toEqual([
       'doc/quick_start_public.md',
       'framework/periodic/doc/periodic_python_public.md',
@@ -26,9 +30,10 @@ describe('publishedPaths', () => {
     ]);
   });
 
-  it('covers everything the real allowlist publishes', () => {
+  it('covers everything the real allowlist publishes from tailos', () => {
     const real = JSON.parse(readFileSync(join(ROOT, 'content/allowlist.json'), 'utf8'));
-    expect(publishedPaths(real)).toHaveLength(real.documents.length + (real.downloads ?? []).length);
+    const fromTailos = (real.downloads ?? []).filter((download) => download.path);
+    expect(publishedPaths(real)).toHaveLength(real.documents.length + fromTailos.length);
   });
 });
 

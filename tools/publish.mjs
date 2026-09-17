@@ -26,10 +26,12 @@ const SOURCE = join(ROOT, 'generated/source.json');
 // have been cut short, so it cannot show that nothing published changed.
 export const COMPARE_FILE_LIMIT = 300;
 
+// Only files read from tailos. A download stored in R2 has no tailos path, and
+// uploading a new one is itself a push to this repository.
 export function publishedPaths(allowlist) {
   return [
     ...allowlist.documents.map((document) => document.path),
-    ...(allowlist.downloads ?? []).map((download) => download.path),
+    ...(allowlist.downloads ?? []).flatMap((download) => (download.path ? [download.path] : [])),
   ];
 }
 
@@ -106,6 +108,7 @@ async function decide() {
 function downloadPointers(root) {
   const allowlist = JSON.parse(readFileSync(join(ROOT, 'content/allowlist.json'), 'utf8'));
   return (allowlist.downloads ?? [])
+    .filter((download) => download.path)
     .map((download) => ({ path: download.path, bytes: readFileSync(join(root, download.path)) }))
     .filter(({ bytes }) => isLfsPointer(bytes));
 }

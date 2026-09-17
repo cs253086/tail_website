@@ -102,6 +102,11 @@
     },
     {
       "path": "scripts/run_tailos_qemu.sh"
+    },
+    {
+      "storage": "r2",
+      "name": "tail-sdk-installer-0.1.0.tar.gz",
+      "sha256": "4f229d87b26dd140348cf988a56befff91f9c55aadea9c8f73886a6ec69185af"
     }
   ]
 }

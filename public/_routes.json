@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "include": [
+    "/api/*",
+    "/downloads/tail-sdk-installer-0.1.0.tar.gz"
+  ],
+  "exclude": []
+}

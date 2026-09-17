@@ -246,7 +246,15 @@ write(
 // latin1 maps every byte to one character, so a binary scans without a decoding
 // error and without a byte skipped.
 const checksums = [];
+const r2Downloads = [];
 for (const download of downloads) {
+  if (download.storage === 'r2') {
+    // Too large for Pages: stored in R2 and served by functions/downloads/[name].js.
+    // Its checksum was verified against the uploaded object by tools/upload-download.mjs.
+    checksums.push(`${download.sha256}  ${download.name}`);
+    r2Downloads.push(download.name);
+    continue;
+  }
   const bytes = readFileSync(download.absolute);
   assertNotLfsPointer(bytes, download.path);
   assertRedacted(bytes.toString('latin1'), redactionRules, download.path);
@@ -259,8 +267,15 @@ for (const download of downloads) {
 // also what the launcher compares its cache against.
 if (checksums.length) {
   write(join(PUBLIC, 'downloads', 'SHA256SUMS'), `${checksums.join('\n')}\n`);
-  console.log(`generate: ${downloads.length} download(s), checksums in /downloads/SHA256SUMS`);
+  console.log(`generate: ${downloads.length} download(s), ${r2Downloads.length} from R2, checksums in /downloads/SHA256SUMS`);
 }
+// The downloads Function serves only these names, and Pages routes only these to it,
+// so every other download stays a static file.
+write(join(GENERATED, 'downloads.json'), `${JSON.stringify({ r2: r2Downloads }, null, 2)}\n`);
+write(
+  join(PUBLIC, '_routes.json'),
+  `${JSON.stringify({ version: 1, include: ['/api/*', ...r2Downloads.map((name) => `/downloads/${name}`)], exclude: [] }, null, 2)}\n`,
+);
 
 cpSync(join(ROOT, 'assets'), join(PUBLIC, 'assets', buildId), {
   recursive: true,

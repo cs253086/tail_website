@@ -80,6 +80,7 @@ One-time setup:
 npx wrangler kv namespace create ANSWER_CACHE   # paste the id into wrangler.toml
 npx wrangler pages project create tail-os
 npx wrangler pages secret put GEMINI_API_KEY --project-name tail-os
+npx wrangler r2 bucket create tail-os-downloads   # needs R2 enabled in the dashboard
 ```
 
 Publishing then needs three secrets, each set under the repository's
@@ -92,6 +93,20 @@ Publishing then needs three secrets, each set under the repository's
 | tailos | `SITE_PUBLISH_TOKEN` | A GitHub fine-grained token with Actions: read and write on tail_website |
 
 Until they exist, both workflows skip with a warning naming what is missing.
+
+### Downloads too large for Pages
+
+Pages refuses files over 25 MiB, so the SDK installer lives in R2. Build it in tailos,
+upload it, then publish:
+
+```bash
+make -C ../tailos sdk-installer REPACKAGE=1
+node tools/upload-download.mjs ~/.local/share/tail-sdk/tailos/sdk/tail-sdk-installer-0.1.0.tar.gz
+npm run build && git commit -am 'Publish the rebuilt SDK installer' && git push
+```
+
+The upload tool reads the object back and records its checksum in `content/allowlist.json`
+only if it matches. It uses wrangler, which uploads at most 300 MiB.
 
 ### Cost
 
