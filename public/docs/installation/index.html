@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Installation — TAIL OS</title>
+<meta name="description" content="Install the TAIL OS SDK and build your first application.">
+<link rel="canonical" href="https://tail-os.com/docs/installation/">
+<meta property="og:title" content="Installation — TAIL OS">
+<meta property="og:description" content="Install the TAIL OS SDK and build your first application.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tail-os.com/docs/installation/">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="/assets/8018b36a6fdd/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/assets/8018b36a6fdd/css/style.css">
+<script type="module" src="/assets/8018b36a6fdd/js/copy.js"></script>
+</head>
+<body class="page-shell">
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 32" width="22" height="22" fill="none" aria-hidden="true"><path d="M4 8h24M4 16h16M4 24h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span>TAIL OS</span><span class="ver">v0.9.0</span></a>
+    <form class="hdr-search" action="/ask/" method="get" role="search">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" name="q" placeholder="Search or ask a question" aria-label="Search or ask a question" autocomplete="off">
+    </form>
+    <nav class="hdr-nav" aria-label="Primary">
+      <a href="/docs/">Docs</a>
+    </nav>
+  </div>
+</header>
+<div class="shell">
+<aside class="side">
+  <nav aria-label="Documentation">
+    <ul class="nav-docs">
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/quick-start/">Quick Start</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/installation/" aria-current="page">Installation</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/installation/#1-prerequisites">1. Prerequisites</a></li>
+        <li><a href="/docs/installation/#2-download">2. Download</a></li>
+        <li><a href="/docs/installation/#3-install">3. Install</a></li>
+        <li><a href="/docs/installation/#4-build-an-application">4. Build an application</a></li>
+        <li><a href="/docs/installation/#where-next">Where next</a></li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">BSP</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/qemu/">QEMU</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/raspberry-pi-3/">Raspberry Pi 3</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Development guide</span>
+      <ul class="nav-list">
+        <li class="nav-group">
+      <span class="nav-label">Periodic</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-rust/">Rust</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-python/">Python</a>
+    </li>
+      </ul>
+    </li>
+      </ul>
+    </li>
+    </ul>
+  </nav>
+</aside>
+<main class="content">
+<div class="doc-wrap">
+<article class="doc">
+<h1 id="installing-the-tail-os-sdk">Installing the TAIL OS SDK</h1>
+<p>The SDK is what you build TAIL OS applications with: the portable OS and the
+toolchain that targets it. It needs no TAIL OS source and no cross-compiler —
+the bundled toolchain links with its own <code>rust-lld</code>.</p>
+<p>TAIL OS ships as two artifacts. The SDK here is <strong>board-agnostic</strong>: install it
+once and the same install serves every board. A <strong>bootable image</strong> for a
+specific board is built from a separate per-board BSP against this SDK.</p>
+<p>To try TAIL OS without installing anything, see the <a href="/docs/quick-start/">Quick Start</a>:
+it boots a prebuilt image in QEMU with one script.</p>
+<h2 id="1-prerequisites">1. Prerequisites</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linux on x86-64</td>
+<td>The bundled toolchain runs there</td>
+</tr>
+<tr>
+<td><code>rustup</code></td>
+<td>The installer registers the bundled toolchain with it: <a href="https://rustup.rs" rel="noopener">rustup.rs</a></td>
+</tr>
+<tr>
+<td><code>curl</code> and <code>tar</code></td>
+<td>Usually preinstalled</td>
+</tr>
+</tbody>
+</table>
+<p>QEMU is needed only to boot an image, not to build applications:
+<code>sudo apt-get install -y qemu-system-arm qemu-utils</code>.</p>
+<h2 id="2-download">2. Download</h2>
+<pre><code class="language-bash">curl -O https://tail-os.com/downloads/tail-sdk-installer-0.1.0.tar.gz
+curl -O https://tail-os.com/downloads/SHA256SUMS
+sha256sum -c --ignore-missing SHA256SUMS
+</code></pre>
+<p>The bundle is 289 MiB: it carries the toolchain and the portable OS, so nothing
+is fetched during installation.</p>
+<h2 id="3-install">3. Install</h2>
+<pre><code class="language-bash">tar xzf tail-sdk-installer-0.1.0.tar.gz
+cd tail-sdk-installer-0.1.0
+./install.sh --prefix ~/tail-sdk
+</code></pre>
+<p><code>install.sh</code> copies the toolchain and the portable OS into the directory you
+name, registers the toolchain with rustup as <code>tail_release</code> pointing there, and
+writes <code>~/tail-sdk/tail-sdk-env.sh</code>, which exports <code>TAIL_SDK</code> (the SDK tree
+inside the install, <code>~/tail-sdk/sdk/tail-sdk-0.1.0</code>). It finishes by
+compiling and linking a throwaway program, so a successful run means the next
+step works. The extracted bundle is disposable afterwards.</p>
+<p>Run it without <code>--prefix</code> to be prompted for the directory, with <code>--profile</code> to
+add the env file to your shell startup, and with <code>--force</code> to reinstall over an
+existing install.</p>
+<h2 id="4-build-an-application">4. Build an application</h2>
+<pre><code class="language-bash">cargo +tail_release new my_app &amp;&amp; cd my_app
+cargo +tail_release build --target aarch64-unknown-tail
+</code></pre>
+<p>That produces an AArch64 ELF for TAIL OS with no further configuration. The
+<code>+tail_release</code> selects the installed toolchain; <code>rustup default tail_release</code>
+makes a bare <code>cargo build</code> use it.</p>
+<p>Application builds need nothing else. <code>TAIL_SDK</code> matters only when building a
+board BSP, whose <code>verify-sdk.sh</code> reads it:</p>
+<pre><code class="language-bash">source ~/tail-sdk/tail-sdk-env.sh
+</code></pre>
+<h2 id="where-next">Where next</h2>
+<ul>
+<li><a href="/docs/periodic-framework-rust/">The periodic framework in Rust</a>
+and <a href="/docs/periodic-framework-python/">in Python</a>: the API
+for periodic applications, with examples.</li>
+<li><a href="/docs/quick-start/">Quick Start</a>: boot a prebuilt image in QEMU.</li>
+<li><a href="/docs/qemu/">Running TAIL OS in QEMU</a> and
+<a href="/docs/raspberry-pi-3/">on a Raspberry Pi 3</a>.</li>
+</ul>
+
+<footer class="doc-src">
+  <span>Generated from <span class="mono">doc/install_sdk_public.md</span> in the TAIL OS repository.</span>
+</footer>
+</article>
+<nav class="toc" aria-label="On this page">
+  <span class="toc-h">On this page</span>
+  <ul>
+    <li><a href="#1-prerequisites">1. Prerequisites</a></li>
+    <li><a href="#2-download">2. Download</a></li>
+    <li><a href="#3-install">3. Install</a></li>
+    <li><a href="#4-build-an-application">4. Build an application</a></li>
+    <li><a href="#where-next">Where next</a></li>
+  </ul>
+</nav>
+</div>
+</main>
+</div>
+<footer class="ftr">
+  <span>TAIL OS &mdash; real-time microkernel in Rust</span>
+  <span class="ftr-sep">/</span>
+  <span class="mono">v0.9.0</span>
+</footer>
+
+</body>
+</html>

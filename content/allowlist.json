@@ -43,10 +43,10 @@
       "summary": "Boot TAIL OS in QEMU with one command, then look around its shell."
     },
     {
-      "path": "doc/get_started.md",
-      "slug": "getting-started",
-      "title": "Getting Started",
-      "summary": "Run TAIL OS, set up a development environment, and build your own applications."
+      "path": "doc/install_sdk_public.md",
+      "slug": "installation",
+      "title": "Installation",
+      "summary": "Install the TAIL OS SDK and build your first application."
     },
     {
       "path": "doc/install_qemu.md",
