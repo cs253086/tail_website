@@ -32,7 +32,7 @@ die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 say "TailOS QEMU launcher"
 
 command -v qemu-system-aarch64 >/dev/null 2>&1 \
-    || die "qemu-system-aarch64 not found. Install with: sudo apt-get install -y qemu-system-aarch64 qemu-utils"
+    || die "qemu-system-aarch64 not found. Install with: sudo apt-get install -y qemu-system-arm qemu-utils"
 command -v gzip >/dev/null 2>&1 || die "gzip not found"
 
 if command -v sha256sum >/dev/null 2>&1; then
@@ -110,10 +110,15 @@ say "Booting TailOS (exit with Ctrl-A then X)"
 # behind QEMU's user-mode networking, which needs no privileges on the host. Without
 # it the USB root port is empty, and the guest reports "[FAIL] usb no device on the
 # root port" and refuses its default route on every boot.
+#
+# The console is the serial line on this terminal. Without -display none QEMU also
+# opens a graphical window, and on a machine with no desktop (a server, a minimal
+# VM, an SSH session) it exits with "gtk initialization failed" before booting.
 qemu=(qemu-system-aarch64
     -M raspi3b
     -kernel "$CACHE_DIR/tail_qemu.rfs"
     -serial mon:stdio
+    -display none
     -drive "file=$CACHE_DIR/tail_disk.img,format=raw,if=sd"
     -netdev user,id=tailnet0
     -device usb-net,netdev=tailnet0)
