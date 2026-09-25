@@ -1,5 +1,6 @@
+import { gunzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
-import { AllowlistError, assertAllowlisted, assertNotLfsPointer, rewriteLink, validateAllowlist, validateDownloads, validateOrigin } from './allowlist.mjs';
+import { AllowlistError, assertAllowlisted, assertNotLfsPointer, gzipDownload, rewriteLink, validateAllowlist, validateDownloads, validateOrigin } from './allowlist.mjs';
 
 const SOURCE_ROOT = '/src/tailos';
 const exists = () => true;
@@ -173,8 +174,23 @@ describe('validateDownloads', () => {
 
   it('records an R2 download by name and checksum, reading nothing from tailos', () => {
     expect(downloads([installer], () => false)).toEqual([
-      { storage: 'r2', name: installer.name, published: installer.name, sha256 },
+      { storage: 'r2', name: installer.name, published: installer.name, compress: false, sha256 },
     ]);
+  });
+
+  it('publishes a compressed R2 download as name.gz, checksummed as the file a reader holds after gunzip', () => {
+    expect(downloads([{ storage: 'r2', name: 'tail_disk.img', compress: true, sha256 }], () => false)).toEqual([
+      { storage: 'r2', name: 'tail_disk.img', published: 'tail_disk.img.gz', compress: true, sha256 },
+    ]);
+  });
+
+  it('refuses an R2 compress flag that is not a boolean', () => {
+    expect(() => downloads([{ ...installer, compress: 'yes' }])).toThrow(/compress must be true or false/);
+  });
+
+  it('refuses a compressed R2 download and a compressed tailos file that would publish to one URL', () => {
+    expect(() => downloads([{ path: 'tail_disk.img', compress: true }, { storage: 'r2', name: 'tail_disk.img', compress: true, sha256 }]))
+      .toThrow(/would publish as tail_disk\.img\.gz/);
   });
 
   it.each([
@@ -203,6 +219,18 @@ describe('validateDownloads', () => {
   it('refuses an R2 download and a tailos file that would publish to one URL', () => {
     expect(() => downloads([{ path: 'scripts/run_tailos_qemu.sh' }, { ...installer, name: 'run_tailos_qemu.sh' }]))
       .toThrow(/would publish as run_tailos_qemu.sh/);
+  });
+});
+
+describe('gzipDownload', () => {
+  const image = Buffer.concat([Buffer.from('TAIL OS disk'), Buffer.alloc(64 * 1024)]);
+
+  it('compresses the same file to the same bytes, so a re-upload of an unchanged image is identical', () => {
+    expect(gzipDownload(image).equals(gzipDownload(Buffer.from(image)))).toBe(true);
+  });
+
+  it('gunzips back to the file', () => {
+    expect(gunzipSync(gzipDownload(image)).equals(image)).toBe(true);
   });
 });
 

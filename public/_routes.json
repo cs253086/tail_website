@@ -2,6 +2,8 @@
   "version": 1,
   "include": [
     "/api/*",
+    "/downloads/tail_qemu.rfs.gz",
+    "/downloads/tail_disk.img.gz",
     "/downloads/tail-sdk-installer-0.1.0.tar.gz"
   ],
   "exclude": []

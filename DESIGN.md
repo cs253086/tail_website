@@ -126,22 +126,31 @@ rules instead, which is what keeps a private URL out of a published script or a 
 inside an image. Compression is deterministic, so regenerating an unchanged image
 produces identical bytes and commits nothing.
 
-**A download too large for Pages is stored in R2.** Pages refuses any file over 25 MiB,
-and the SDK installer is 289 MiB, so it lives in the `tail-os-downloads` bucket and is
-listed as `{ "storage": "r2", "name", "sha256" }` rather than by tailos path: it is a
-build product (`make sdk-installer REPACKAGE=1`), not a file in the repository.
-`tools/upload-download.mjs` uploads it, reads the object back, and records its checksum
-only if the two match, so `SHA256SUMS` never publishes a checksum the served file would
-fail. `functions/downloads/[name].js` serves it, but only under a name the generator
+**A download that is a build product is stored in R2.** The SDK installer is 289 MiB,
+over Pages' 25 MiB limit, and the two QEMU images are built rather than kept in tailos,
+which stopped using Git LFS. They live in the `tail-os-downloads` bucket and are listed
+as `{ "storage": "r2", "name", "sha256" }` rather than by tailos path. An R2 entry may
+set `"compress": true`, which means what it means for a tailos download: the object is
+the gzip of the file and is served as `name.gz`, while `sha256` and the `SHA256SUMS`
+line are those of the file itself, what a reader verifies after gunzip and what the
+launcher's cache compares. `tools/upload-download.mjs [--compress] <file>` uploads it,
+reads the object back, and records the entry only if the object hashes to what was
+uploaded and, compressed, gunzips to the file, so `SHA256SUMS` never publishes a
+checksum the served file would fail. It stores a content type and no content encoding:
+a `.gz` sent with `Content-Encoding: gzip` would be unwrapped by the client, and the
+launcher's `gzip -dc` would then fail. `functions/downloads/[name].js` serves it, but only under a name the generator
 published: `public/_routes.json` sends just those names to the Function, and the Function
 checks `generated/downloads.json` as well, so no other object in the bucket is reachable.
 Every other download stays a static file.
 
-The kernel and disk are committed to tailos through Git LFS, built as a pair by one
-recipe (`make build-release BOARD=rpi3 IMAGE=qemu`) and booted to the shell before they
-are committed. The build's `os_image/` directory is shared with test runners, so the
-newest file there is not necessarily an image with a shell — the one found there during
-this work booted a regression test and never reached a prompt.
+The kernel and disk are built as a pair by one recipe from a tailos commit, with the
+disk created from scratch — `rm -f tail_disk.img && make build-release BOARD=rpi3
+IMAGE=qemu` — because deploying onto an existing disk only adds files, and a renamed
+utility would survive under its old name. The pair is booted to the shell before it is
+uploaded, and the banner names the commit it was built from. The build's `os_image/`
+directory is shared with test runners, so the newest file there is not necessarily an
+image with a shell — the one found there during this work booted a regression test and
+never reached a prompt.
 
 ### 5.2 Retrieval runs server-side, never in the browser
 
@@ -180,12 +189,9 @@ builds. The list of published files lives only in the allowlist; neither workflo
 repeats it.
 
 A build checks out only the allowlisted tailos files, shallow and sparse, because tailos
-is 1.7 GB. The two QEMU images are Git LFS objects whose downloads count against the
-tailos owner's bandwidth, so they are cached by LFS object id and downloaded only when
-they change. Each is restored from its own pointer, never by a command that scans the
-checkout (in a blobless clone that fetches every tailos file to inspect it), and must
-hash to the id its pointer names; the generator refuses any download that is still a
-pointer. The workflow then generates, runs the full test suite, records the tailos
+is 1.7 GB. None of them is large: the images are in R2, so a publish reads documents
+and a script, and the generator still refuses a download that turns out to be a Git LFS
+pointer rather than a file. The workflow then generates, runs the full test suite, records the tailos
 commit, commits `public/` and `generated/`, deploys with `wrangler pages deploy`, and
 checks that tail-os.com serves the new build id. If the website repo's main moved during
 the build, the publish started by that push deploys instead.
@@ -341,7 +347,7 @@ unchanged.
 | `/ask/?q=...` | Answer with inline citations, source cards linking into `/docs/`, keyword results below. Shareable URL. `noindex`, and disallowed in `robots.txt`. |
 | `/docs/` | Generated index of every published document, grouped by the same hierarchy as the sidebar. |
 | `/docs/<slug>/` | One generated page per allowlisted document. Plain HTML, readable with JavaScript disabled. |
-| `/downloads/` | Allowlisted files: `tail_qemu.rfs.gz`, `tail_disk.img.gz` and `run_tailos_qemu.sh` as static files, `tail-sdk-installer-0.1.0.tar.gz` from R2 through `functions/downloads/[name].js`, and `SHA256SUMS` giving the checksum of each as a reader holds it after decompressing. |
+| `/downloads/` | Allowlisted files: `run_tailos_qemu.sh` as a static file; `tail_qemu.rfs.gz`, `tail_disk.img.gz` and `tail-sdk-installer-0.1.0.tar.gz` from R2 through `functions/downloads/[name].js`; and `SHA256SUMS` giving the checksum of each as a reader holds it after decompressing. |
 
 The home page and the documentation shell are deliberately different layouts. `/`
 is the front door — what search engines index and what a stranger lands on — and a
@@ -456,7 +462,7 @@ pulled in. Nothing ships to the browser except the site's own code.
 | `tools/redact.test.mjs` | Private URLs replaced wherever they appear including inside fenced commands, unrelated URLs untouched, and output that escaped redaction failing the build. |
 | `tools/publish.test.mjs` | When a publish builds: every push to the website repo; a tailos move only if a published document or download changed, a rename counting; and always when it cannot compare — no recorded build, rewritten history, or a comparison at GitHub's 300-file limit. |
 | `functions/downloads/[name].test.js` | Serving from R2: only published names, the rest left to the static site; HEAD without a body; single ranges (closed, open, suffix, past the end); 416 past the end; multiple or malformed ranges ignored; a stale `If-Range` answered with the whole file; `If-None-Match` answered with 304. |
-| `tools/upload-download.test.mjs` | The bucket read from `wrangler.toml`, the content type an upload is given, and a re-upload replacing its allowlist entry in place. |
+| `tools/upload-download.test.mjs` | The bucket read from `wrangler.toml`; the content type an upload is given and the absence of a content encoding; the `[--compress] <file>` arguments; a compressed entry recording the file's own checksum; and a re-upload replacing its allowlist entry in place. |
 | `tools/build.test.mjs` | Runs the generator and asserts on its output: a page per allowlisted document and no others, no reference to the private repository anywhere, no test file published, assets carrying the current build hash, no unpublished repository file present, `/ask/` disallowed in robots.txt. |
 
 The model call is faked at the `answer()` boundary. No test performs network I/O.

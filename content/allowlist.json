@@ -93,12 +93,16 @@
   ],
   "downloads": [
     {
-      "path": "tail_qemu.rfs",
-      "compress": true
+      "storage": "r2",
+      "name": "tail_qemu.rfs",
+      "compress": true,
+      "sha256": "5642ae1bf3e80749f9fd4bf482c2a0669ece35cd5de0e22dcac453865f6d59da"
     },
     {
-      "path": "tail_disk.img",
-      "compress": true
+      "storage": "r2",
+      "name": "tail_disk.img",
+      "compress": true,
+      "sha256": "ce0d0f38e9000e4447c21b3537144fa53806ffea963cbe22d2b6d7e18677fc6c"
     },
     {
       "path": "scripts/run_tailos_qemu.sh"

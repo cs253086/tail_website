@@ -6,18 +6,12 @@
 // compares the tailos commit it last built with the newest one. The list of
 // published files lives only in the allowlist; neither workflow repeats it.
 //
-//   node tools/publish.mjs decide                    GitHub Actions outputs: sha, build, paths
-//   node tools/publish.mjs downloads-key <tailos>     cache key for the download images
-//   node tools/publish.mjs restore-downloads <tailos> restores each image from its LFS pointer
-//   node tools/publish.mjs record <sha>              records the tailos commit a build used
+//   node tools/publish.mjs decide        GitHub Actions outputs: sha, build, paths
+//   node tools/publish.mjs record <sha>  records the tailos commit a build used
 
-import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-
-import { isLfsPointer } from './allowlist.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SOURCE = join(ROOT, 'generated/source.json');
@@ -50,18 +44,6 @@ export function needsBuild({ event, lastBuilt, newest, comparison, allowlist }) 
   if (comparison.files.length >= COMPARE_FILE_LIMIT) return true;
   const published = new Set(publishedPaths(allowlist));
   return changedPaths(comparison.files).some((path) => published.has(path));
-}
-
-export function pointerOid(bytes) {
-  return /^oid sha256:([0-9a-f]{64})$/m.exec(bytes.toString('latin1'))?.[1] ?? null;
-}
-
-// Keyed by the pointers, not the images: a pointer names its object's hash, so the
-// key changes exactly when an image does, and computing it downloads nothing.
-export function downloadsCacheKey(pointers) {
-  const hash = createHash('sha256');
-  for (const { path, bytes } of pointers) hash.update(path).update('\0').update(bytes).update('\0');
-  return hash.digest('hex');
 }
 
 function fail(message) {
@@ -102,29 +84,7 @@ async function decide() {
   console.log(`sha=${newest}`);
   console.log(`build=${build}`);
   // Anchored, so the sparse checkout takes these paths and no same-named file elsewhere.
-  console.log(['paths<<PUBLISHED_PATHS', '/.gitattributes', ...publishedPaths(allowlist).map((path) => `/${path}`), 'PUBLISHED_PATHS'].join('\n'));
-}
-
-function downloadPointers(root) {
-  const allowlist = JSON.parse(readFileSync(join(ROOT, 'content/allowlist.json'), 'utf8'));
-  return (allowlist.downloads ?? [])
-    .filter((download) => download.path)
-    .map((download) => ({ path: download.path, bytes: readFileSync(join(root, download.path)) }))
-    .filter(({ bytes }) => isLfsPointer(bytes));
-}
-
-// Each image comes from its own pointer. A command that scans the checkout for
-// pointers (git lfs pull, git lfs ls-files) makes a blobless clone fetch every
-// file in tailos just to look at it.
-function restoreDownloads(root) {
-  for (const { path, bytes } of downloadPointers(root)) {
-    const oid = pointerOid(bytes);
-    const content = execFileSync('git', ['-C', root, 'lfs', 'smudge', path], { input: bytes, maxBuffer: 1024 ** 3 });
-    const actual = createHash('sha256').update(content).digest('hex');
-    if (actual !== oid) fail(`${path}: restored content hashes to ${actual}, but its pointer names ${oid}`);
-    writeFileSync(join(root, path), content);
-    console.error(`publish: restored ${path} (${content.length} bytes, ${oid.slice(0, 12)})`);
-  }
+  console.log(['paths<<PUBLISHED_PATHS', ...publishedPaths(allowlist).map((path) => `/${path}`), 'PUBLISHED_PATHS'].join('\n'));
 }
 
 function record(sha) {
@@ -135,8 +95,6 @@ function record(sha) {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [command, argument] = process.argv.slice(2);
   if (command === 'decide') await decide();
-  else if (command === 'downloads-key' && argument) console.log(`key=${downloadsCacheKey(downloadPointers(argument))}`);
-  else if (command === 'restore-downloads' && argument) restoreDownloads(argument);
   else if (command === 'record') record(argument);
-  else fail('usage: node tools/publish.mjs decide | downloads-key <tailos> | restore-downloads <tailos> | record <tailos-commit>');
+  else fail('usage: node tools/publish.mjs decide | record <tailos-commit>');
 }

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { COMPARE_FILE_LIMIT, changedPaths, downloadsCacheKey, needsBuild, pointerOid, publishedPaths } from './publish.mjs';
+import { COMPARE_FILE_LIMIT, changedPaths, needsBuild, publishedPaths } from './publish.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -81,35 +81,5 @@ describe('needsBuild', () => {
 
   it('builds when main was rewritten rather than moved forward', () => {
     expect(decide({ comparison: { status: 'diverged', files: [] } })).toBe(true);
-  });
-});
-
-const pointer = (oid, size) => Buffer.from(`version https://git-lfs.github.com/spec/v1\noid sha256:${oid}\nsize ${size}\n`);
-const kernelOid = 'a58d3d552fef0112070f4fda10bb6772a702dbd5707f902297e3af531adccc77';
-const diskOid = 'd19951da388f6224f82d89239e5719b101c91b519b478de27cb1c1c018338984';
-
-describe('pointerOid', () => {
-  it('reads the object id a pointer names', () => {
-    expect(pointerOid(pointer(kernelOid, 6713264))).toBe(kernelOid);
-  });
-
-  it('finds none in a file that is not a pointer', () => {
-    expect(pointerOid(Buffer.from('#!/usr/bin/env bash\n# TailOS QEMU one-command launcher.\n'))).toBeNull();
-  });
-});
-
-describe('downloadsCacheKey', () => {
-  const images = [
-    { path: 'tail_qemu.rfs', bytes: pointer(kernelOid, 6713264) },
-    { path: 'tail_disk.img', bytes: pointer(diskOid, 268435456) },
-  ];
-
-  it('stays the same while the images do', () => {
-    expect(downloadsCacheKey(images.map((image) => ({ ...image })))).toBe(downloadsCacheKey(images));
-  });
-
-  it('changes when an image is rebuilt', () => {
-    const rebuilt = [images[0], { path: 'tail_disk.img', bytes: pointer('0'.repeat(64), 268435456) }];
-    expect(downloadsCacheKey(rebuilt)).not.toBe(downloadsCacheKey(images));
   });
 });

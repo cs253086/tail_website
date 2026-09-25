@@ -10,10 +10,9 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync, cpSync, existsSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { gzipSync } from 'node:zlib';
 import MarkdownIt from 'markdown-it';
 
-import { assertAllowlisted, assertNotLfsPointer, rewriteLink, validateAllowlist, validateDownloads, validateOrigin } from './allowlist.mjs';
+import { assertAllowlisted, assertNotLfsPointer, gzipDownload, rewriteLink, validateAllowlist, validateDownloads, validateOrigin } from './allowlist.mjs';
 import { assertRedacted, compileRules, redact } from './redact.mjs';
 import { buildIndex } from './bm25.mjs';
 import { chunkMarkdown } from './chunk.mjs';
@@ -249,19 +248,18 @@ const checksums = [];
 const r2Downloads = [];
 for (const download of downloads) {
   if (download.storage === 'r2') {
-    // Too large for Pages: stored in R2 and served by functions/downloads/[name].js.
-    // Its checksum was verified against the uploaded object by tools/upload-download.mjs.
+    // Stored in R2 and served by functions/downloads/[name].js under its published
+    // name. Its checksum was verified against the uploaded object by
+    // tools/upload-download.mjs, and is listed under the file's own name.
     checksums.push(`${download.sha256}  ${download.name}`);
-    r2Downloads.push(download.name);
+    r2Downloads.push(download.published);
     continue;
   }
   const bytes = readFileSync(download.absolute);
   assertNotLfsPointer(bytes, download.path);
   assertRedacted(bytes.toString('latin1'), redactionRules, download.path);
   checksums.push(`${createHash('sha256').update(bytes).digest('hex')}  ${download.name}`);
-  // Level 6 rather than 9: measured on the QEMU disk image, 9 saved 0.04 MiB of 8.6 and
-  // cost a second on every generate.
-  write(join(PUBLIC, 'downloads', download.published), download.compress ? gzipSync(bytes, { level: 6 }) : bytes);
+  write(join(PUBLIC, 'downloads', download.published), download.compress ? gzipDownload(bytes) : bytes);
 }
 // Checksums of the files as a reader holds them after decompressing, which is
 // also what the launcher compares its cache against.

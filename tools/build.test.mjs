@@ -6,6 +6,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { gunzipSync } from 'node:zlib';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { publishedName } from './allowlist.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const allowlist = JSON.parse(readFileSync(join(ROOT, 'content/allowlist.json'), 'utf8'));
@@ -67,7 +68,7 @@ describe('published output', () => {
   });
 
   it('routes only the API and the R2 downloads to Functions, so every other download stays static', () => {
-    const names = fromR2.map((download) => download.name);
+    const names = fromR2.map(({ name, compress }) => publishedName(name, compress === true));
     expect(JSON.parse(read(join(ROOT, 'public/_routes.json'))))
       .toEqual({ version: 1, include: ['/api/*', ...names.map((name) => `/downloads/${name}`)], exclude: [] });
     expect(JSON.parse(read(join(ROOT, 'generated/downloads.json')))).toEqual({ r2: names });
@@ -189,7 +190,7 @@ describe.skipIf(!existsSync(sourceRoot))('generator', () => {
         mkdirSync(dirname(join(root, path)), { recursive: true });
         symlinkSync(join(sourceRoot, path), join(root, path));
       }
-      const launcher = (allowlist.downloads ?? []).find((entry) => entry.path.endsWith('.sh'));
+      const launcher = fromTailos.find((entry) => entry.path.endsWith('.sh'));
       expect(launcher).toBeDefined();
       rmSync(join(root, launcher.path));
       writeFileSync(join(root, launcher.path),

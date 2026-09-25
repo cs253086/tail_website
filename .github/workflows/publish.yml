@@ -65,7 +65,7 @@ jobs:
           EVENT: ${{ github.event_name }}
         run: node tools/publish.mjs decide >> "$GITHUB_OUTPUT"
 
-      # Only the published files: tailos is 1.7 GB, and the site reads nine files of it.
+      # Only the published files: tailos is 1.7 GB, and the site reads the handful the allowlist names.
       - name: Check out the published tailos files
         if: steps.source.outputs.build == 'true'
         uses: actions/checkout@v7
@@ -78,26 +78,6 @@ jobs:
           filter: blob:none
           sparse-checkout: ${{ steps.source.outputs.paths }}
           sparse-checkout-cone-mode: false
-
-      # LFS downloads count against the tailos owner's bandwidth quota, so the images
-      # are cached under a key that changes only when one of them does.
-      - name: Key the download images by their LFS pointers
-        id: downloads
-        if: steps.source.outputs.build == 'true'
-        run: node tools/publish.mjs downloads-key tailos >> "$GITHUB_OUTPUT"
-
-      - name: Restore the download images from cache
-        if: steps.source.outputs.build == 'true'
-        uses: actions/cache@v6
-        with:
-          path: tailos/.git/lfs/objects
-          key: tailos-downloads-${{ steps.downloads.outputs.key }}
-
-      # Never git lfs pull or ls-files here: in this blobless clone they fetch every
-      # tailos file to find the pointers.
-      - name: Restore each download image from its pointer
-        if: steps.source.outputs.build == 'true'
-        run: node tools/publish.mjs restore-downloads tailos
 
       - name: Install
         if: steps.source.outputs.build == 'true'

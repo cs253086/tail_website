@@ -12,12 +12,12 @@
 <meta property="og:url" content="https://tail-os.com/docs/quick-start/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/daf944b2dcec/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/46db1117022f/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/daf944b2dcec/css/style.css">
-<script type="module" src="/assets/daf944b2dcec/js/copy.js"></script>
+<link rel="stylesheet" href="/assets/46db1117022f/css/style.css">
+<script type="module" src="/assets/46db1117022f/js/copy.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -135,14 +135,14 @@ External commands are executed as separate processes.
 etc       hello.py  usr
 /$ ls /usr/bin
 bluetoothctl    isrfat          netstat         route           waitfor
-cp              kill            pidls           shutdown        wcetdump
-dhcp            list-root-long  ping            sleep           which
+cp              kill            ping            shutdown        wcetdump
+dhcp            list-root-long  ps              sleep           which
 fetch           logview         python          time            wifi
 find            ls              reboot          top
 grep            mv              rm              vi
 </code></pre>
 <h3 id="the-processes">The processes</h3>
-<pre><code>/$ pidls
+<pre><code>/$ ps
 PID    PPID   STATE      THREADS  NAME
 0      -      LOADING    0        startup
 1      -      RUNNING    11       kernel
@@ -156,7 +156,7 @@ PID    PPID   STATE      THREADS  NAME
 10     -      RUNNING    1        read_only_file_system_server
 11     -      RUNNING    1        fat_file_system_server
 13     -      RUNNING    1        tsh
-14     13     RUNNING    1        pidls
+14     13     RUNNING    1        ps
 </code></pre>
 <p>This is what a microkernel looks like from the inside. The serial driver, the USB and SD
 card drivers, both filesystems and the network stack are not part of <code>kernel</code>; each is a
