@@ -19,7 +19,7 @@
 #                (default: https://tail-os.com/downloads)
 #   CACHE_DIR    Where images are cached (default: ~/.cache/tailos)
 #
-# Exit with Ctrl-A then X from inside QEMU.
+# Exit with Ctrl-A then x from inside QEMU.
 
 set -euo pipefail
 
@@ -105,7 +105,7 @@ ensure tail_disk.img
 rm -rf "$work"
 trap - EXIT
 
-say "Booting TailOS (exit with Ctrl-A then X)"
+say "Booting TailOS (exit with Ctrl-A then x)"
 # The same NIC `make run` attaches: a USB network device on the dwc2 controller,
 # behind QEMU's user-mode networking, which needs no privileges on the host. Without
 # it the USB root port is empty, and the guest reports "[FAIL] usb no device on the
@@ -124,7 +124,7 @@ qemu=(qemu-system-aarch64
     -device usb-net,netdev=tailnet0)
 
 # `curl … | bash` leaves this script's stdin as the download pipe, and QEMU would
-# inherit it: the guest boots to its prompt, but nothing typed reaches it and Ctrl-A X
+# inherit it: the guest boots to its prompt, but nothing typed reaches it and Ctrl-A x
 # cannot quit. When there is a terminal, QEMU is given that instead. Only QEMU's stdin
 # is redirected -- bash is still reading the rest of this script from the pipe, and
 # an `exec </dev/tty` would make it wait for the remaining lines to be typed. The

@@ -12,12 +12,12 @@
 <meta property="og:url" content="https://tail-os.com/docs/quick-start/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/6e8369efcc15/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/be8d1325915c/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/6e8369efcc15/css/style.css">
-<script type="module" src="/assets/6e8369efcc15/js/copy.js"></script>
+<link rel="stylesheet" href="/assets/be8d1325915c/css/style.css">
+<script type="module" src="/assets/be8d1325915c/js/copy.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -84,10 +84,19 @@
 <article class="doc">
 <h1 id="quick-start">Quick Start</h1>
 <p>See TAIL OS run on a Linux machine with QEMU — no board, no toolchain, no build. Every
-command on this page was run against the published image, and the output shown is what
-it printed.</p>
+command from step 2 on was run against the published image, with Ubuntu 24.04's QEMU 8.2 and
+with QEMU 10.2, and the output shown is what it printed.</p>
+<p>You need a Linux machine with at least 2 CPUs and enough free disk for QEMU and TAIL OS. On
+Ubuntu 24.04 the QEMU packages below take 580 to 970 MiB, depending on what is already
+installed; TAIL OS takes about 300 MiB more, or about 600 MiB if you also follow
+<a href="#without-the-launcher">Without the launcher</a>, which keeps its own copy.</p>
+<p>QEMU emulates the Raspberry Pi 3's four CPU cores, so the timings on this page are for a
+machine with 4 or more CPUs (<code>nproc</code> counts them). With 3 it is only a little slower. With 2,
+everything works but runs far slower, as noted below. With 1, the boot stops early; in our
+test it had not reached the shell after 15 minutes.</p>
 <h2 id="1-install-qemu">1. Install QEMU</h2>
-<pre><code class="language-bash">sudo apt-get install -y qemu-system-arm qemu-utils
+<pre><code class="language-bash">sudo apt-get update
+sudo apt-get install -y qemu-system-arm qemu-utils
 </code></pre>
 <h2 id="2-boot-tail-os">2. Boot TAIL OS</h2>
 <p>Download the launcher, then run it:</p>
@@ -96,17 +105,33 @@ chmod +x run_tailos_qemu.sh
 ./run_tailos_qemu.sh
 </code></pre>
 <p>The launcher downloads the kernel and data disk into <code>~/.cache/tailos/</code>, checks each
-against the published <code>SHA256SUMS</code>, and boots them. The first run downloads about 10 MB.
-Later runs start from the cache, which the launcher replaces only when a new image is
-published, so booting again is just <code>./run_tailos_qemu.sh</code>.</p>
-<p>Boot takes a few seconds. When the shell starts you see:</p>
+against the published <code>SHA256SUMS</code>, and boots them. The first run downloads about 15 MiB,
+which unpacks to about 263 MiB in the cache. It shows no progress while it does: after
+<code>fetching https://tail-os.com/downloads/tail_disk.img.gz</code> nothing more appears until the
+download, unpacking and check are done. Later runs start from the cache, which the launcher
+replaces only when a new image is published, so booting again is just <code>./run_tailos_qemu.sh</code>.
+Each run still fetches the small <code>SHA256SUMS</code> to check for a new image, so it needs the
+network.</p>
+<p>With 4 or more CPUs, boot takes a few seconds. With 2 it takes one to four minutes, and the
+log can stop for a minute or more at a time, longest just before the line ending
+<code>FAT File System Server initialized</code>; it has not hung.</p>
+<p>Before the shell starts, the launcher prints a few lines of its own, then TAIL OS prints a banner
+beginning <code>TailOS  aarch64 / raspi3b  build</code> and about 45 lines of boot log, each tagged <code>[STRT]</code>,
+<code>[ OK ]</code> or <code>[INFO]</code>. The two <code>[INFO]</code> lines where the wifi and bt expander
+<code>did not acknowledge</code> are expected: QEMU's emulated firmware ignores that request. Lines
+from different services can arrive out of timestamp order. When the shell starts you see:</p>
 <pre><code>TAIL OS Shell (tsh)
 Type 'exit' to quit, 'help' for built-in commands.
 
 /$
 </code></pre>
-<p>To leave QEMU at any point, press <strong>Ctrl-A</strong>, then <strong>X</strong>.</p>
+<p>To leave QEMU at any point, press <strong>Ctrl-A</strong>, then a lowercase <strong>x</strong>. QEMU prints <code>QEMU: Terminated</code>
+and you are back at your own shell.</p>
 <h2 id="3-look-around">3. Look around</h2>
+<p>With 2 CPUs the shell is slow: typed text can take several seconds to appear, and each
+command below takes from several seconds to over ten minutes to finish. Wait for the <code>/$</code>
+prompt before typing the next command; text typed while a command is still running appears
+twice.</p>
 <h3 id="the-shell">The shell</h3>
 <pre><code>/$ help
 Built-in commands:
@@ -165,6 +190,9 @@ process of its own, listed here beside the shell.</p>
 <pre><code>/$ python /hello.py
 hello from tailos
 </code></pre>
+<p><code>python</code> prints nothing for a few seconds before its line, and with 2 CPUs for many minutes
+(from 6 to about 15 in our runs, the longer when the two CPUs were separate physical cores).
+It has not hung.</p>
 <h3 id="the-network">The network</h3>
 <pre><code>/$ ping -c 3 10.0.2.2
 PING 10.0.2.2 (10.0.2.2)
@@ -175,10 +203,15 @@ reply from 10.0.2.2: seq=2 time=2.982 ms
 3 sent, 3 received, 0% lost
 </code></pre>
 <p><code>10.0.2.2</code> is QEMU's gateway on the emulated network. The replies travel through the
-guest's USB network device, its driver and the <code>network</code> process above.</p>
+guest's USB network device, its driver and the <code>network</code> process above. The times differ
+on every run. With 2 CPUs a reply can miss ping's 1-second timeout: that probe prints
+<code>no reply: seq=N</code>, and the last line counts it as lost.</p>
 <h2 id="without-the-launcher">Without the launcher</h2>
-<p>If you would rather not pipe a script into your shell, the same steps by hand:</p>
-<pre><code class="language-bash">curl -fsSLO https://tail-os.com/downloads/tail_qemu.rfs.gz
+<p>If you would rather not run a script, the same steps by hand. Run them in an empty
+directory: they keep no cache, the files land there, <code>gunzip</code> stops and asks before
+replacing files an earlier run left behind, and it unpacks the disk image to 256 MiB.</p>
+<pre><code class="language-bash">mkdir tailos-manual &amp;&amp; cd tailos-manual
+curl -fsSLO https://tail-os.com/downloads/tail_qemu.rfs.gz
 curl -fsSLO https://tail-os.com/downloads/tail_disk.img.gz
 curl -fsSLO https://tail-os.com/downloads/SHA256SUMS
 gunzip tail_qemu.rfs.gz tail_disk.img.gz
