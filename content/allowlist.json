@@ -96,7 +96,7 @@
       "storage": "r2",
       "name": "tail_qemu.rfs",
       "compress": true,
-      "sha256": "c7eeeed5e6d286af51f536b927ec1900f88e6cb90e096520f327dedac4d52536"
+      "sha256": "92fad052d9281e957d1107812707a1189bf0fc40b1208a8c9e9d93d32d2ee870"
     },
     {
       "storage": "r2",

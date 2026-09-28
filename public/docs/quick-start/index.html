@@ -12,12 +12,12 @@
 <meta property="og:url" content="https://tail-os.com/docs/quick-start/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/80eb8706889c/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/c1380c9340c7/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/80eb8706889c/css/style.css">
-<script type="module" src="/assets/80eb8706889c/js/copy.js"></script>
+<link rel="stylesheet" href="/assets/c1380c9340c7/css/style.css">
+<script type="module" src="/assets/c1380c9340c7/js/copy.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -91,9 +91,8 @@ Ubuntu 24.04 the QEMU packages below take 580 to 970 MiB, depending on what is a
 installed; TAIL OS takes about 300 MiB more, or about 600 MiB if you also follow
 <a href="#without-the-launcher">Without the launcher</a>, which keeps its own copy.</p>
 <p>QEMU emulates the Raspberry Pi 3's four CPU cores. It runs best with 4 or more CPUs (<code>nproc</code>
-counts them) and nearly as fast with 2. With 1 it is slower: in our run the shell came up in
-about 20 seconds and <code>python /hello.py</code> took about a minute, and single-CPU timings vary a lot
-from run to run.</p>
+counts them) and a little slower with 2. With 1 it is slower still: in our runs the shell came
+up in about 20 seconds and <code>python /hello.py</code> took about 40, and timings vary from run to run.</p>
 <h2 id="1-install-qemu">1. Install QEMU</h2>
 <pre><code class="language-bash">sudo apt-get update
 sudo apt-get install -y qemu-system-arm qemu-utils
@@ -112,7 +111,7 @@ download, unpacking and check are done. Later runs start from the cache, which t
 replaces only when a new image is published, so booting again is just <code>./run_tailos_qemu.sh</code>.
 Each run still fetches the small <code>SHA256SUMS</code> to check for a new image, so it needs the
 network.</p>
-<p>Boot takes a few seconds: on our machine about 4 with 4 CPUs and 7 with 2. A slower machine
+<p>Boot takes a few seconds: on our machine about 4 with 4 CPUs and 8 with 2. A slower machine
 takes longer, and the log can pause for a while, longest just before the line ending
 <code>FAT File System Server initialized</code>, but it has not hung.</p>
 <p>Before the shell starts, the launcher prints a few lines of its own, then TAIL OS prints a banner
@@ -128,7 +127,7 @@ Type 'exit' to quit, 'help' for built-in commands.
 <p>To leave QEMU at any point, press <strong>Ctrl-A</strong>, then a lowercase <strong>x</strong>. QEMU prints <code>QEMU: Terminated</code>
 and you are back at your own shell.</p>
 <h2 id="3-look-around">3. Look around</h2>
-<p>Each command below answers within a second or two, and <code>python /hello.py</code> within several
+<p>Each command below answers within a second or two, and <code>python /hello.py</code> within about ten
 seconds. Wait for the <code>/$</code> prompt before typing the next command; text typed while a command
 is still running appears twice.</p>
 <h3 id="the-shell">The shell</h3>
@@ -189,8 +188,8 @@ process of its own, listed here beside the shell.</p>
 <pre><code>/$ python /hello.py
 hello from tailos
 </code></pre>
-<p><code>python</code> prints nothing for a few seconds before its line (on our machine about 5 with 4
-CPUs and 7 with 2). It has not hung.</p>
+<p><code>python</code> prints nothing for several seconds before its line (on our machine about 8 with 4
+CPUs and 12 with 2). It has not hung.</p>
 <h3 id="the-network">The network</h3>
 <pre><code>/$ ping -c 3 10.0.2.2
 PING 10.0.2.2 (10.0.2.2)
