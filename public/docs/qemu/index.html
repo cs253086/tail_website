@@ -12,12 +12,12 @@
 <meta property="og:url" content="https://tail-os.com/docs/qemu/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/67d1fa97c1c1/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/a9f748ec3a7f/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/67d1fa97c1c1/css/style.css">
-<script type="module" src="/assets/67d1fa97c1c1/js/copy.js"></script>
+<link rel="stylesheet" href="/assets/a9f748ec3a7f/css/style.css">
+<script type="module" src="/assets/a9f748ec3a7f/js/copy.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -140,8 +140,8 @@ again is <code>./run_tailos_qemu.sh</code>: it starts from the cached images.</p
 <p>The prompt shows the current directory (it changes after <code>cd</code>). The shell also
 supports arrow-key history, per-process <code>cwd</code>, and background jobs
 with <code>&amp;</code>.</p>
-<p><code>exit</code> ends the shell, and no new one starts: the console stays silent. Quit QEMU with
-<strong>Ctrl-A, then lowercase x</strong>.</p>
+<p><code>exit</code> ends the shell, and no new one starts: nothing runs and no prompt returns, though
+what you type still echoes. Quit QEMU with <strong>Ctrl-A, then lowercase x</strong>.</p>
 <h2 id="manual-launch-alternative">Manual Launch (alternative)</h2>
 <p>If you prefer not to run a remote script, do it by hand:</p>
 <pre><code class="language-bash"># 1. Install QEMU
