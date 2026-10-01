@@ -12,12 +12,12 @@
 <meta property="og:url" content="https://tail-os.com/docs/qemu/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/c1380c9340c7/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/67d1fa97c1c1/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/c1380c9340c7/css/style.css">
-<script type="module" src="/assets/c1380c9340c7/js/copy.js"></script>
+<link rel="stylesheet" href="/assets/67d1fa97c1c1/css/style.css">
+<script type="module" src="/assets/67d1fa97c1c1/js/copy.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -88,7 +88,7 @@
 <h1 id="running-tailos-in-qemu">Running TailOS in QEMU</h1>
 <p>Try TailOS on your Linux machine in under two minutes — no hardware, no
 toolchain. For installing TailOS on real Raspberry Pi 3 hardware, see
-<a href="/docs/raspberry-pi-3/">install_rpi3.md</a>.</p>
+<a href="/docs/raspberry-pi-3/">Installing on Raspberry Pi 3</a>.</p>
 <h2 id="prerequisites">Prerequisites</h2>
 <table>
 <thead>
@@ -127,7 +127,7 @@ chmod +x run_tailos_qemu.sh
 reuse the cache until a new image is published.</li>
 <li>Boot TailOS in QEMU with the correct flags.</li>
 </ol>
-<p>When you see <code>/$</code>, the system is ready. Exit QEMU with <strong>Ctrl-A, then X</strong>. Booting it
+<p>When you see <code>/$</code>, the system is ready. Exit QEMU with <strong>Ctrl-A, then lowercase x</strong>. Booting it
 again is <code>./run_tailos_qemu.sh</code>: it starts from the cached images.</p>
 <h2 id="try-the-shell">Try the Shell</h2>
 <pre><code>/$ help
@@ -140,6 +140,8 @@ again is <code>./run_tailos_qemu.sh</code>: it starts from the cached images.</p
 <p>The prompt shows the current directory (it changes after <code>cd</code>). The shell also
 supports arrow-key history, per-process <code>cwd</code>, and background jobs
 with <code>&amp;</code>.</p>
+<p><code>exit</code> ends the shell, and no new one starts: the console stays silent. Quit QEMU with
+<strong>Ctrl-A, then lowercase x</strong>.</p>
 <h2 id="manual-launch-alternative">Manual Launch (alternative)</h2>
 <p>If you prefer not to run a remote script, do it by hand:</p>
 <pre><code class="language-bash"># 1. Install QEMU
@@ -165,18 +167,32 @@ qemu-system-aarch64 \
 <h2 id="whats-inside-the-images">What's Inside the Images</h2>
 <p><code>tail_qemu.rfs</code> is a custom ELF container that bundles the entire OS:</p>
 <pre><code>tail_qemu.rfs
-├── startup_rpi3              Early boot (EL3 -&gt; EL1, MMU, jump to kernel)
-├── kernel                    Microkernel (process, thread, IPC, scheduler)
-├── uart_pl011                UART + TTY server (user-space)
-├── sd_rpi3                   SD card block driver (user-space)
-├── fat_file_system_server    Mounts tail_disk.img as &quot;/&quot;
-├── debug_server              GDB remote protocol stub
-└── tsh                       Shell
+├── aarch64-startup                Early boot (EL3 -&gt; EL1, MMU, jump to kernel)
+├── kernel                         Microkernel (process, thread, IPC, scheduler)
+├── uart_pl011                     UART + TTY server (user-space)
+├── gpio_rpi3                      GPIO controller driver
+├── sd_sdhost_rpi3                 SD card block driver (user-space)
+├── fat_file_system_server         Mounts tail_disk.img as &quot;/&quot;
+├── read_only_file_system_server   Serves these files at /rfs
+├── log_server                     System log
+├── logview                        Copies logged errors to the console
+├── pipe_server                    Pipes between processes
+├── dwc2_rpi3                      USB host controller driver
+├── network                        Network stack
+├── netdev_lo_module               Loopback network device
+├── route                          Sets the default route at boot
+├── debug_server                   GDB remote protocol stub (packed, not started)
+└── tsh                            Shell
 </code></pre>
+<p><code>ls /rfs</code> lists them. <code>/rfs</code> does not appear in <code>ls /</code>, but paths under it work:
+<code>which tsh</code> prints <code>/rfs/tsh</code>.</p>
 <p><code>tail_disk.img</code> is a FAT32 disk image exposed to the guest as an SD card:</p>
 <pre><code>tail_disk.img
-├── /usr/bin/ls       Directory listing utility
-└── /usr/bin/ps       Process listing utility
+├── /etc/hosts, /etc/resolv.conf     Name lookup
+├── /hello.py                        Example Python script
+├── /usr/bin/                        28 programs: ls, ps, top, vi, python, ping, ...
+└── /usr/lib/python3.14/,
+    /usr/lib/python314.zip           Python 3.14 standard library
 </code></pre>
 <h2 id="boot-sequence">Boot Sequence</h2>
 <pre><code>qemu-system-aarch64 -M raspi3b
@@ -185,7 +201,7 @@ qemu-system-aarch64 \
 QEMU loads tail_qemu.rfs at 0x80000 (raspi3b entry point)
   |
   v
-TailOS startup (_start.S)
+TailOS startup (aarch64-startup)
   |-- Switch EL3 -&gt; EL1
   |-- Initialize MMU, caches
   |-- Jump to kernel
@@ -212,12 +228,11 @@ The FAT filesystem takes several seconds to initialize on first boot; give it
 up to a minute. If it never appears, re-download the images (the cached copy
 may be corrupted) with <code>rm -rf ~/.cache/tailos</code>.</p>
 <p><strong>Exiting:</strong>
-Inside QEMU, press <strong>Ctrl-A, then X</strong> to quit. <strong>Ctrl-A, then C</strong> drops into
-the QEMU monitor (type <code>quit</code>).</p>
+Inside QEMU, press <strong>Ctrl-A, then lowercase x</strong> to quit. <strong>Ctrl-A, then lowercase c</strong>
+drops into the QEMU monitor (type <code>quit</code>). Uppercase X and C do nothing.</p>
 <h2 id="see-also">See Also</h2>
 <ul>
-<li><a href="/docs/raspberry-pi-3/">install_rpi3.md</a> — Installing on Raspberry Pi 3 hardware</li>
-<li>buildsystem.md — Building TailOS from source (contributors)</li>
+<li><a href="/docs/raspberry-pi-3/">Installing on Raspberry Pi 3</a> — TailOS on real hardware</li>
 </ul>
 
 <footer class="doc-src">
