@@ -110,7 +110,7 @@ export function renderRedirects(docs) {
 
 function footer({ site }) {
   return `<footer class="ftr">
-  <span>TAIL OS &mdash; real-time microkernel in Rust</span>
+  <span>TAIL OS &mdash; real-time OS in Rust</span>
   <span class="ftr-sep">/</span>
   <span class="mono">${esc(site.version)}</span>
 </footer>`;
