@@ -4,20 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Installing on Raspberry Pi 3 — TAIL OS</title>
-<meta name="description" content="Flash the SD card image, wire the serial console, and boot on real hardware.">
+<meta name="description" content="Build an SD card image from the SDK and the BSP download, flash it, and boot on real hardware.">
 <link rel="canonical" href="https://tail-os.com/docs/raspberry-pi-3/">
 <meta property="og:title" content="Installing on Raspberry Pi 3 — TAIL OS">
-<meta property="og:description" content="Flash the SD card image, wire the serial console, and boot on real hardware.">
+<meta property="og:description" content="Build an SD card image from the SDK and the BSP download, flash it, and boot on real hardware.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://tail-os.com/docs/raspberry-pi-3/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/a9f748ec3a7f/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/ba9ed0d7c4d4/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/a9f748ec3a7f/css/style.css">
-<script type="module" src="/assets/a9f748ec3a7f/js/copy.js"></script>
+<link rel="stylesheet" href="/assets/ba9ed0d7c4d4/css/style.css">
+<script type="module" src="/assets/ba9ed0d7c4d4/js/copy.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -52,11 +52,16 @@
       <a class="nav-link" href="/docs/raspberry-pi-3/" aria-current="page">Raspberry Pi 3</a>
       <ul class="nav-sections">
         <li><a href="/docs/raspberry-pi-3/#hardware-required">Hardware Required</a></li>
-        <li><a href="/docs/raspberry-pi-3/#quick-start">Quick Start</a></li>
-        <li><a href="/docs/raspberry-pi-3/#serial-console-wiring">Serial Console Wiring</a></li>
+        <li><a href="/docs/raspberry-pi-3/#1-install-the-sdk">1. Install the SDK</a></li>
+        <li><a href="/docs/raspberry-pi-3/#2-download-the-bsp-and-build-the-image">2. Download the BSP and build the image</a></li>
+        <li><a href="/docs/raspberry-pi-3/#3-flash-the-sd-card">3. Flash the SD card</a></li>
+        <li><a href="/docs/raspberry-pi-3/#4-wire-the-serial-console">4. Wire the serial console</a></li>
+        <li><a href="/docs/raspberry-pi-3/#5-boot">5. Boot</a></li>
+        <li><a href="/docs/raspberry-pi-3/#try-the-image-in-qemu-first">Try the image in QEMU first</a></li>
+        <li><a href="/docs/raspberry-pi-3/#add-your-own-programs">Add your own programs</a></li>
+        <li><a href="/docs/raspberry-pi-3/#whats-in-the-bsp">What's in the BSP</a></li>
         <li><a href="/docs/raspberry-pi-3/#sd-card-image-structure">SD Card Image Structure</a></li>
         <li><a href="/docs/raspberry-pi-3/#boot-sequence">Boot Sequence</a></li>
-        <li><a href="/docs/raspberry-pi-3/#build-details">Build Details</a></li>
         <li><a href="/docs/raspberry-pi-3/#configtxt-reference">config.txt Reference</a></li>
         <li><a href="/docs/raspberry-pi-3/#troubleshooting">Troubleshooting</a></li>
       </ul>
@@ -79,13 +84,21 @@
     </li>
       </ul>
     </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/license-guide/">License Guide</a>
+    </li>
     </ul>
   </nav>
 </aside>
 <main class="content">
 <div class="doc-wrap">
 <article class="doc">
-<h1 id="installing-tailos-on-raspberry-pi-3">Installing TailOS on Raspberry Pi 3</h1>
+<h1 id="installing-tail-os-on-raspberry-pi-3">Installing TAIL OS on Raspberry Pi 3</h1>
+<p>You build the SD card image yourself, from two downloads: the TAIL OS SDK, which holds
+the toolchain and the prebuilt operating system, and the Raspberry Pi 3 board support
+package (BSP), which holds the board's startup code and drivers as source plus the
+script that builds the image. To try TAIL OS without hardware, see
+<a href="/docs/qemu/">Running TAIL OS in QEMU</a>.</p>
 <h2 id="hardware-required">Hardware Required</h2>
 <table>
 <thead>
@@ -117,17 +130,35 @@
 </tr>
 </tbody>
 </table>
-<h2 id="quick-start">Quick Start</h2>
-<pre><code class="language-bash"># 1. Build TailOS and create the SD card image
-make sd-image
-
-# 2. Flash to SD card (replace /dev/sdX with your SD card device)
-sudo dd if=tailos_sd.img of=/dev/sdX bs=4M status=progress
-sync
-
-# 3. Wire serial console, insert SD card, power on
+<h2 id="1-install-the-sdk">1. Install the SDK</h2>
+<p>Follow <a href="/docs/installation/">Installation</a>. It installs the toolchain and the SDK and
+writes <code>tail-sdk-env.sh</code>, which the BSP uses to find the SDK.</p>
+<h2 id="2-download-the-bsp-and-build-the-image">2. Download the BSP and build the image</h2>
+<pre><code class="language-bash">curl -fsSLO https://tail-os.com/downloads/bsp-rpi3.zip
+curl -fsSLO https://tail-os.com/downloads/SHA256SUMS
+sha256sum -c --ignore-missing SHA256SUMS
+unzip bsp-rpi3.zip
+cd bsp-rpi3
+source &lt;install dir&gt;/tail-sdk-env.sh
+./make-disk.sh
 </code></pre>
-<h2 id="serial-console-wiring">Serial Console Wiring</h2>
+<p><code>&lt;install dir&gt;</code> is the directory you gave the SDK installer. <code>make-disk.sh</code> checks that
+the BSP matches the installed SDK, builds the board crates against it, and writes
+<code>tailos_sd.img</code>. A BSP and an SDK are published as a pair: if the check rejects your SDK,
+install the SDK from the same day's downloads.</p>
+<p>The first run downloads the Raspberry Pi boot firmware, about 3 MB, from the official
+<code>raspberrypi/firmware</code> repository and caches it in <code>tools/.firmware_cache</code>. On a machine
+without network access, pass <code>--firmware-dir &lt;dir&gt;</code> pointing at one directory that
+already holds <code>bootcode.bin</code>, <code>start.elf</code>, <code>fixup.dat</code>, <code>bcm2710-rpi-3-b.dtb</code>,
+<code>bcm2710-rpi-3-b-plus.dtb</code> and <code>miniuart-bt.dtbo</code>, all side by side. They come from
+<a href="https://github.com/raspberrypi/firmware/tree/master/boot" rel="noopener">https://github.com/raspberrypi/firmware/tree/master/boot</a>, where <code>miniuart-bt.dtbo</code> is
+under <code>overlays/</code>.</p>
+<h2 id="3-flash-the-sd-card">3. Flash the SD card</h2>
+<p>Replace <code>/dev/sdX</code> with your SD card's device:</p>
+<pre><code class="language-bash">sudo dd if=tailos_sd.img of=/dev/sdX bs=4M status=progress
+sync
+</code></pre>
+<h2 id="4-wire-the-serial-console">4. Wire the serial console</h2>
 <p>Connect the USB-to-TTL serial adapter to the RPi3 GPIO header:</p>
 <pre><code>USB-TTL Adapter          RPi3 GPIO Header
 +-----------+            +----------------+
@@ -147,33 +178,72 @@ Power the RPi from its own power supply.</p>
 # or
 minicom -D /dev/ttyUSB0 -b 115200
 </code></pre>
+<h2 id="5-boot">5. Boot</h2>
+<p>Insert the SD card and power on. The boot log appears on the serial console, and the
+shell prompt <code>/$</code> follows it.</p>
+<h2 id="try-the-image-in-qemu-first">Try the image in QEMU first</h2>
+<p>The same image boots in QEMU. QEMU does not emulate the Pi's firmware boot chain, so it
+loads the operating system from <code>images/tail.rfs</code> and takes the SD card image only for
+its data partition:</p>
+<pre><code class="language-bash">qemu-system-aarch64 -M raspi3b -kernel images/tail.rfs -serial mon:stdio \
+    -display none -drive file=tailos_sd.img,format=raw,if=sd
+</code></pre>
+<p>Under QEMU the log shows <code>[FAIL]</code> lines for USB (<code>no device on the root port</code>) and for
+Bluetooth (<code>startup failed: TimedOut</code>). QEMU has no Bluetooth controller and the command
+attaches no USB device, so these are expected; the shell still comes up. Exit with
+<strong>Ctrl-A, then lowercase x</strong>.</p>
+<h2 id="add-your-own-programs">Add your own programs</h2>
+<p>Put a program in <code>app/&lt;name&gt;/src/main.rs</code> and add a line <code>/usr/bin/&lt;name&gt;=&lt;name&gt;</code> to the
+<code>[disk]</code> section of <code>tail.build</code>. <code>./make-disk.sh</code> builds it against the SDK and puts it
+in <code>/usr/bin</code> on the image. This is also how a program uses the
+<a href="/docs/periodic-framework-rust/">Periodic Framework</a>.</p>
+<h2 id="whats-in-the-bsp">What's in the BSP</h2>
+<pre><code>bsp-rpi3/
+├── make-disk.sh       Builds tailos_sd.img (runs the two scripts below)
+├── verify-sdk.sh      Checks that the installed SDK matches this BSP
+├── build-os.sh        Builds the operating system image, images/tail.rfs
+├── bsp.toml           Board manifest: board paths and the SDK this BSP pairs with
+├── tail.build         Image manifest: what boots, what starts, what goes on the disk
+├── app/build.sh       Builds your programs under app/
+├── tools/             SD card image tools (Python 3 standard library only)
+├── startup/           Board startup (EL3 to EL1, MMU, jump to the kernel)
+├── library/hardware/  Board memory map, power and mailbox crates
+└── driver/hardware/   GPIO, SD card (SDHOST and EMMC) and Bluetooth drivers
+</code></pre>
+<p>The source is TAIL OS software under licence; see the
+<a href="/docs/license-guide/">License Guide</a>. The Bluetooth driver includes Broadcom's
+firmware for the Pi 3B+ controller, under Broadcom's own licence beside it.</p>
 <h2 id="sd-card-image-structure">SD Card Image Structure</h2>
-<p>The <code>make sd-image</code> command produces <code>tailos_sd.img</code> with the following layout:</p>
+<p><code>make-disk.sh</code> produces <code>tailos_sd.img</code> with the following layout:</p>
 <pre><code>+===========================================================================+
-|                          tailos_sd.img (193 MiB)                          |
+|                          tailos_sd.img (256 MiB)                          |
 +===========================================================================+
 |                                                                           |
-|  Sector 0: MBR (Master Boot Record)                                      |
-|    Partition 1: Boot  | FAT32 | 64 MiB                                   |
-|    Partition 2: Data  | FAT32 | 128 MiB                                  |
+|  Sector 0: MBR (Master Boot Record)                                       |
+|    Partition 1: Boot  | FAT32 | 64 MiB, starting at 1 MiB                 |
+|    Partition 2: Data  | FAT32 | 128 MiB                                   |
+|    The rest is padding: QEMU's SD emulation needs a power-of-two size.    |
 |                                                                           |
 |  Partition 1: BOOT                                                        |
 |  +-----------------------------------------------------------------------+|
 |  |  bootcode.bin .... RPi GPU 1st-stage bootloader                       ||
 |  |  start.elf ....... RPi GPU firmware                                   ||
 |  |  fixup.dat ....... RPi GPU memory fixup                               ||
-|  |  config.txt ...... Boot configuration (arm_64bit=1, enable_uart=1)    ||
-|  |  kernel8.img ..... TailOS (startup + kernel + drivers + servers + tsh)||
+|  |  bcm2710-rpi-3-b.dtb, bcm2710-rpi-3-b-plus.dtb .. device trees        ||
+|  |  overlays/miniuart-bt.dtbo ... routes Bluetooth to the mini-UART      ||
+|  |  config.txt ...... Boot configuration (see below)                     ||
+|  |  kernel8.img ..... TAIL OS (startup + kernel + drivers + servers + tsh)||
 |  +-----------------------------------------------------------------------+|
 |                                                                           |
-|  Partition 2: DATA                                                        |
+|  Partition 2: DATA (mounted as /)                                         |
 |  +-----------------------------------------------------------------------+|
-|  |  /usr/bin/ls ..... Directory listing utility                          ||
-|  |  /usr/bin/ps ..... Process listing utility                            ||
+|  |  /etc/hosts, /etc/resolv.conf .. name lookup                         ||
+|  |  /usr/bin/ ...... 27 programs: ls, ps, top, vi, ping, wifi, ...       ||
 |  +-----------------------------------------------------------------------+|
 |                                                                           |
 +===========================================================================+
 </code></pre>
+<p>Python is not on this image. It comes only with the QEMU download, <code>tail_disk.img</code>.</p>
 <h2 id="boot-sequence">Boot Sequence</h2>
 <pre><code>Power On
   |
@@ -187,42 +257,21 @@ bootcode.bin -&gt; loads start.elf
 start.elf -&gt; reads config.txt, loads kernel8.img at 0x80000
   |
   v
-TailOS startup (_start.S)
+TAIL OS startup (aarch64-startup)
   |-- Switch EL3 -&gt; EL1
   |-- Initialize MMU and caches
   |-- Jump to kernel
   v
-TailOS kernel
+TAIL OS kernel
   |-- Initialize process/thread/IPC subsystem
-  |-- Load drivers from RFS (UART, SD)
-  |-- Mount data partition via SD driver + FAT server
+  |-- Load drivers and servers from the image (UART, GPIO, SD, Bluetooth, network)
+  |-- Mount the data partition via the SD driver + FAT server
   |-- Start tsh shell
   v
 /$ _   (serial console ready)
 </code></pre>
-<h2 id="build-details">Build Details</h2>
-<p>The <code>make sd-image</code> target:</p>
-<ol>
-<li>Builds TailOS (<code>make build-release</code>)</li>
-<li>Downloads RPi3 firmware from <code>raspberrypi/firmware</code> (cached locally)</li>
-<li>Converts <code>tail.rfs</code> (ELF) to <code>kernel8.img</code> (raw binary) via <code>objcopy -O binary</code></li>
-<li>Creates a two-partition FAT32 image with MBR</li>
-<li>Populates boot partition with firmware + kernel</li>
-<li>Populates data partition with user binaries from <code>tail.build</code> <code>[disk]</code> section</li>
-</ol>
-<h3 id="offline-firmware">Offline Firmware</h3>
-<p>To use pre-downloaded firmware instead of auto-downloading:</p>
-<pre><code class="language-bash">python3 utility/host/deploy_disk/make_sd_image.py \
-    ./tail.build \
-    $TAIL_PREFIX/os_image/tail.rfs \
-    $TAIL_PREFIX/target/bin \
-    tailos_sd.img \
-    --firmware-dir /path/to/firmware/
-</code></pre>
-<p>The firmware directory must contain: <code>bootcode.bin</code>, <code>start.elf</code>, <code>fixup.dat</code>.
-These can be obtained from <a href="https://github.com/raspberrypi/firmware/tree/master/boot" rel="noopener">https://github.com/raspberrypi/firmware/tree/master/boot</a>.</p>
 <h2 id="configtxt-reference">config.txt Reference</h2>
-<p>The generated <code>config.txt</code> contains:</p>
+<p><code>make-disk.sh</code> writes this <code>config.txt</code>:</p>
 <table>
 <thead>
 <tr>
@@ -245,45 +294,59 @@ These can be obtained from <a href="https://github.com/raspberrypi/firmware/tree
 <tr>
 <td><code>disable_commandline_tags</code></td>
 <td><code>1</code></td>
-<td>Don't pass ATAGS (TailOS doesn't use them)</td>
+<td>Don't pass ATAGS (TAIL OS doesn't use them)</td>
 </tr>
 <tr>
 <td><code>gpu_mem</code></td>
-<td><code>16</code></td>
-<td>Minimize GPU memory (TailOS doesn't use GPU)</td>
-</tr>
-<tr>
-<td><code>dtoverlay</code></td>
-<td><code>disable-bt</code></td>
-<td>Free PL011 UART from Bluetooth</td>
+<td><code>64</code></td>
+<td>The firmware default. <code>16</code> would make the firmware look for a cut-down <code>start_cd.elf</code> that is not on the card, and the Pi would not boot</td>
 </tr>
 <tr>
 <td><code>enable_uart</code></td>
 <td><code>1</code></td>
 <td>Enable serial console</td>
 </tr>
+<tr>
+<td><code>uart_2ndstage</code></td>
+<td><code>1</code></td>
+<td>Print the firmware's own boot messages on the serial console</td>
+</tr>
+<tr>
+<td><code>dtoverlay</code></td>
+<td><code>miniuart-bt</code></td>
+<td>Route the onboard Bluetooth controller to the mini-UART and keep it powered</td>
+</tr>
+<tr>
+<td><code>core_freq</code></td>
+<td><code>250</code></td>
+<td>Pin the core clock so the mini-UART's baud rate stays stable</td>
+</tr>
 </tbody>
 </table>
-<p>The <code>dtoverlay=disable-bt</code> setting is critical: by default, the RPi3 maps the
-full PL011 UART to Bluetooth and provides only the mini UART on GPIO 14/15.
-TailOS uses PL011 (at address 0x3F201000), so Bluetooth must be disabled to
-make PL011 available on the GPIO pins.</p>
+<p>TAIL OS's console is the PL011 UART at address <code>0x3F201000</code>. TAIL OS's startup code
+connects GPIO 14/15 to the PL011 itself, so the console reaches the header pins while
+Bluetooth uses the mini-UART.</p>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <p><strong>No serial output:</strong></p>
 <ul>
 <li>Verify TX/RX wiring (they must be crossed: adapter TX -&gt; RPi RX)</li>
 <li>Ensure baud rate is 115200</li>
-<li>Check that the SD card has <code>config.txt</code> with <code>dtoverlay=disable-bt</code> and <code>enable_uart=1</code></li>
+<li>Check that the SD card's <code>config.txt</code> has <code>enable_uart=1</code></li>
 </ul>
 <p><strong>RPi power LED on but no activity LED blinking:</strong></p>
 <ul>
 <li>The SD card may not be readable. Re-flash with <code>dd</code> and verify the boot partition
 contains <code>bootcode.bin</code>, <code>start.elf</code>, and <code>kernel8.img</code></li>
 </ul>
+<p><strong><code>make-disk.sh</code> rejects the SDK:</strong></p>
+<ul>
+<li>The BSP was packaged against a different SDK. Install the SDK published with this
+BSP, then run <code>./make-disk.sh</code> again.</li>
+</ul>
 <p><strong>Kernel panic or hang after startup:</strong></p>
 <ul>
-<li>Connect via GDB if built with debug: <code>make run-gdb</code> (QEMU only)</li>
-<li>Compare behavior with QEMU first: see <a href="/docs/qemu/">install_qemu.md</a></li>
+<li>Boot the same image in QEMU first (see above) to see whether the fault depends on
+the hardware, and compare with <a href="/docs/qemu/">Running TAIL OS in QEMU</a></li>
 </ul>
 
 <footer class="doc-src">
@@ -294,11 +357,16 @@ contains <code>bootcode.bin</code>, <code>start.elf</code>, and <code>kernel8.im
   <span class="toc-h">On this page</span>
   <ul>
     <li><a href="#hardware-required">Hardware Required</a></li>
-    <li><a href="#quick-start">Quick Start</a></li>
-    <li><a href="#serial-console-wiring">Serial Console Wiring</a></li>
+    <li><a href="#1-install-the-sdk">1. Install the SDK</a></li>
+    <li><a href="#2-download-the-bsp-and-build-the-image">2. Download the BSP and build the image</a></li>
+    <li><a href="#3-flash-the-sd-card">3. Flash the SD card</a></li>
+    <li><a href="#4-wire-the-serial-console">4. Wire the serial console</a></li>
+    <li><a href="#5-boot">5. Boot</a></li>
+    <li><a href="#try-the-image-in-qemu-first">Try the image in QEMU first</a></li>
+    <li><a href="#add-your-own-programs">Add your own programs</a></li>
+    <li><a href="#whats-in-the-bsp">What's in the BSP</a></li>
     <li><a href="#sd-card-image-structure">SD Card Image Structure</a></li>
     <li><a href="#boot-sequence">Boot Sequence</a></li>
-    <li><a href="#build-details">Build Details</a></li>
     <li><a href="#configtxt-reference">config.txt Reference</a></li>
     <li><a href="#troubleshooting">Troubleshooting</a></li>
   </ul>

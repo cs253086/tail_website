@@ -12,12 +12,12 @@
 <meta property="og:url" content="https://tail-os.com/docs/periodic-framework-rust/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/a9f748ec3a7f/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/ba9ed0d7c4d4/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/a9f748ec3a7f/css/style.css">
-<script type="module" src="/assets/a9f748ec3a7f/js/copy.js"></script>
+<link rel="stylesheet" href="/assets/ba9ed0d7c4d4/css/style.css">
+<script type="module" src="/assets/ba9ed0d7c4d4/js/copy.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -81,6 +81,9 @@
     </li>
       </ul>
     </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/license-guide/">License Guide</a>
+    </li>
     </ul>
   </nav>
 </aside>
@@ -98,11 +101,12 @@ correction the hand-written version needs.</p>
 <h2 id="quick-start">Quick start</h2>
 <p>Two programs: one that produces a reading on a topic, one that consumes it. Neither writes
 a <code>main</code>, a thread, or a sleep.</p>
-<p>Add the crate as a direct dependency. It is standalone — not re-exported through
-<code>tail_core</code> — so adding it forces no toolchain or <code>std</code> rebuild.</p>
-<pre><code class="language-toml">[dependencies]
-periodic = { path = &quot;&lt;relative path to&gt;/framework/periodic/lib&quot; }
-</code></pre>
+<p>Each program is built with the Raspberry Pi 3 board support package (BSP). Put it in
+<code>app/&lt;name&gt;/src/main.rs</code> inside the BSP and add <code>/usr/bin/&lt;name&gt;=&lt;name&gt;</code> to the <code>[disk]</code>
+section of the BSP's <code>tail.build</code>; <code>./make-disk.sh</code> links it against the SDK's <code>periodic</code>
+crate and puts it in <code>/usr/bin</code> on the image. There is no <code>Cargo.toml</code> to write. See
+<a href="/docs/raspberry-pi-3/#add-your-own-programs">Installing TAIL OS on Raspberry Pi 3</a>.
+On the booted image, start both programs in the background: <code>lidar &amp;</code> and <code>brake &amp;</code>.</p>
 <h3 id="a-publisher">A publisher</h3>
 <p>Reads a sensor every 20 ms and publishes the reading. This is the whole program:</p>
 <pre><code class="language-rust">#![feature(tail_core)]
@@ -145,6 +149,9 @@ fn brake(lidar: Cycle&lt;Range&gt;) {
         None          =&gt; brake_for(0),   // absent or stale
     }
 }
+
+// Your actuator call goes here: brake for an obstacle `range_mm` away, 0 meaning now.
+fn brake_for(_range_mm: u32) {}
 </code></pre>
 <p>Neither program names the other. The framework opens each topic and retries, so the two
 can start in any order.</p>

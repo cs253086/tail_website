@@ -12,12 +12,12 @@
 <meta property="og:url" content="https://tail-os.com/docs/installation/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/a9f748ec3a7f/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/ba9ed0d7c4d4/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/a9f748ec3a7f/css/style.css">
-<script type="module" src="/assets/a9f748ec3a7f/js/copy.js"></script>
+<link rel="stylesheet" href="/assets/ba9ed0d7c4d4/css/style.css">
+<script type="module" src="/assets/ba9ed0d7c4d4/js/copy.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -76,6 +76,9 @@
     </li>
       </ul>
     </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/license-guide/">License Guide</a>
+    </li>
     </ul>
   </nav>
 </aside>
@@ -88,7 +91,9 @@ toolchain that targets it. It needs no TAIL OS source and no cross-compiler —
 the bundled toolchain links with its own <code>rust-lld</code>.</p>
 <p>TAIL OS ships as two artifacts. The SDK here is <strong>board-agnostic</strong>: install it
 once and the same install serves every board. A <strong>bootable image</strong> for a
-specific board is built from a separate per-board BSP against this SDK.</p>
+specific board is built from a separate per-board BSP against this SDK. The
+Raspberry Pi 3 BSP is a download too: see
+<a href="/docs/raspberry-pi-3/">Installing TAIL OS on Raspberry Pi 3</a>.</p>
 <p>To try TAIL OS without installing anything, see the <a href="/docs/quick-start/">Quick Start</a>:
 it boots a prebuilt image in QEMU with one script.</p>
 <h2 id="1-prerequisites">1. Prerequisites</h2>
@@ -150,12 +155,14 @@ board BSP, whose <code>verify-sdk.sh</code> reads it:</p>
 </code></pre>
 <h2 id="where-next">Where next</h2>
 <ul>
+<li><a href="/docs/raspberry-pi-3/">Installing TAIL OS on Raspberry Pi 3</a>: download the BSP,
+<code>bsp-rpi3.zip</code>, and build an SD card image against this SDK. Programs that use
+the periodic framework are built there too.</li>
 <li><a href="/docs/periodic-framework-rust/">The periodic framework in Rust</a>
 and <a href="/docs/periodic-framework-python/">in Python</a>: the API
 for periodic applications, with examples.</li>
 <li><a href="/docs/quick-start/">Quick Start</a>: boot a prebuilt image in QEMU.</li>
-<li><a href="/docs/qemu/">Running TAIL OS in QEMU</a> and
-<a href="/docs/raspberry-pi-3/">on a Raspberry Pi 3</a>.</li>
+<li><a href="/docs/qemu/">Running TAIL OS in QEMU</a>.</li>
 </ul>
 
 <footer class="doc-src">

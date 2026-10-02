@@ -62,7 +62,7 @@
       "path": "doc/install_rpi3.md",
       "slug": "raspberry-pi-3",
       "title": "Installing on Raspberry Pi 3",
-      "summary": "Flash the SD card image, wire the serial console, and boot on real hardware.",
+      "summary": "Build an SD card image from the SDK and the BSP download, flash it, and boot on real hardware.",
       "nav": [
         "BSP"
       ],
@@ -89,6 +89,13 @@
         "Periodic"
       ],
       "navTitle": "Python"
+    },
+    {
+      "path": "doc/license_guide_public.md",
+      "slug": "license-guide",
+      "title": "License Guide",
+      "summary": "What the licence notice in TAIL OS source files means, and which files carry their own licence.",
+      "alias": "/license-guide/"
     }
   ],
   "downloads": [
@@ -110,7 +117,12 @@
     {
       "storage": "r2",
       "name": "tail-sdk-installer-0.1.0.tar.gz",
-      "sha256": "89ed46057fe768a6cfeb6cad0e6048a95199b31318f3d5160fb211b5104c8756"
+      "sha256": "fac5d9ec1c7709e5dd963c1d8df0d79bcc4dbb8901b50770f715f63cac028cac"
+    },
+    {
+      "storage": "r2",
+      "name": "bsp-rpi3.zip",
+      "sha256": "f16788f44a0243fea303915fc3bf02251ce5b464b1f9dc5f4a74371510118eda"
     }
   ]
 }

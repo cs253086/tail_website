@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>License Guide — TAIL OS</title>
+<meta name="description" content="What the licence notice in TAIL OS source files means, and which files carry their own licence.">
+<link rel="canonical" href="https://tail-os.com/docs/license-guide/">
+<meta property="og:title" content="License Guide — TAIL OS">
+<meta property="og:description" content="What the licence notice in TAIL OS source files means, and which files carry their own licence.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tail-os.com/docs/license-guide/">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="/assets/ba9ed0d7c4d4/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/assets/ba9ed0d7c4d4/css/style.css">
+<script type="module" src="/assets/ba9ed0d7c4d4/js/copy.js"></script>
+</head>
+<body class="page-shell">
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 32" width="22" height="22" fill="none" aria-hidden="true"><path d="M4 8h24M4 16h16M4 24h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span>TAIL OS</span><span class="ver">v0.9.0</span></a>
+    <form class="hdr-search" action="/ask/" method="get" role="search">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" name="q" placeholder="Search or ask a question" aria-label="Search or ask a question" autocomplete="off">
+    </form>
+    <nav class="hdr-nav" aria-label="Primary">
+      <a href="/docs/">Docs</a>
+    </nav>
+  </div>
+</header>
+<div class="shell">
+<aside class="side">
+  <nav aria-label="Documentation">
+    <ul class="nav-docs">
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/quick-start/">Quick Start</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/installation/">Installation</a>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">BSP</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/qemu/">QEMU</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/raspberry-pi-3/">Raspberry Pi 3</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Development guide</span>
+      <ul class="nav-list">
+        <li class="nav-group">
+      <span class="nav-label">Periodic</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-rust/">Rust</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-python/">Python</a>
+    </li>
+      </ul>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/license-guide/" aria-current="page">License Guide</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/license-guide/#what-you-may-do">What you may do</a></li>
+        <li><a href="/docs/license-guide/#files-under-other-licenses">Files under other licenses</a></li>
+      </ul>
+    </li>
+    </ul>
+  </nav>
+</aside>
+<main class="content">
+<div class="doc-wrap">
+<article class="doc">
+<h1 id="tail-os-license-guide">TAIL OS License Guide</h1>
+<p>TAIL OS is proprietary software. Every TAIL OS source file, including the source in the
+Raspberry Pi 3 board support package (BSP), begins with a notice like this one:</p>
+<pre><code>Copyright 2026, TAIL OS. All Rights Reserved.
+
+You must obtain a written license from and pay applicable license fees to TAIL OS
+before you may reproduce, modify, or distribute this software, or any work that
+includes all or part of this software.
+
+Free development licenses are available for evaluation, research, and non-commercial
+purposes, which may include access to the source code under these terms. Redistribution
+or commercial use without a license is strictly prohibited.
+</code></pre>
+<p>This page explains what that notice means for you.</p>
+<h2 id="what-you-may-do">What you may do</h2>
+<table>
+<thead>
+<tr>
+<th>You want to</th>
+<th>What you need</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Evaluate TAIL OS, do research with it, or use it for non-commercial work</td>
+<td>A free development license. It may include access to the source code, under the terms above.</td>
+</tr>
+<tr>
+<td>Use TAIL OS commercially</td>
+<td>A written license from TAIL OS, and the applicable license fees</td>
+</tr>
+<tr>
+<td>Reproduce, modify or distribute TAIL OS, or a work that includes any part of it</td>
+<td>A written license from TAIL OS, and the applicable license fees</td>
+</tr>
+</tbody>
+</table>
+<p>Redistribution or commercial use without a license is prohibited.</p>
+<h2 id="files-under-other-licenses">Files under other licenses</h2>
+<p>A TAIL OS file may contain contributions from others. Read each file for other
+proprietary rights or license notices. Two components that come with the Raspberry Pi 3
+BSP carry their own licenses:</p>
+<ul>
+<li><strong>Bluetooth firmware.</strong> The BSP includes Broadcom's firmware for the Raspberry Pi 3B+
+Bluetooth controller, <code>BCM4345C0.hcd</code>, with Broadcom's license beside it in
+<code>LICENCE.broadcom</code>. That license allows redistribution in binary form only, and only
+for use with a Raspberry Pi device.</li>
+<li><strong>Raspberry Pi boot firmware.</strong> <code>make-disk.sh</code> downloads the Raspberry Pi boot
+firmware from the official <code>raspberrypi/firmware</code> repository. It is not part of the
+BSP, and it comes under that repository's licenses.</li>
+</ul>
+
+<footer class="doc-src">
+  <span>Generated from <span class="mono">doc/license_guide_public.md</span> in the TAIL OS repository.</span>
+</footer>
+</article>
+<nav class="toc" aria-label="On this page">
+  <span class="toc-h">On this page</span>
+  <ul>
+    <li><a href="#what-you-may-do">What you may do</a></li>
+    <li><a href="#files-under-other-licenses">Files under other licenses</a></li>
+  </ul>
+</nav>
+</div>
+</main>
+</div>
+<footer class="ftr">
+  <span>TAIL OS &mdash; real-time microkernel in Rust</span>
+  <span class="ftr-sep">/</span>
+  <span class="mono">v0.9.0</span>
+</footer>
+
+</body>
+</html>

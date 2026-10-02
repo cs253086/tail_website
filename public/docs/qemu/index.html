@@ -12,12 +12,12 @@
 <meta property="og:url" content="https://tail-os.com/docs/qemu/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/a9f748ec3a7f/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/ba9ed0d7c4d4/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/a9f748ec3a7f/css/style.css">
-<script type="module" src="/assets/a9f748ec3a7f/js/copy.js"></script>
+<link rel="stylesheet" href="/assets/ba9ed0d7c4d4/css/style.css">
+<script type="module" src="/assets/ba9ed0d7c4d4/js/copy.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -49,7 +49,7 @@
       <a class="nav-link" href="/docs/qemu/" aria-current="page">QEMU</a>
       <ul class="nav-sections">
         <li><a href="/docs/qemu/#prerequisites">Prerequisites</a></li>
-        <li><a href="/docs/qemu/#run-tailos">Run TailOS</a></li>
+        <li><a href="/docs/qemu/#run-tail-os">Run TAIL OS</a></li>
         <li><a href="/docs/qemu/#try-the-shell">Try the Shell</a></li>
         <li><a href="/docs/qemu/#manual-launch-alternative">Manual Launch (alternative)</a></li>
         <li><a href="/docs/qemu/#whats-inside-the-images">What's Inside the Images</a></li>
@@ -79,15 +79,18 @@
     </li>
       </ul>
     </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/license-guide/">License Guide</a>
+    </li>
     </ul>
   </nav>
 </aside>
 <main class="content">
 <div class="doc-wrap">
 <article class="doc">
-<h1 id="running-tailos-in-qemu">Running TailOS in QEMU</h1>
-<p>Try TailOS on your Linux machine in under two minutes — no hardware, no
-toolchain. For installing TailOS on real Raspberry Pi 3 hardware, see
+<h1 id="running-tail-os-in-qemu">Running TAIL OS in QEMU</h1>
+<p>Try TAIL OS on your Linux machine in under two minutes — no hardware, no
+toolchain. For installing TAIL OS on real Raspberry Pi 3 hardware, see
 <a href="/docs/raspberry-pi-3/">Installing on Raspberry Pi 3</a>.</p>
 <h2 id="prerequisites">Prerequisites</h2>
 <table>
@@ -113,7 +116,7 @@ toolchain. For installing TailOS on real Raspberry Pi 3 hardware, see
 </tbody>
 </table>
 <p>That's it. Everything else is bundled in the prebuilt images.</p>
-<h2 id="run-tailos">Run TailOS</h2>
+<h2 id="run-tail-os">Run TAIL OS</h2>
 <p>Download the launcher, then run it:</p>
 <pre><code class="language-bash">curl -O https://tail-os.com/downloads/run_tailos_qemu.sh
 chmod +x run_tailos_qemu.sh
@@ -125,7 +128,7 @@ chmod +x run_tailos_qemu.sh
 <li>Download <code>tail_qemu.rfs</code> (kernel) and <code>tail_disk.img</code> (data disk) into
 <code>~/.cache/tailos/</code>, verifying each against the published <code>SHA256SUMS</code>. Later runs
 reuse the cache until a new image is published.</li>
-<li>Boot TailOS in QEMU with the correct flags.</li>
+<li>Boot TAIL OS in QEMU with the correct flags.</li>
 </ol>
 <p>When you see <code>/$</code>, the system is ready. Exit QEMU with <strong>Ctrl-A, then lowercase x</strong>. Booting it
 again is <code>./run_tailos_qemu.sh</code>: it starts from the cached images.</p>
@@ -165,7 +168,7 @@ qemu-system-aarch64 \
     -device usb-net,netdev=tailnet0
 </code></pre>
 <h2 id="whats-inside-the-images">What's Inside the Images</h2>
-<p><code>tail_qemu.rfs</code> is a custom ELF container that bundles the entire OS:</p>
+<p><code>tail_qemu.rfs</code> is a custom ELF container that bundles the entire OS, 16 components:</p>
 <pre><code>tail_qemu.rfs
 ├── aarch64-startup                Early boot (EL3 -&gt; EL1, MMU, jump to kernel)
 ├── kernel                         Microkernel (process, thread, IPC, scheduler)
@@ -184,9 +187,12 @@ qemu-system-aarch64 \
 ├── debug_server                   GDB remote protocol stub (packed, not started)
 └── tsh                            Shell
 </code></pre>
-<p><code>ls /rfs</code> lists them. <code>/rfs</code> does not appear in <code>ls /</code>, but paths under it work:
-<code>which tsh</code> prints <code>/rfs/tsh</code>.</p>
-<p><code>tail_disk.img</code> is a FAT32 disk image exposed to the guest as an SD card:</p>
+<p><code>ls /rfs</code> lists them, and the shell itself is <code>/rfs/tsh</code>. <code>/rfs</code> does not appear in
+<code>ls /</code>, but paths under it work: <code>which tsh</code> prints <code>/rfs/tsh</code>.</p>
+<p><code>tail_disk.img</code> is exposed to the guest as an SD card. It has two FAT32 partitions, laid
+out like the Raspberry Pi 3 image: the first, 64 MiB, is the boot partition a real Pi
+reads its firmware from, and it is empty here, because QEMU loads <code>tail_qemu.rfs</code>
+directly. The second is mounted as <code>/</code> and holds:</p>
 <pre><code>tail_disk.img
 ├── /etc/hosts, /etc/resolv.conf     Name lookup
 ├── /hello.py                        Example Python script
@@ -201,12 +207,12 @@ qemu-system-aarch64 \
 QEMU loads tail_qemu.rfs at 0x80000 (raspi3b entry point)
   |
   v
-TailOS startup (aarch64-startup)
+TAIL OS startup (aarch64-startup)
   |-- Switch EL3 -&gt; EL1
   |-- Initialize MMU, caches
   |-- Jump to kernel
   v
-TailOS kernel
+TAIL OS kernel
   |-- Initialize process/thread/IPC/memory subsystems
   |-- Load user-space servers from RFS
   |-- Mount tail_disk.img as &quot;/&quot; via SD + FAT
@@ -232,7 +238,7 @@ Inside QEMU, press <strong>Ctrl-A, then lowercase x</strong> to quit. <strong>Ct
 drops into the QEMU monitor (type <code>quit</code>). Uppercase X and C do nothing.</p>
 <h2 id="see-also">See Also</h2>
 <ul>
-<li><a href="/docs/raspberry-pi-3/">Installing on Raspberry Pi 3</a> — TailOS on real hardware</li>
+<li><a href="/docs/raspberry-pi-3/">Installing on Raspberry Pi 3</a> — TAIL OS on real hardware</li>
 </ul>
 
 <footer class="doc-src">
@@ -243,7 +249,7 @@ drops into the QEMU monitor (type <code>quit</code>). Uppercase X and C do nothi
   <span class="toc-h">On this page</span>
   <ul>
     <li><a href="#prerequisites">Prerequisites</a></li>
-    <li><a href="#run-tailos">Run TailOS</a></li>
+    <li><a href="#run-tail-os">Run TAIL OS</a></li>
     <li><a href="#try-the-shell">Try the Shell</a></li>
     <li><a href="#manual-launch-alternative">Manual Launch (alternative)</a></li>
     <li><a href="#whats-inside-the-images">What's Inside the Images</a></li>

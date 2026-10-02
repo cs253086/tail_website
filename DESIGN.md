@@ -348,7 +348,7 @@ unchanged.
 | `/docs/` | Generated index of every published document, grouped by the same hierarchy as the sidebar. |
 | `/docs/<slug>/` | One generated page per allowlisted document. Plain HTML, readable with JavaScript disabled. |
 | `/<alias>/` | A 301 redirect, listed in `_redirects`, to the `/docs/<slug>/` page whose allowlist entry names that `alias`. `/license-guide/` is the one in use. |
-| `/downloads/` | Allowlisted files: `run_tailos_qemu.sh` as a static file; `tail_qemu.rfs.gz`, `tail_disk.img.gz` and `tail-sdk-installer-0.1.0.tar.gz` from R2 through `functions/downloads/[name].js`; and `SHA256SUMS` giving the checksum of each as a reader holds it after decompressing. |
+| `/downloads/` | Allowlisted files: `run_tailos_qemu.sh` as a static file; `tail_qemu.rfs.gz`, `tail_disk.img.gz`, `tail-sdk-installer-0.1.0.tar.gz` and `bsp-rpi3.zip` from R2 through `functions/downloads/[name].js`; and `SHA256SUMS` giving the checksum of each as a reader holds it after decompressing. |
 
 The home page and the documentation shell are deliberately different layouts. `/`
 is the front door — what search engines index and what a stranger lands on — and a

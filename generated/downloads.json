@@ -2,6 +2,7 @@
   "r2": [
     "tail_qemu.rfs.gz",
     "tail_disk.img.gz",
-    "tail-sdk-installer-0.1.0.tar.gz"
+    "tail-sdk-installer-0.1.0.tar.gz",
+    "bsp-rpi3.zip"
   ]
 }

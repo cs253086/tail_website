@@ -12,12 +12,12 @@
 <meta property="og:url" content="https://tail-os.com/docs/periodic-framework-python/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/a9f748ec3a7f/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/ba9ed0d7c4d4/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/a9f748ec3a7f/css/style.css">
-<script type="module" src="/assets/a9f748ec3a7f/js/copy.js"></script>
+<link rel="stylesheet" href="/assets/ba9ed0d7c4d4/css/style.css">
+<script type="module" src="/assets/ba9ed0d7c4d4/js/copy.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -80,6 +80,9 @@
     </li>
       </ul>
     </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/license-guide/">License Guide</a>
+    </li>
     </ul>
   </nav>
 </aside>
@@ -95,6 +98,10 @@ Where the two differ, this page says why.</p>
 <h2 id="quick-start">Quick start</h2>
 <p>Two programs, one of each shape: a node that only publishes and a node that only
 subscribes. Neither writes a loop or a sleep.</p>
+<p>These run on TAIL OS, under its own Python. The <code>periodic</code> module comes with it: there is
+nothing to install, and <code>import periodic</code> loads it from <code>/usr/lib/python314.zip</code>. Python
+is on the disk image of the <a href="/docs/qemu/">QEMU download</a>; the Raspberry
+Pi 3 image built from the BSP does not include Python.</p>
 <h3 id="a-python-publisher">A Python publisher</h3>
 <pre><code class="language-python">from periodic import periodic, run, Skip, Payload, Topic
 

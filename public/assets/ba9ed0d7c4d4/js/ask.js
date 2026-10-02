@@ -70,6 +70,7 @@ function renderAnswer(text, citations) {
     const paragraph = el('p');
     for (const piece of block.pieces) {
       if (piece.type === 'code') paragraph.append(el('code', null, piece.text));
+      else if (piece.type === 'strong') paragraph.append(el('strong', null, piece.text));
       else if (piece.type === 'cite') paragraph.append(citeNode(piece.n, citations));
       else paragraph.append(document.createTextNode(piece.text));
     }

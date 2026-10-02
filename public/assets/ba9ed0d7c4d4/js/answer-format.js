@@ -30,6 +30,11 @@ export function parseAnswer(text) {
 const MARKER = /(\[\d{1,2}(?:\s*,\s*\d{1,2})*\])/g;
 const ANCHORED_MARKER = /^\[(\d{1,2}(?:\s*,\s*\d{1,2})*)\]$/;
 
+// `**Ctrl-A, then lowercase x**`. The docs use bold for keys and warnings, and
+// a model quoting them keeps the asterisks, which read as noise when shown.
+const BOLD = /(\*\*[^*\n]+\*\*)/g;
+const ANCHORED_BOLD = /^\*\*([^*\n]+)\*\*$/;
+
 function parsePieces(paragraph) {
   const pieces = [];
   for (const part of paragraph.split(/(`[^`\n]+`)/g)) {
@@ -38,20 +43,31 @@ function parsePieces(paragraph) {
       pieces.push({ type: 'code', text: part.slice(1, -1) });
       continue;
     }
-    for (const piece of part.split(MARKER)) {
-      if (!piece) continue;
-      const marker = ANCHORED_MARKER.exec(piece);
-      // A claim resting on two passages is cited as one bracket holding both,
-      // and that is the form a model reaches for whenever a sentence draws on
-      // more than one. Matching only `[1]` counted such an answer as uncited,
-      // so the citation gate discarded work that was correctly sourced, and
-      // any that survived on other markers rendered `[1, 2]` as plain text.
-      if (marker) {
-        for (const n of marker[1].split(',')) pieces.push({ type: 'cite', n: Number(n.trim()) });
-      } else {
-        pieces.push({ type: 'text', text: piece });
-      }
+    for (const run of part.split(BOLD)) {
+      if (!run) continue;
+      const bold = ANCHORED_BOLD.exec(run);
+      // A marker inside bold is still a citation: the gate counts the same
+      // pieces the reader sees, so emphasis must not hide one from it.
+      if (bold) pushMarked(pieces, bold[1], 'strong');
+      else pushMarked(pieces, run, 'text');
     }
   }
   return pieces;
+}
+
+function pushMarked(pieces, text, type) {
+  for (const piece of text.split(MARKER)) {
+    if (!piece) continue;
+    const marker = ANCHORED_MARKER.exec(piece);
+    // A claim resting on two passages is cited as one bracket holding both,
+    // and that is the form a model reaches for whenever a sentence draws on
+    // more than one. Matching only `[1]` counted such an answer as uncited,
+    // so the citation gate discarded work that was correctly sourced, and
+    // any that survived on other markers rendered `[1, 2]` as plain text.
+    if (marker) {
+      for (const n of marker[1].split(',')) pieces.push({ type: 'cite', n: Number(n.trim()) });
+    } else {
+      pieces.push({ type, text: piece });
+    }
+  }
 }
