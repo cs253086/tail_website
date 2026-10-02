@@ -431,11 +431,15 @@ whole new file instead of a spliced one.
 ### 9.2 Rendering model output
 
 Model output never reaches `innerHTML`. `answer-format.js` parses an answer into a
-render tree of text, inline-code and citation pieces; the renderer walks that tree
-setting `textContent` only. Parsing is separated from rendering so the shape of an
+render tree of text, bold, inline-code and citation pieces; the renderer walks that
+tree setting `textContent` only. Parsing is separated from rendering so the shape of an
 answer is testable without a DOM, and so the renderer stays small enough to audit
-at a glance. Markup in an answer is therefore displayed as literal text by
-construction, not by escaping. The copy button `copy.js` adds to an answer's code
+at a glance. HTML in an answer is therefore displayed as literal text by
+construction, not by escaping. The one Markdown form read as structure is
+`**bold**`, because the docs use it for keys and warnings and a model quoting them
+keeps the asterisks; it becomes a `<strong>` whose text is set with `textContent`. A
+citation inside bold is split out as its own piece, so the citation gate (§5.3),
+which counts the same pieces, sees it. The copy button `copy.js` adds to an answer's code
 block is built the same way, and copies the text the renderer set.
 
 ## 10. Dependencies

@@ -93,6 +93,11 @@ describe('validateAnswer', () => {
     expect(validateAnswer('See [7].', 3).reason).toBe('out_of_range');
   });
 
+  it('counts a marker inside bold, in range or not', () => {
+    expect(validateAnswer('**Quit with lowercase x [1]**', 2)).toEqual({ ok: true, used: [1] });
+    expect(validateAnswer('**Quit with lowercase x [7]**', 2).reason).toBe('out_of_range');
+  });
+
   it('rejects an empty answer', () => {
     expect(validateAnswer('   ', 3).reason).toBe('empty');
   });

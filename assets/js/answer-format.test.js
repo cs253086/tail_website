@@ -57,6 +57,39 @@ describe('parseAnswer', () => {
     expect(block.pieces.every((p) => ['text', 'code', 'cite'].includes(p.type))).toBe(true);
   });
 
+  it('reads **bold** as emphasis rather than literal asterisks', () => {
+    const [block] = parseAnswer('Quit with **Ctrl-A, then lowercase x** [1].');
+    expect(block.pieces).toEqual([
+      { type: 'text', text: 'Quit with ' },
+      { type: 'strong', text: 'Ctrl-A, then lowercase x' },
+      { type: 'text', text: ' ' },
+      { type: 'cite', n: 1 },
+      { type: 'text', text: '.' },
+    ]);
+  });
+
+  it('still counts a citation written inside bold', () => {
+    // The citation gate counts these pieces; emphasis must not hide a marker.
+    const [block] = parseAnswer('**Uppercase X does nothing [2]**');
+    expect(block.pieces).toEqual([
+      { type: 'strong', text: 'Uppercase X does nothing ' },
+      { type: 'cite', n: 2 },
+    ]);
+  });
+
+  it('leaves unpaired asterisks as text', () => {
+    const [block] = parseAnswer('Globs like ** match deeply [1].');
+    expect(block.pieces.some((p) => p.type === 'strong')).toBe(false);
+    expect(flat(block)).toBe('Globs like ** match deeply [1].');
+  });
+
+  it('keeps asterisks inside code as code', () => {
+    const blocks = parseAnswer('Run `ls **/*.rs` [1].\n\n```\necho **x**\n```');
+    expect(blocks[0].pieces.find((p) => p.type === 'code').text).toBe('ls **/*.rs');
+    expect(blocks[0].pieces.some((p) => p.type === 'strong')).toBe(false);
+    expect(blocks[1]).toEqual({ type: 'code', text: 'echo **x**' });
+  });
+
   it('drops an empty fence rather than emitting a blank block', () => {
     expect(parseAnswer('Text [1].\n\n```\n```\n')).toHaveLength(1);
   });
