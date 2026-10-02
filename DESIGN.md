@@ -342,7 +342,7 @@ unchanged.
 
 | Route | Content |
 |---|---|
-| `/` | Question box, a one-line description of TAIL OS, the front-page facts, and links into the documents. No sidebar, and no repository link (§5.0). |
+| `/` | Question box, a one-line description of TAIL OS, and links into the documents. No sidebar, and no repository link (§5.0). |
 | `/404.html` | The documentation shell with a route back in. Replaces the error document the retired Apache config provided. |
 | `/ask/?q=...` | Answer with inline citations, source cards linking into `/docs/`, keyword results below. Shareable URL. `noindex`, and disallowed in `robots.txt`. |
 | `/docs/` | Generated index of every published document, grouped by the same hierarchy as the sidebar. |
@@ -392,6 +392,10 @@ competing with the box they were meant to explain. Adding a `questions` list to 
 allowlist entry restores them: they come from the allowlist rather than being hardcoded,
 so they cannot advertise a topic the corpus no longer covers, and their container is
 emitted only when there is something to put in it.
+
+Front-page facts (`home.highlights`) work the same way and are also empty: the strip of
+three (architecture, targets, build host) was removed at the owner's request. Listing
+facts there restores it.
 
 Documentation pages are static HTML and work without JavaScript, which is what keeps
 them indexable. The question box is progressive enhancement over a plain form, and so
