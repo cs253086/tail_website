@@ -98,6 +98,16 @@ function sidebar({ docs, activeSlug }) {
 </aside>`;
 }
 
+// Cloudflare Pages `_redirects`. Each alias is listed with and without its
+// trailing slash, because a citation copied from a source file can lose it.
+export function renderRedirects(docs) {
+  return docs
+    .filter((doc) => doc.alias)
+    .flatMap((doc) => [doc.alias, doc.alias.slice(0, -1)].map((from) => `${from} /docs/${doc.slug}/ 301`))
+    .map((line) => `${line}\n`)
+    .join('');
+}
+
 function footer({ site }) {
   return `<footer class="ftr">
   <span>TAIL OS &mdash; real-time microkernel in Rust</span>

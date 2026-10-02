@@ -347,6 +347,7 @@ unchanged.
 | `/ask/?q=...` | Answer with inline citations, source cards linking into `/docs/`, keyword results below. Shareable URL. `noindex`, and disallowed in `robots.txt`. |
 | `/docs/` | Generated index of every published document, grouped by the same hierarchy as the sidebar. |
 | `/docs/<slug>/` | One generated page per allowlisted document. Plain HTML, readable with JavaScript disabled. |
+| `/<alias>/` | A 301 redirect, listed in `_redirects`, to the `/docs/<slug>/` page whose allowlist entry names that `alias`. `/license-guide/` is the one in use. |
 | `/downloads/` | Allowlisted files: `run_tailos_qemu.sh` as a static file; `tail_qemu.rfs.gz`, `tail_disk.img.gz` and `tail-sdk-installer-0.1.0.tar.gz` from R2 through `functions/downloads/[name].js`; and `SHA256SUMS` giving the checksum of each as a reader holds it after decompressing. |
 
 The home page and the documentation shell are deliberately different layouts. `/`
@@ -367,6 +368,15 @@ as *Periodic → Periodic Framework (Rust)*.
 Only the page being read lists its sections. With every document's sections expanded at
 once the sidebar was already long at four documents; grouped, it would bury the groups
 under headings from pages nobody has opened.
+
+**Aliases.** An allowlist entry may name an `alias`, an address that something outside
+the site already cites. The licence notice at the top of every TAIL OS source file points
+readers to `https://tail-os.com/license-guide/`, and those files ship in the BSP, where
+the site cannot change them. The page still has one home under `/docs/`; the alias is a
+301 redirect to it, written to `_redirects` with and without the trailing slash. An alias
+may not begin with a path the site serves itself (`/docs/`, `/ask/`, `/api/`,
+`/downloads/`, `/assets/`), and two pages may not share one; both are refused at build
+time.
 
 `nav` written as a string is refused at build time rather than coerced. A string
 iterates by character, so `"nav": "BSP"` would otherwise publish the page nested under

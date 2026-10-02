@@ -27,6 +27,33 @@ describe('validateAllowlist', () => {
     expect(() => validateAllowlist(list, SOURCE_ROOT, exists)).toThrow(/navTitle/);
   });
 
+  it('accepts an alias for an address cited outside the site', () => {
+    const list = { documents: [{ ...entry('doc/license_guide_public.md', 'license-guide'), alias: '/license-guide/' }] };
+    expect(() => validateAllowlist(list, SOURCE_ROOT, exists)).not.toThrow();
+  });
+
+  it('refuses a malformed alias', () => {
+    for (const alias of ['license-guide/', '/license-guide', '/License/', '/a b/', '', 7]) {
+      const list = { documents: [{ ...entry('doc/a.md', 'a'), alias }] };
+      expect(() => validateAllowlist(list, SOURCE_ROOT, exists), String(alias)).toThrow(/alias must be a path/);
+    }
+  });
+
+  it('refuses an alias that would shadow a path the site serves', () => {
+    for (const alias of ['/docs/qemu/', '/api/ask/', '/downloads/x/', '/assets/x/', '/ask/x/']) {
+      const list = { documents: [{ ...entry('doc/a.md', 'a'), alias }] };
+      expect(() => validateAllowlist(list, SOURCE_ROOT, exists), alias).toThrow(/would shadow/);
+    }
+  });
+
+  it('refuses two pages claiming one alias', () => {
+    const list = { documents: [
+      { ...entry('doc/a.md', 'a'), alias: '/license-guide/' },
+      { ...entry('doc/b.md', 'b'), alias: '/license-guide/' },
+    ] };
+    expect(() => validateAllowlist(list, SOURCE_ROOT, exists)).toThrow(/duplicate alias/);
+  });
+
   it('accepts a well-formed list', () => {
     const map = validateAllowlist({ documents: [entry('doc/a.md', 'a')] }, SOURCE_ROOT, exists);
     expect(map.get('doc/a.md').absolute).toBe('/src/tailos/doc/a.md');

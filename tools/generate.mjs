@@ -16,7 +16,7 @@ import { assertAllowlisted, assertNotLfsPointer, gzipDownload, rewriteLink, vali
 import { assertRedacted, compileRules, redact } from './redact.mjs';
 import { buildIndex } from './bm25.mjs';
 import { chunkMarkdown } from './chunk.mjs';
-import { renderAsk, renderDoc, renderDocsIndex, renderHome, renderNotFound } from './render.mjs';
+import { renderAsk, renderDoc, renderDocsIndex, renderHome, renderNotFound, renderRedirects } from './render.mjs';
 import { sectionsFrom } from './sections.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -235,6 +235,8 @@ write(
   Cache-Control: public, max-age=31536000, immutable
 `,
 );
+
+write(join(PUBLIC, '_redirects'), renderRedirects(docs));
 
 // Tests live beside the code they cover; they are not part of the site.
 // --- downloads -------------------------------------------------------------

@@ -23,6 +23,7 @@ export function validateAllowlist(allowlist, sourceRoot, exists) {
 
   const bySourcePath = new Map();
   const slugs = new Set();
+  const aliases = new Set();
 
   for (const entry of allowlist.documents) {
     for (const field of ['path', 'slug', 'title', 'summary']) {
@@ -38,6 +39,23 @@ export function validateAllowlist(allowlist, sourceRoot, exists) {
     }
     if (entry.navTitle !== undefined && !isLabel(entry.navTitle)) {
       throw new AllowlistError(`navTitle must be a non-empty string: ${entry.path}`);
+    }
+
+    // An alias is an address something outside this site already cites -- the
+    // licence notice in every TAIL OS source file names /license-guide/ -- and
+    // it redirects to the page's one home under /docs/. It may not shadow a path
+    // the site itself serves, or a reader following it would land somewhere else.
+    if (entry.alias !== undefined) {
+      if (typeof entry.alias !== 'string' || !/^(\/[a-z0-9-]+)+\/$/.test(entry.alias)) {
+        throw new AllowlistError(`alias must be a path like "/license-guide/": ${entry.path}`);
+      }
+      if (/^\/(docs|ask|api|downloads|assets)\//.test(entry.alias)) {
+        throw new AllowlistError(`alias would shadow a path the site serves: ${entry.alias}`);
+      }
+      if (aliases.has(entry.alias)) {
+        throw new AllowlistError(`duplicate alias: ${entry.alias}`);
+      }
+      aliases.add(entry.alias);
     }
 
     const absolute = insideSourceRoot(sourceRoot, entry.path);

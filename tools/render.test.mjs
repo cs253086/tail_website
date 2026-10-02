@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { renderAsk, renderDoc, renderDocsIndex, renderHome, renderNotFound } from './render.mjs';
+import { renderAsk, renderDoc, renderDocsIndex, renderHome, renderNotFound, renderRedirects } from './render.mjs';
 
 const site = { origin: 'https://tail-os.com', version: 'v0.9.0', assets: '/assets/abc', buildId: 'abc' };
 const docs = [{ slug: 'qemu', title: 'Running TAIL OS in QEMU', summary: 'Boot under QEMU.', sections: [] }];
@@ -95,5 +95,18 @@ describe('copy buttons', () => {
     const quickstart = { title: 'Quick start', doc: 'quick-start', commands, note: 'Exit with Ctrl-A then X.' };
     const html = renderHome({ site, docs, questions: [], home: { quickstart } });
     expect(html).toContain(`<pre class="term" data-copy="${commands.join('\n')}"><code>`);
+  });
+});
+
+describe('renderRedirects', () => {
+  it('sends an alias, with or without its trailing slash, to the page under /docs/', () => {
+    const withAlias = [...docs, { slug: 'license-guide', title: 'License', summary: 'S', sections: [], alias: '/license-guide/' }];
+    expect(renderRedirects(withAlias)).toBe(
+      '/license-guide/ /docs/license-guide/ 301\n/license-guide /docs/license-guide/ 301\n',
+    );
+  });
+
+  it('writes nothing when no page has an alias', () => {
+    expect(renderRedirects(docs)).toBe('');
   });
 });
