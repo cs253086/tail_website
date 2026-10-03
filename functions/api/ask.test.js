@@ -359,6 +359,20 @@ describe('POST /api/ask', () => {
     expect(modelMock.answer).toHaveBeenCalledTimes(1);
   });
 
+  it('asks the model again after a refusal, instead of serving the refusal from cache', async () => {
+    // A refusal cannot be checked the way an answer is, and the model refuses
+    // questions its passages answer often enough that a cached one would stick.
+    const env = { ANSWER_CACHE: fakeKv() };
+    modelMock.answer
+      .mockResolvedValueOnce({ text: 'NO_ANSWER_IN_DOCS' })
+      .mockResolvedValueOnce({ text: 'Launch it with one command [1].' });
+
+    expect((await (await ask('how do I run qemu', env)).json()).status).toBe('unsupported');
+    expect([...env.ANSWER_CACHE.store.keys()].filter((key) => key.startsWith('answer:'))).toEqual([]);
+    expect((await (await ask('how do I run qemu', env)).json()).status).toBe('answered');
+    expect(modelMock.answer).toHaveBeenCalledTimes(2);
+  });
+
   it('degrades once a single visitor exhausts their burst', async () => {
     const env = { ANSWER_CACHE: fakeKv() };
     let call = 0;

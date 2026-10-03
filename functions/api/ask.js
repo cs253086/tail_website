@@ -142,16 +142,19 @@ export async function onRequestPost({ request, env }) {
     return degraded(question, reason, results);
   }
 
+  // A refusal is not cached. An answer is checked before it is stored (below);
+  // a refusal cannot be checked, and the model refuses a question its passages
+  // do answer often enough -- "Can I use TAIL OS commercially without a
+  // license?" was refused on two asks in four -- that storing one served a
+  // single bad draw to every reader for the life of the build.
   if (isRefusal(text)) {
-    const payload = {
+    return json({
       status: 'unsupported',
       question,
       reason: 'The documentation published here does not cover that. I will not guess at anything outside it.',
       coverage: corpus.coverage,
       results: results.map(asResult),
-    };
-    await writeCache(kv, key, payload);
-    return json(payload);
+    });
   }
 
   // The prompt asks for citations; this is what enforces them. An uncited or
