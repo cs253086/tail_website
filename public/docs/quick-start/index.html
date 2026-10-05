@@ -12,12 +12,12 @@
 <meta property="og:url" content="https://tail-os.com/docs/quick-start/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/1d5a7a136ac7/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/4ebfe545f23f/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/1d5a7a136ac7/css/style.css">
-<script type="module" src="/assets/1d5a7a136ac7/js/copy.js"></script>
+<link rel="stylesheet" href="/assets/4ebfe545f23f/css/style.css">
+<script type="module" src="/assets/4ebfe545f23f/js/copy.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -191,8 +191,10 @@ process of its own, listed here beside the shell.</p>
 <pre><code>/$ python /hello.py
 hello from tailos
 </code></pre>
-<p><code>python</code> prints nothing for several seconds before its line: about 4 on our 4-CPU machine
-with QEMU 10.2, and about 13 on the 2-CPU cloud machine with QEMU 8.2. It has not hung.</p>
+<p><code>python</code> prints nothing for several seconds before its line. The first run after boot is the
+slow one: about 4 seconds on our 4-CPU machine with QEMU 10.2, and about 17 on the 2-CPU
+cloud machine with QEMU 8.2. It has not hung. Run it again and it takes under a second on
+our machine and about 4 seconds on the cloud machine.</p>
 <h3 id="the-network">The network</h3>
 <pre><code>/$ ping -c 3 10.0.2.2
 PING 10.0.2.2 (10.0.2.2)
