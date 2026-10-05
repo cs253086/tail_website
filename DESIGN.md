@@ -162,6 +162,28 @@ turning the endpoint into a general-purpose LLM proxy. Because the Function retr
 from its own bundled corpus, answering about anything other than TAIL OS is not
 prevented by a rule; it is unreachable.
 
+**How much is retrieved.** BM25F ranks the corpus's sections, the top eight go to the
+model, and the opening of each document they come from is added.
+`functions/api/retrieval.test.js` holds the questions readers have asked, most of them
+from cowork tests of the live site, each with a phrase only an answering passage
+contains, and asserts an answering passage reaches the model. On 2026-10-05 the 35
+answerable questions measured:
+
+| Passages, length normalisation `B` | Questions reached | Worst rank of an answer | Passages given (with openings) |
+|---|---|---|---|
+| 6, 0.75 (before) | 33 | 8 | 8.3 on average |
+| 8, 0.75 | 35 | 8 | 10.7 |
+| 6, 0.3 | 35 | 6 | 8.3 |
+| **8, 0.5 (now)** | **35** | **7** | **10.7** |
+
+The misses were long sections — the SD card layout box is 6.6 times the median length —
+which textbook length normalisation (0.75) pushes down. Each change alone reaches 35
+with no rank to spare; both together leave one. Asked of the live model, the same
+questions went from 29 answered (1 refused for want of the passage, 6 correct but
+uncited and so discarded by §5.3) to 33 (2 uncited, 1 provider error), one run each.
+Passing two more passages costs about 30% more model input per question; the daily
+ceiling counts calls, not tokens.
+
 ### 5.3 Citations are enforced mechanically, not requested politely
 
 The model is instructed to cite every claim as `[n]` against the numbered passages it

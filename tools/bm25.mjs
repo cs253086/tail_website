@@ -20,7 +20,12 @@ const COMPOUND_ALIASES = new Map([
 ]);
 
 const K1 = 1.2;
-const B = 0.75;
+// Length normalisation, softened from the textbook 0.75. The corpus mixes
+// one-line sections with long layout boxes and listings; at 0.75 the passage
+// holding "26 programs" -- inside the SD card layout box, 6.6 times the median
+// length -- ranked seventh for "How many programs are on the Raspberry Pi 3
+// image?". Measured on functions/api/retrieval.test.js; see DESIGN.md 5.2.
+const B = 0.5;
 
 // A section titled "Run TailOS (one command)" is a far stronger signal of what
 // it answers than the same words appearing once in a paragraph. Weighting the

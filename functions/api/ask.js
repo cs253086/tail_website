@@ -15,7 +15,11 @@ import { recordModelCall, takeToken, withinDailyCeiling } from './_limits.js';
 import { DEFAULT_MODEL, ModelError, answer as callModel } from './_model.js';
 
 const MAX_QUESTION = 500;
-const PASSAGES = 6;
+// Ranked passages handed to the model, before document openings are added.
+// Eight, with the softer length normalisation in bm25.mjs, puts the answering
+// passage of every question in retrieval.test.js within reach with a rank to
+// spare; six missed two of them. See DESIGN.md 5.2.
+const PASSAGES = 8;
 const RESULTS = 5;
 
 const json = (payload, status = 200) =>
@@ -71,6 +75,14 @@ function withOpenings(ranked) {
   return [...openings, ...ranked];
 }
 
+// What a question is answered from: the ranked hits, which are also what a
+// reader is shown when there is no answer, and the passages the model is given.
+// Exported so the retrieval test checks exactly what the model would see.
+export function passagesFor(question) {
+  const ranked = retrieve(question, PASSAGES);
+  return { ranked, passages: withOpenings(ranked) };
+}
+
 // Every limit lands here: results, never an error. The site becomes less
 // clever until the quota resets, and never broken.
 const degraded = (question, reason, results) =>
@@ -88,11 +100,10 @@ export async function onRequestPost({ request, env }) {
 
   const kv = env.ANSWER_CACHE ?? null;
   const now = Date.now();
-  const ranked = retrieve(question, PASSAGES);
+  const { ranked, passages } = passagesFor(question);
   // What the reader is shown when there is no answer stays the ranked hits: an
   // opening is context for the model, not a search result.
   const results = ranked.slice(0, RESULTS);
-  const passages = withOpenings(ranked);
 
   if (ranked.length === 0) {
     return json({
