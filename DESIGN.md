@@ -186,10 +186,13 @@ ceiling counts calls, not tokens.
 
 ### 5.3 Citations are enforced mechanically, not requested politely
 
-The model is instructed to cite every claim as `[n]` against the numbered passages it
-was given, and to refuse when the passages do not contain the answer.
+The model replies in a provider-enforced schema (§8): prose paragraphs and code blocks,
+each naming the numbered passages it rests on, or a refusal when the passages do not
+contain the answer. A prose paragraph cannot be returned without a source, so a correct
+answer is no longer lost for want of a marker. Asked for in prose instead, the model left
+the citation off 5 of 36 correct answers on 2026-10-05; in the schema, 0 of 36.
 
-The Function then parses the response. An answer containing zero valid citation markers,
+The Function then parses the answer text the reply is assembled into. An answer containing zero valid citation markers,
 or a marker pointing outside the supplied passage range, is discarded and the request
 degrades to retrieval results. Prompt instructions can be ignored by a model; this check
 cannot. A fabricated answer cannot reach the reader while still appearing sourced.
@@ -349,9 +352,18 @@ answer, and would otherwise satisfy §5.3 whenever a citation marker happened to
 before the cut. It is rejected as `unavailable` and the request degrades to retrieval
 results.
 
-It returns text only. Citations are not the provider's to report: they are
-derived from that text by `_citations.js`, using the same parse the browser
-renders, so the guarantee in §5.3 does not depend on a provider's cooperation.
+It returns text, assembled from a structured reply. The request carries a response
+schema (`RESPONSE_SCHEMA` in `_model.js`): a `refused` flag and a list of blocks, each
+`prose` or `code`, each with the passages it rests on in `sources`, which for a prose block
+must hold at least one. `_model.js` turns the reply into the answer text the rest of the
+site has always handled: a prose block's sources become its `[n]` marker before the final
+punctuation, any marker the model also wrote into the text is dropped (found by the
+renderer's own parse, so `array[1]` in inline code survives), a code block is fenced, and a
+refusal becomes the refusal token. A reply that is not valid JSON or not the schema's shape
+is a provider failure, like a truncated one. Citations are still not the provider's to
+report: `_citations.js` derives them from the assembled text, so the guarantee in §5.3
+does not depend on the provider honouring the schema. Citations are per paragraph rather
+than per claim; answers are a few sentences per paragraph, so the marker moves little.
 Failures are raised as `ModelError` with a `kind` of `quota`, `unavailable` or
 `unconfigured`, which is all the handler needs to choose a degradation message.
 
