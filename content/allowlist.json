@@ -90,13 +90,13 @@
       "storage": "r2",
       "name": "tail_qemu.rfs",
       "compress": true,
-      "sha256": "92fad052d9281e957d1107812707a1189bf0fc40b1208a8c9e9d93d32d2ee870"
+      "sha256": "309be9f9d1eef743f3383c8a3b3d44e070fc1cd36194b48ef4db45ee0c12be0c"
     },
     {
       "storage": "r2",
       "name": "tail_disk.img",
       "compress": true,
-      "sha256": "ce0d0f38e9000e4447c21b3537144fa53806ffea963cbe22d2b6d7e18677fc6c"
+      "sha256": "81bc2720b72ca0d96d3274546696661db3fa5877a1656add7e3d26fb7ef7e3e7"
     },
     {
       "path": "scripts/run_tailos_qemu.sh"
