@@ -12,12 +12,12 @@
 <meta property="og:url" content="https://tail-os.com/docs/raspberry-pi-3/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/04d114217174/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/583dcb28b586/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/04d114217174/css/style.css">
-<script type="module" src="/assets/04d114217174/js/copy.js"></script>
+<link rel="stylesheet" href="/assets/583dcb28b586/css/style.css">
+<script type="module" src="/assets/583dcb28b586/js/copy.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -188,10 +188,19 @@ its data partition:</p>
 <pre><code class="language-bash">qemu-system-aarch64 -M raspi3b -kernel images/tail.rfs -serial mon:stdio \
     -display none -drive file=tailos_sd.img,format=raw,if=sd
 </code></pre>
-<p>Under QEMU the log shows <code>[FAIL]</code> lines for USB (<code>no device on the root port</code>) and for
-Bluetooth (<code>startup failed: TimedOut</code>). QEMU has no Bluetooth controller and the command
-attaches no USB device, so these are expected; the shell still comes up. Exit with
-<strong>Ctrl-A, then lowercase x</strong>.</p>
+<p>Under QEMU the boot log shows four messages that are not faults. QEMU has no Bluetooth
+controller, and the command attaches no USB device, so there is no USB network adapter
+to route through:</p>
+<pre><code>route: the stack refused 10.0.2.2 on netdev_usb0: InvalidInput
+[FAIL] usb      no device on the root port
+[FAIL] bluetoot bt: opcode 0x0c03 — 0 bytes from controller (unpowered / not routed / wrong baud?)
+[FAIL] bt       startup failed: TimedOut
+</code></pre>
+<p>Each <code>[FAIL]</code> line starts with a timestamp. Their order varies from run to run, and one
+can print just after the <code>/$</code> prompt; press Enter for a fresh prompt. This image needs a
+machine with at least 2 CPUs under QEMU: with one, the boot stops at
+<code>boot waitfor timeout: prefix '/rfs'</code>.</p>
+<p>Exit with <strong>Ctrl-A, then lowercase x</strong>.</p>
 <h2 id="add-your-own-programs">Add your own programs</h2>
 <p>Put a program in <code>app/&lt;name&gt;/src/main.rs</code> and add a line <code>/usr/bin/&lt;name&gt;=&lt;name&gt;</code> to the
 <code>[disk]</code> section of <code>tail.build</code>. <code>./make-disk.sh</code> builds it against the SDK and puts it
@@ -232,17 +241,19 @@ firmware for the Pi 3B+ controller, under Broadcom's own licence beside it.</p>
 |  |  bcm2710-rpi-3-b.dtb, bcm2710-rpi-3-b-plus.dtb .. device trees        ||
 |  |  overlays/miniuart-bt.dtbo ... routes Bluetooth to the mini-UART      ||
 |  |  config.txt ...... Boot configuration (see below)                     ||
-|  |  kernel8.img ..... TAIL OS (startup + kernel + drivers + servers + tsh)||
+|  |  kernel8.img .... TAIL OS (startup + kernel + drivers + servers + tsh)||
 |  +-----------------------------------------------------------------------+|
 |                                                                           |
 |  Partition 2: DATA (mounted as /)                                         |
 |  +-----------------------------------------------------------------------+|
-|  |  /etc/hosts, /etc/resolv.conf .. name lookup                         ||
-|  |  /usr/bin/ ...... 27 programs: ls, ps, top, vi, ping, wifi, ...       ||
+|  |  /etc/hosts, /etc/resolv.conf .. name lookup                          ||
+|  |  /usr/bin/ ...... 27 files: ls, ps, top, vi, ping, wifi, ... (*)      ||
 |  +-----------------------------------------------------------------------+|
 |                                                                           |
 +===========================================================================+
 </code></pre>
+<p>(*) 26 programs, plus <code>list-root-long</code>, a copy of <code>ls</code> under a long file name that shows
+the FAT server's long-name support.</p>
 <p>Python is not on this image. It comes only with the QEMU download, <code>tail_disk.img</code>.</p>
 <h2 id="boot-sequence">Boot Sequence</h2>
 <pre><code>Power On

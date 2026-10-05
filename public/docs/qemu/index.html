@@ -12,12 +12,12 @@
 <meta property="og:url" content="https://tail-os.com/docs/qemu/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/04d114217174/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/583dcb28b586/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/04d114217174/css/style.css">
-<script type="module" src="/assets/04d114217174/js/copy.js"></script>
+<link rel="stylesheet" href="/assets/583dcb28b586/css/style.css">
+<script type="module" src="/assets/583dcb28b586/js/copy.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -188,7 +188,9 @@ qemu-system-aarch64 \
 └── tsh                            Shell
 </code></pre>
 <p><code>ls /rfs</code> lists them, and the shell itself is <code>/rfs/tsh</code>. <code>/rfs</code> does not appear in
-<code>ls /</code>, but paths under it work: <code>which tsh</code> prints <code>/rfs/tsh</code>.</p>
+<code>ls /</code>, because <code>ls /</code> lists the root directory of the FAT disk, and <code>/rfs</code> is a separate
+file system mounted beside it rather than a directory on that disk. Paths under it work:
+<code>which tsh</code> prints <code>/rfs/tsh</code>.</p>
 <p><code>tail_disk.img</code> is exposed to the guest as an SD card. It has two FAT32 partitions, laid
 out like the Raspberry Pi 3 image: the first, 64 MiB, is the boot partition a real Pi
 reads its firmware from, and it is empty here, because QEMU loads <code>tail_qemu.rfs</code>
@@ -196,10 +198,12 @@ directly. The second is mounted as <code>/</code> and holds:</p>
 <pre><code>tail_disk.img
 ├── /etc/hosts, /etc/resolv.conf     Name lookup
 ├── /hello.py                        Example Python script
-├── /usr/bin/                        28 programs: ls, ps, top, vi, python, ping, ...
+├── /usr/bin/                        28 files: ls, ps, top, vi, python, ping, ... (*)
 └── /usr/lib/python3.14/,
     /usr/lib/python314.zip           Python 3.14 standard library
 </code></pre>
+<p>(*) 27 programs, plus <code>list-root-long</code>, a copy of <code>ls</code> under a long file name that shows
+the FAT server's long-name support.</p>
 <h2 id="boot-sequence">Boot Sequence</h2>
 <pre><code>qemu-system-aarch64 -M raspi3b
   |
