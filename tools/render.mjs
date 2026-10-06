@@ -157,7 +157,7 @@ ${(home.highlights ?? []).map((item) => `    <div class="stat"><span class="stat
   return `${head({
     site,
     title: 'TAIL OS — real-time microkernel RTOS in Rust',
-    description: 'TAIL OS is Real-Time & Microkernel, in RUST, for Robot & Safety. Ask anything about TAIL OS.',
+    description: 'TAIL OS is Microkernel & Real-Time, in RUST, for Robot & Safety. Ask anything about TAIL OS.',
     canonical: `${site.origin}/`,
   })}
 <body class="page-home">
@@ -165,7 +165,7 @@ ${header({ site, compact: false })}
 <main>
   <section class="hero">
     <h1>TAIL OS</h1>
-    <p class="lede">TAIL OS is <strong class="kw-realtime">Real-Time</strong> &amp; <strong class="kw-kernel">Microkernel</strong>, in <strong class="kw-rust">RUST</strong>, for <strong class="kw-robot">Robot</strong> &amp; <strong class="kw-safety">Safety</strong></p>
+    <p class="lede">TAIL OS is <strong class="kw-kernel">Microkernel</strong> &amp; <strong class="kw-realtime">Real-Time</strong>, in <strong class="kw-rust">RUST</strong>, for <strong class="kw-robot">Robot</strong> &amp; <strong class="kw-safety">Safety</strong></p>
 
     <form class="ask" action="/ask/" method="get" role="search">
       <label class="ask-field">
