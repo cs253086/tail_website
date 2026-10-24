@@ -1,0 +1,47 @@
+{
+  "slug": "desk-arm",
+  "name": "Desk arm",
+  "developer": "Example developer",
+  "summary": "A small arm that moves to a set of saved poses.",
+  "category": "Arms",
+  "board": "Raspberry Pi 3B",
+  "tailosVersion": "0.9",
+  "buildMinutes": 180,
+  "color": "blue",
+  "image": "desk-arm.svg",
+  "safety": [
+    {
+      "level": "caution",
+      "text": "Pinch hazard at the joints. Keep fingers clear while the arm moves."
+    }
+  ],
+  "needs": [
+    {
+      "item": "Raspberry Pi",
+      "spec": "3B or 3B+"
+    },
+    {
+      "item": "Servos",
+      "spec": "3 × hobby servo"
+    },
+    {
+      "item": "TAIL OS",
+      "spec": "0.9 or later"
+    }
+  ],
+  "steps": [
+    {
+      "title": "Assemble the joints",
+      "body": "Fit each servo horn at the centre position before tightening the screws."
+    },
+    {
+      "title": "Wire the servos",
+      "body": "Power the servos from their own supply, not from the Pi, and share the ground."
+    },
+    {
+      "title": "Save poses",
+      "body": "Move the arm by hand into each pose and press the button to save it."
+    }
+  ],
+  "status": "draft"
+}

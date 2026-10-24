@@ -1,0 +1,43 @@
+{
+  "slug": "weather-mast",
+  "name": "Weather mast",
+  "developer": "Example developer",
+  "summary": "Records temperature, pressure and humidity to a file on the SD card.",
+  "category": "Sensors",
+  "board": "Raspberry Pi 3B",
+  "tailosVersion": "0.9",
+  "buildMinutes": 90,
+  "color": "green",
+  "image": "weather-mast.svg",
+  "safety": [
+    {
+      "level": "low",
+      "text": "No moving parts. Mount it out of direct sun for accurate readings."
+    }
+  ],
+  "needs": [
+    {
+      "item": "Raspberry Pi",
+      "spec": "3B or 3B+"
+    },
+    {
+      "item": "Environmental sensor",
+      "spec": "I²C, 3.3 V"
+    },
+    {
+      "item": "TAIL OS",
+      "spec": "0.9 or later"
+    }
+  ],
+  "steps": [
+    {
+      "title": "Connect the sensor",
+      "body": "Wire the sensor to the I²C pins on the Pi and check it is seen on the bus."
+    },
+    {
+      "title": "Start logging",
+      "body": "Run the logger from the shell. It writes one line a minute to the card."
+    }
+  ],
+  "status": "draft"
+}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Ground rover robot">
+  <rect width="200" height="200" fill="#efe9fb"/>
+  <rect x="26" y="150" width="148" height="14" rx="7" fill="#1d1d1f"/>
+  <rect x="48" y="96" width="104" height="44" rx="10" fill="#ffffff" stroke="#1d1d1f" stroke-width="4"/>
+  <rect x="82" y="72" width="36" height="26" rx="6" fill="#ffffff" stroke="#1d1d1f" stroke-width="4"/>
+  <circle cx="92" cy="85" r="4" fill="#5b3fa6"/>
+  <circle cx="62" cy="144" r="13" fill="#1d1d1f"/>
+  <circle cx="138" cy="144" r="13" fill="#1d1d1f"/>
+  <rect x="56" y="112" width="8" height="8" rx="2" fill="#5b3fa6"/>
+  <rect x="136" y="112" width="8" height="8" rx="2" fill="#5b3fa6"/>
+  <path d="M100 72 L100 56" stroke="#1d1d1f" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="100" cy="52" r="5" fill="#5b3fa6"/>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Desk arm robot">
+  <rect width="200" height="200" fill="#f6eee1"/>
+  <rect x="50" y="160" width="100" height="16" rx="6" fill="#1d1d1f"/>
+  <rect x="82" y="120" width="36" height="42" rx="8" fill="#ffffff" stroke="#1d1d1f" stroke-width="4"/>
+  <path d="M100 124 L138 88 L122 52" fill="none" stroke="#1d1d1f" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M100 124 L138 88 L122 52" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="100" cy="124" r="10" fill="#7a4b00"/>
+  <circle cx="138" cy="88" r="9" fill="#7a4b00"/>
+  <path d="M112 44 L122 52 L130 40 M122 52 L110 56" fill="none" stroke="#7a4b00" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

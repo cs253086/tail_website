@@ -34,14 +34,15 @@ function head({ site, title, description, canonical, extraHead = '' }) {
 <link rel="icon" type="image/svg+xml" href="${esc(site.assets)}/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="${esc(site.assets)}/css/style.css">
 <script type="module" src="${esc(site.assets)}/js/copy.js"></script>
+<script type="module" src="${esc(site.assets)}/js/reveal.js"></script>
 ${extraHead}</head>`;
 }
 
-function header({ site, compact }) {
-  const searchBox = compact
+function header({ site, search = true }) {
+  const searchBox = search
     ? `<form class="hdr-search" action="/ask/" method="get" role="search">
       ${SEARCH_GLYPH}
       <input type="search" name="q" placeholder="Search or ask a question" aria-label="Search or ask a question" autocomplete="off">
@@ -53,6 +54,7 @@ function header({ site, compact }) {
     ${searchBox}
     <nav class="hdr-nav" aria-label="Primary">
       <a href="/docs/">Docs</a>
+      <a href="/robots/">Robots</a>
     </nav>
   </div>
 </header>`;
@@ -116,7 +118,7 @@ function footer({ site }) {
 </footer>`;
 }
 
-export function renderHome({ site, docs, questions, home = {} }) {
+export function renderHome({ site, docs, questions, robots = [], home = {} }) {
   // Links, not submit buttons: a button named `q` inside a form whose input is
   // also named `q` submits both, and URLSearchParams.get() takes the first.
   const chips = questions.length
@@ -161,7 +163,7 @@ ${(home.highlights ?? []).map((item) => `    <div class="stat"><span class="stat
     canonical: `${site.origin}/`,
   })}
 <body class="page-home">
-${header({ site, compact: false })}
+${header({ site, search: false })}
 <main>
   <section class="hero">
     <h1>TAIL OS</h1>
@@ -183,7 +185,7 @@ ${highlights}${quickstart}
   <section class="docs-cards" aria-label="Documentation">
       ${cards}
   </section>
-</main>
+${robots.length ? '  <p class="robots-link"><a href="/robots/">Robots built on TAIL OS</a></p>\n' : ''}</main>
 ${footer({ site })}
 </body>
 </html>`;
@@ -192,7 +194,7 @@ ${footer({ site })}
 function shell({ site, docs, title, description, canonical, activeSlug, main, extraHead = '', scripts = '' }) {
   return `${head({ site, title, description, canonical, extraHead })}
 <body class="page-shell">
-${header({ site, compact: true })}
+${header({ site })}
 <div class="shell">
 ${sidebar({ docs, activeSlug })}
 <main class="content">
@@ -293,6 +295,172 @@ export function renderDocsIndex({ site, docs }) {
   <ul class="idx">
     ${items}
   </ul>
+</article>`,
+  });
+}
+
+// Robot store pages. Text comes from reviewed JSON and is escaped like everything
+// else here. The layout follows the store's app-style pages: a banner, scrolling
+// rows, one main action per robot, and hazards shown before the steps.
+const LEVEL_LABEL = { low: 'Low risk', caution: 'Caution', hazard: 'Hazard' };
+const ICON_CLASSES = ['icon-blue', 'icon-brown', 'icon-green', 'icon-violet'];
+
+// A fixed colour per robot, from its slug, so it never changes between builds.
+function iconClass(robot) {
+  if (robot.color) return `icon-${robot.color}`;
+  const sum = [...robot.slug].reduce((total, ch) => total + ch.charCodeAt(0), 0);
+  return ICON_CLASSES[sum % ICON_CLASSES.length];
+}
+
+function initials(name) {
+  return name.split(/\s+/).slice(0, 2).map((word) => word[0].toUpperCase()).join('');
+}
+
+// A robot's picture, from content/robots/images, or its initials on a colour
+// when no picture is listed.
+function thumbnail(robot, size = '') {
+  if (robot.image) {
+    return `<img class="robot-picture ${size}" src="/robots/images/${esc(robot.image)}" alt="" width="200" height="200" loading="lazy">`;
+  }
+  return `<span class="robot-icon ${size} ${iconClass(robot)}" aria-hidden="true">${esc(initials(robot.name))}</span>`;
+}
+
+function storeNav(active) {
+  const links = [
+    ['/', 'Home', 'home'],
+    ['/robots/', 'Robots', 'robots'],
+    ['/docs/', 'Docs', 'docs'],
+    ['/ask/', 'Ask', 'ask'],
+  ];
+  return links
+    .map(([href, label, key]) => `<a href="${href}"${key === active ? ' aria-current="page"' : ''}>${label}</a>`)
+    .join('');
+}
+
+// The store's page frame: the site header, the page, and a bottom bar on a phone.
+// No documentation sidebar, so the store reads as its own app-style space.
+function storeShell({ site, title, description, canonical, active, main }) {
+  return `${head({ site, title, description, canonical })}
+<body class="page-store">
+${header({ site })}
+<main class="store">
+${main}
+</main>
+<nav class="store-tabs" aria-label="Sections">${storeNav(active)}</nav>
+</body>
+</html>`;
+}
+
+function robotCard(robot) {
+  return `      <a class="robot-card" href="/robots/${esc(robot.slug)}/">
+        ${thumbnail(robot)}
+        <strong>${esc(robot.name)}</strong>
+        <span class="robot-dev">${esc(robot.developer)}</span>
+        <span class="robot-note">${esc(robot.summary)}</span>
+        <span class="robot-get-sm">Get plans</span>
+      </a>`;
+}
+
+function robotRow(title, robots) {
+  const id = `row-${title.toLowerCase().replace(/\s+/g, '-')}`;
+  return `  <section class="robot-row" aria-labelledby="${esc(id)}">
+    <h2 id="${esc(id)}">${esc(title)}</h2>
+    <div class="robot-scroll">
+${robots.map(robotCard).join('\n')}
+    </div>
+  </section>`;
+}
+
+export function renderRobotsIndex({ site, robots }) {
+  const categories = [...new Set(robots.map((robot) => robot.category))];
+  const rows = robots.length
+    ? [robotRow('Newest', [...robots].sort((a, b) => b.reviewed.localeCompare(a.reviewed)))]
+        .concat(categories.map((category) => robotRow(category, robots.filter((robot) => robot.category === category))))
+        .join('\n')
+    : '  <p class="store-empty">No robots are listed yet.</p>';
+  const featured = robots.find((robot) => robot.featured) ?? robots[0];
+  const banner = featured
+    ? `  <a class="store-banner" href="/robots/${esc(featured.slug)}/">
+    <span class="kicker">Featured</span>
+    <strong>${esc(featured.name)}</strong>
+    <span>${esc(featured.summary)}</span>
+  </a>`
+    : `  <div class="store-banner">
+    <span class="kicker">Robots built on TAIL OS</span>
+    <strong>Build a robot with the instructions</strong>
+    <span>Each robot lists its parts, its safety notes and its build steps.</span>
+  </div>`;
+  return storeShell({
+    site,
+    title: 'Robots built on TAIL OS — TAIL OS',
+    description: 'Robots built on TAIL OS, each with its parts list, safety notes and build steps.',
+    canonical: `${site.origin}/robots/`,
+    active: 'robots',
+    main: `${banner}
+${rows}`,
+  });
+}
+
+export function renderRobotPage({ site, robot }) {
+  const safety = robot.safety.length
+    ? `  <section class="robot-safety" aria-labelledby="safety">
+    <h2 id="safety">Safety</h2>
+    <ul>
+${robot.safety.map((item) => `      <li data-level="${esc(item.level)}"><strong>${esc(LEVEL_LABEL[item.level])}</strong> ${esc(item.text)}</li>`).join('\n')}
+    </ul>
+  </section>`
+    : '';
+  const photos = (robot.photos ?? [])
+    .map((src) => `    <img src="${esc(src)}" alt="${esc(robot.name)}" loading="lazy">`)
+    .join('\n');
+  const facts = [
+    `Developer: ${robot.developer}`,
+    `Category: ${robot.category}`,
+    `Tested on: ${robot.board}`,
+    `TAIL OS ${robot.tailosVersion} or later`,
+    robot.buildMinutes ? `About ${robot.buildMinutes} minutes` : null,
+  ].filter(Boolean).map((fact) => `<li>${esc(fact)}</li>`).join('');
+  const needs = robot.needs
+    .map((need) => `      <li><span>${esc(need.item)}</span><b>${esc(need.spec)}</b></li>`)
+    .join('\n');
+  const steps = robot.steps
+    .map((step) => `      <li><h3>${esc(step.title)}</h3><p>${esc(step.body)}</p></li>`)
+    .join('\n');
+  return storeShell({
+    site,
+    title: `${robot.name} — Robots — TAIL OS`,
+    description: robot.summary,
+    canonical: `${site.origin}/robots/${robot.slug}/`,
+    active: 'robots',
+    main: `<article class="robot-page">
+  <header class="robot-hero">
+    ${thumbnail(robot, 'robot-icon-lg')}
+    <div>
+      <h1>${esc(robot.name)}</h1>
+      <p class="robot-dev">${esc(robot.developer)}</p>
+      <ul class="robot-facts">${facts}</ul>
+      <div class="robot-actions"><a class="robot-get" href="#steps">Get the plans</a></div>
+    </div>
+  </header>
+${photos ? `  <div class="robot-photos">\n${photos}\n  </div>` : ''}
+  <section class="robot-block" aria-labelledby="about">
+    <h2 id="about">About</h2>
+    <p>${esc(robot.summary)}</p>
+  </section>
+${safety}
+  <section class="robot-block robot-needs" aria-labelledby="needs">
+    <h2 id="needs">What you need</h2>
+    <ul>
+${needs}
+    </ul>
+  </section>
+  <section class="robot-block robot-steps" id="steps" aria-labelledby="steps-title">
+    <h2 id="steps-title">Build steps</h2>
+    <ol>
+${steps}
+    </ol>
+  </section>
+  <p class="robot-reviewed">Safety notes reviewed on ${esc(robot.reviewed)}. Example listing where marked.</p>
 </article>`,
   });
 }

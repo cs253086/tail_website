@@ -16,7 +16,8 @@ import { assertAllowlisted, assertNotLfsPointer, gzipDownload, rewriteLink, vali
 import { assertRedacted, compileRules, redact } from './redact.mjs';
 import { buildIndex } from './bm25.mjs';
 import { chunkMarkdown } from './chunk.mjs';
-import { renderAsk, renderDoc, renderDocsIndex, renderHome, renderNotFound, renderRedirects } from './render.mjs';
+import { renderAsk, renderDoc, renderDocsIndex, renderHome, renderNotFound, renderRedirects, renderRobotPage, renderRobotsIndex } from './render.mjs';
+import { loadRobots } from './robots.mjs';
 import { sectionsFrom } from './sections.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -166,10 +167,19 @@ rmSync(PUBLIC, { recursive: true, force: true });
 for (const doc of docs) {
   write(join(PUBLIC, 'docs', doc.slug, 'index.html'), renderDoc({ site, docs, doc, html: doc.html }));
 }
-write(join(PUBLIC, 'index.html'), renderHome({ site, docs, questions, home: allowlist.home ?? {} }));
+// Robot listings are read and checked before any page is written. Only listed
+// robots are returned; a draft is validated but never published.
+const robots = loadRobots(join(ROOT, 'content', 'robots'));
+write(join(PUBLIC, 'index.html'), renderHome({ site, docs, questions, robots, home: allowlist.home ?? {} }));
 write(join(PUBLIC, '404.html'), renderNotFound({ site, docs }));
 write(join(PUBLIC, 'ask', 'index.html'), renderAsk({ site, docs, questions }));
 write(join(PUBLIC, 'docs', 'index.html'), renderDocsIndex({ site, docs }));
+write(join(PUBLIC, 'robots', 'index.html'), renderRobotsIndex({ site, robots }));
+for (const robot of robots) {
+  write(join(PUBLIC, 'robots', robot.slug, 'index.html'), renderRobotPage({ site, robot }));
+}
+// Robot pictures are copied as they are; each listing names its file.
+cpSync(join(ROOT, 'content', 'robots', 'images'), join(PUBLIC, 'robots', 'images'), { recursive: true });
 
 // Two views of one build: the browser gets chunk metadata for keyword search,
 // the Function gets full text for retrieval. Both carry the same buildId.
@@ -200,7 +210,7 @@ write(
   }),
 );
 
-const urls = ['/', '/docs/', ...docs.map((doc) => `/docs/${doc.slug}/`)];
+const urls = ['/', '/docs/', ...docs.map((doc) => `/docs/${doc.slug}/`), ...(robots.length ? ['/robots/'] : []), ...robots.map((robot) => `/robots/${robot.slug}/`)];
 write(
   join(PUBLIC, 'sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>

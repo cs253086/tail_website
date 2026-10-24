@@ -110,3 +110,14 @@ describe('renderRedirects', () => {
     expect(renderRedirects(docs)).toBe('');
   });
 });
+
+describe('motion and the store', () => {
+  it('loads the reveal script on every page', () => {
+    expect(renderHome({ site, docs, questions: [] })).toContain('/js/reveal.js');
+  });
+
+  it('links to the store from the home page only once a robot is listed', () => {
+    expect(renderHome({ site, docs, questions: [], robots: [] })).not.toContain('Robots built on TAIL OS');
+    expect(renderHome({ site, docs, questions: [], robots: [{ slug: 'x' }] })).toContain('href="/robots/"');
+  });
+});

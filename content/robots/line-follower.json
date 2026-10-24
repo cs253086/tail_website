@@ -1,0 +1,56 @@
+{
+  "slug": "line-follower",
+  "name": "Line follower",
+  "developer": "Example developer",
+  "summary": "A two-wheel robot that follows a black tape line on white paper.",
+  "category": "Mobile",
+  "board": "Raspberry Pi 3B",
+  "tailosVersion": "0.9",
+  "buildMinutes": 120,
+  "color": "blue",
+  "featured": true,
+  "image": "line-follower.svg",
+  "safety": [
+    {
+      "level": "hazard",
+      "text": "The motors start as soon as power is applied. Lift the wheels off the table until the calibration step."
+    }
+  ],
+  "needs": [
+    {
+      "item": "Raspberry Pi",
+      "spec": "3B or 3B+"
+    },
+    {
+      "item": "Motor driver",
+      "spec": "Dual H-bridge"
+    },
+    {
+      "item": "Sensors",
+      "spec": "2 × IR reflectance pair"
+    },
+    {
+      "item": "TAIL OS",
+      "spec": "0.9 or later"
+    }
+  ],
+  "steps": [
+    {
+      "title": "Mount the sensors",
+      "body": "Fix the pairs 12 mm above the paper, one either side of the line."
+    },
+    {
+      "title": "Wire the motor driver",
+      "body": "Connect the PWM inputs to GPIO 18 and 19. Share the ground with the Pi."
+    },
+    {
+      "title": "Load the program",
+      "body": "Copy the program onto the image and run it from the shell."
+    },
+    {
+      "title": "Calibrate",
+      "body": "Hold it over white paper, press Enter, then over the black line."
+    }
+  ],
+  "status": "draft"
+}

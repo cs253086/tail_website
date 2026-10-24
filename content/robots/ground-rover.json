@@ -1,0 +1,43 @@
+{
+  "slug": "ground-rover",
+  "name": "Ground rover",
+  "developer": "Example developer",
+  "summary": "A four-wheel base with a bench test script. Not tested outdoors.",
+  "category": "Mobile",
+  "board": "Raspberry Pi 3B",
+  "tailosVersion": "0.9",
+  "buildMinutes": 150,
+  "color": "violet",
+  "image": "ground-rover.svg",
+  "safety": [
+    {
+      "level": "caution",
+      "text": "The wheels turn as soon as the test starts. Test with the rover raised off the table."
+    }
+  ],
+  "needs": [
+    {
+      "item": "Raspberry Pi",
+      "spec": "3B or 3B+"
+    },
+    {
+      "item": "Motor driver",
+      "spec": "Quad H-bridge"
+    },
+    {
+      "item": "TAIL OS",
+      "spec": "0.9 or later"
+    }
+  ],
+  "steps": [
+    {
+      "title": "Assemble the base",
+      "body": "Fix the four motors to the chassis and check the wheels turn freely."
+    },
+    {
+      "title": "Run the bench test",
+      "body": "Start the test script with the rover raised. Each wheel should turn once, in turn."
+    }
+  ],
+  "status": "draft"
+}
