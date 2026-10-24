@@ -54,7 +54,7 @@ function header({ site, search = true }) {
     ${searchBox}
     <nav class="hdr-nav" aria-label="Primary">
       <a href="/docs/">Docs</a>
-      <a href="/robots/">Robots</a>
+      ${site.store ? '<a href="/robots/">Robots</a>' : ''}
     </nav>
   </div>
 </header>`;
@@ -185,7 +185,7 @@ ${highlights}${quickstart}
   <section class="docs-cards" aria-label="Documentation">
       ${cards}
   </section>
-${robots.length ? '  <p class="robots-link"><a href="/robots/">Robots built on TAIL OS</a></p>\n' : ''}</main>
+${site.store && robots.length ? '  <p class="robots-link"><a href="/robots/">Robots built on TAIL OS</a></p>\n' : ''}</main>
 ${footer({ site })}
 </body>
 </html>`;

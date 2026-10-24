@@ -111,5 +111,9 @@
       "name": "bsp-rpi3.zip",
       "sha256": "6fcda82451c9c7a5c4a5b475430fcd497f5eb8985c5180f2504fc33e1c900440"
     }
-  ]
+  ],
+  "store": {
+    "enabled": false,
+    "_comment": "The robot store is built only when this is true. Off until the store is ready to publish."
+  }
 }

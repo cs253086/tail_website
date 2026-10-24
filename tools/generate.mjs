@@ -59,9 +59,13 @@ const allowedPaths = new Set(bySourcePath.keys());
 
 // --- markdown --------------------------------------------------------------
 
+// The robot store is built only when the allowlist switches it on. Its listings
+// are still checked either way, so a broken draft fails the build.
+const storeEnabled = allowlist.store?.enabled === true;
 const site = {
   origin,
   version: allowlist.version,
+  store: storeEnabled,
 };
 
 const redactionRules = compileRules(allowlist.redact);
@@ -174,12 +178,14 @@ write(join(PUBLIC, 'index.html'), renderHome({ site, docs, questions, robots, ho
 write(join(PUBLIC, '404.html'), renderNotFound({ site, docs }));
 write(join(PUBLIC, 'ask', 'index.html'), renderAsk({ site, docs, questions }));
 write(join(PUBLIC, 'docs', 'index.html'), renderDocsIndex({ site, docs }));
-write(join(PUBLIC, 'robots', 'index.html'), renderRobotsIndex({ site, robots }));
-for (const robot of robots) {
-  write(join(PUBLIC, 'robots', robot.slug, 'index.html'), renderRobotPage({ site, robot }));
+if (storeEnabled) {
+  write(join(PUBLIC, 'robots', 'index.html'), renderRobotsIndex({ site, robots }));
+  for (const robot of robots) {
+    write(join(PUBLIC, 'robots', robot.slug, 'index.html'), renderRobotPage({ site, robot }));
+  }
+  // Robot pictures are copied as they are; each listing names its file.
+  cpSync(join(ROOT, 'content', 'robots', 'images'), join(PUBLIC, 'robots', 'images'), { recursive: true });
 }
-// Robot pictures are copied as they are; each listing names its file.
-cpSync(join(ROOT, 'content', 'robots', 'images'), join(PUBLIC, 'robots', 'images'), { recursive: true });
 
 // Two views of one build: the browser gets chunk metadata for keyword search,
 // the Function gets full text for retrieval. Both carry the same buildId.
@@ -210,7 +216,7 @@ write(
   }),
 );
 
-const urls = ['/', '/docs/', ...docs.map((doc) => `/docs/${doc.slug}/`), ...(robots.length ? ['/robots/'] : []), ...robots.map((robot) => `/robots/${robot.slug}/`)];
+const urls = ['/', '/docs/', ...docs.map((doc) => `/docs/${doc.slug}/`), ...(storeEnabled && robots.length ? ['/robots/'] : []), ...(storeEnabled ? robots.map((robot) => `/robots/${robot.slug}/`) : [])];
 write(
   join(PUBLIC, 'sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>
