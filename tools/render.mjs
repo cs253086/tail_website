@@ -54,6 +54,20 @@ function header({ site, search = true }) {
     ${searchBox}
     <nav class="hdr-nav" aria-label="Primary">
       <a href="/docs/">Docs</a>
+      <details class="hdr-menu">
+        <summary class="hdr-menu-btn" aria-haspopup="true">
+          <span>Support</span>
+          <svg class="hdr-menu-chevron" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
+        </summary>
+        <div class="hdr-menu-panel">
+          <div class="hdr-menu-desc">Questions, hardware bring-up, or general inquiries:</div>
+          <a class="hdr-menu-action" href="mailto:support@tail-os.com">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <span>Email us</span>
+          </a>
+          <span class="hdr-menu-sub mono">support@tail-os.com</span>
+        </div>
+      </details>
       ${site.store ? '<a href="/robots/">Robots</a>' : ''}
     </nav>
   </div>
