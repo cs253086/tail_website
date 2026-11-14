@@ -81,18 +81,24 @@ jobs:
 
       - name: Install
         if: steps.source.outputs.build == 'true'
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: '1'
         run: npm ci
 
       - name: Generate
         if: steps.source.outputs.build == 'true'
         env:
           TAILOS_ROOT: tailos
+          # Diagrams are drawn in the runner's own Chrome; installing puppeteer's
+          # copy would download about 150 MB on every publish.
+          PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: node tools/generate.mjs
 
       - name: Test
         if: steps.source.outputs.build == 'true'
         env:
           TAILOS_ROOT: tailos
+          PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
         run: npm test
 
       - name: Commit what was built

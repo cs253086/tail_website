@@ -46,6 +46,18 @@ describe('published output', () => {
     expect(offenders).toEqual([]);
   });
 
+  it('never ships a diagram as source, or a drawing the policy would strip', () => {
+    const offenders = files.filter((file) => file.endsWith('.html')).flatMap((file) => {
+      const contents = read(file);
+      const figures = contents.match(/<figure class="diagram">[\s\S]*?<\/figure>/g) ?? [];
+      return [
+        ...(contents.includes('language-mermaid') ? [`${file}: undrawn mermaid block`] : []),
+        ...figures.filter((figure) => /<style|\sstyle=|<script|foreignObject/.test(figure)).map(() => `${file}: unsafe drawing`),
+      ];
+    });
+    expect(offenders).toEqual([]);
+  });
+
   it('never publishes a test file', () => {
     expect(files.filter((file) => file.includes('.test.'))).toEqual([]);
   });

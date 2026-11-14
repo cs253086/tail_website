@@ -579,6 +579,25 @@ img, svg { display: block; max-width: 100%; }
 }
 .doc pre code { background: none; border: 0; padding: 0; color: inherit; font-size: inherit; }
 
+/* Diagrams. Drawn at build time by tools/diagram.mjs, which removes mermaid's
+   own styling because the Content-Security-Policy would drop it; these rules
+   style the class names it emits. Colours come from the theme tokens, so a
+   diagram follows light and dark with the rest of the page. */
+.doc figure.diagram {
+  margin: 0 0 18px; padding: 18px; overflow-x: auto;
+  background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; font-family: Arial, Helvetica, sans-serif; }
+.diagram .node rect, .diagram .node polygon, .diagram .node circle, .diagram .node ellipse, .diagram .node path.basic {
+  fill: var(--bg-sunken); stroke: var(--border-strong); stroke-width: 1px;
+}
+.diagram .cluster rect { fill: var(--accent-soft); stroke: var(--accent-line); stroke-width: 1px; }
+.diagram .edgePaths path, .diagram .flowchart-link { fill: none; stroke: var(--text-mute); stroke-width: 1.5px; }
+.diagram marker path, .diagram .arrowMarkerPath { fill: var(--text-mute); stroke: var(--text-mute); }
+.diagram text, .diagram .nodeLabel, .diagram .edgeLabel { fill: var(--text); font-size: 16px; }
+.diagram .label text, .diagram .cluster-label text, .diagram .edgeLabel text { text-anchor: middle; }
+.diagram .edgeLabel rect, .diagram .edgeLabel .background { fill: var(--bg-soft); stroke: none; opacity: 0.9; }
+
 /* Copy buttons, added by copy.js. The wrapper rather than the <pre> positions the
    button, so it stays in the corner while a wide block scrolls sideways. Code blocks
    are dark in both themes, so the button is drawn for a dark ground in both. */

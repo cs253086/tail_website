@@ -16,6 +16,7 @@ import { assertAllowlisted, assertNotLfsPointer, gzipDownload, rewriteLink, vali
 import { assertRedacted, compileRules, redact } from './redact.mjs';
 import { buildIndex } from './bm25.mjs';
 import { chunkMarkdown } from './chunk.mjs';
+import { diagramFenceRule, diagramSources, renderDiagrams } from './diagram.mjs';
 import { renderAsk, renderDoc, renderDocsIndex, renderHome, renderNotFound, renderRedirects, renderRobotPage, renderRobotsIndex } from './render.mjs';
 import { loadRobots } from './robots.mjs';
 import { sectionsFrom } from './sections.mjs';
@@ -138,6 +139,9 @@ for (const entry of bySourcePath.values()) {
   }
 
   const sections = sectionsFrom(tokens, headings);
+
+  const svgs = await renderDiagrams(diagramSources(tokens));
+  md.renderer.rules.fence = diagramFenceRule(svgs, md.renderer.rules.fence);
 
   const html = md.renderer.render(tokens, md.options, {});
   assertRedacted(html, redactionRules, entry.path);

@@ -496,15 +496,33 @@ citation inside bold is split out as its own piece, so the citation gate (§5.3)
 which counts the same pieces, sees it. The copy button `copy.js` adds to an answer's code
 block is built the same way, and copies the text the renderer set.
 
+### 9.3 Diagrams
+
+A document may carry a ```` ```mermaid ```` block. It is drawn to SVG when the site is built
+(`tools/diagram.mjs`) and inlined in a `<figure class="diagram">`, so the page needs no
+script. The Content-Security-Policy forbids script and inline style, which is why the
+drawing cannot happen in the reader's browser, and why mermaid's own `<style>` element and
+style attributes are removed after drawing: the stylesheet styles the same class names from
+the theme tokens, so a diagram follows light and dark with the page. Labels are SVG text,
+never HTML, because HTML labels size themselves with inline style.
+
+Two rules keep the figure honest. A diagram that cannot be drawn fails the build; the source
+is never shown as if it were the figure. And the drawing is not the only statement of what it
+shows: a diagram declares `accTitle` and `accDescr`, which become its accessible name and
+description, and the document says the same in the sentence that follows it. Drawn SVGs are
+cached under `node_modules/.cache/diagrams` by a hash of the source, the mermaid version and
+the configuration, so a rebuild with unchanged diagrams starts no browser.
+
 ## 10. Dependencies
 
-The current site has none. This design adds three, two of them development-only:
+The current site has none. This design adds three, two of them development-only, and diagrams (§9.3) add two more, both build-only:
 
 | Package | Scope | Why |
 |---|---|---|
 | `markdown-it` | build | Markdown to HTML. Writing a CommonMark parser is not warranted. |
 | `wrangler` | dev | Cloudflare's CLI. Required to run and deploy Pages Functions. |
 | `vitest` | dev | Test runner for the generator and Function. |
+| `@mermaid-js/mermaid-cli`, `puppeteer` | dev | Draw ```` ```mermaid ```` blocks to SVG at build time (§9.3). Chrome itself is the machine's own, found by `PUPPETEER_EXECUTABLE_PATH`; puppeteer's download is skipped. Nothing of either ships to the browser. |
 
 BM25, chunking, front-matter parsing, and browser search are hand-written rather than
 pulled in. Nothing ships to the browser except the site's own code.
