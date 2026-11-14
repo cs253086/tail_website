@@ -12,13 +12,13 @@
 <meta property="og:url" content="https://tail-os.com/docs/periodic-framework-python/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/a04dbcb6183f/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/085c498a91ec/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/a04dbcb6183f/css/style.css">
-<script type="module" src="/assets/a04dbcb6183f/js/copy.js"></script>
-<script type="module" src="/assets/a04dbcb6183f/js/reveal.js"></script>
+<link rel="stylesheet" href="/assets/085c498a91ec/css/style.css">
+<script type="module" src="/assets/085c498a91ec/js/copy.js"></script>
+<script type="module" src="/assets/085c498a91ec/js/reveal.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -52,37 +52,31 @@
 <aside class="side">
   <nav aria-label="Documentation">
     <ul class="nav-docs">
-    <li class="nav-page">
+    <li class="nav-group">
+      <span class="nav-label">Get started</span>
+      <ul class="nav-list">
+        <li class="nav-page">
       <a class="nav-link" href="/docs/quick-start/">Quick Start</a>
     </li>
     <li class="nav-page">
       <a class="nav-link" href="/docs/installation/">Installation</a>
     </li>
-    <li class="nav-group">
-      <span class="nav-label">BSP</span>
-      <ul class="nav-list">
-        <li class="nav-page">
-      <a class="nav-link" href="/docs/qemu/">QEMU</a>
-    </li>
-    <li class="nav-page">
-      <a class="nav-link" href="/docs/raspberry-pi-3/">Raspberry Pi 3</a>
-    </li>
       </ul>
     </li>
     <li class="nav-group">
-      <span class="nav-label">Development guide</span>
-      <ul class="nav-list">
-        <li class="nav-group">
-      <span class="nav-label">Periodic</span>
+      <span class="nav-label">Guides</span>
       <ul class="nav-list">
         <li class="nav-page">
-      <a class="nav-link" href="/docs/periodic-framework-rust/">Rust</a>
+      <a class="nav-link" href="/docs/periodic-framework-rust/">Rust Guide</a>
     </li>
     <li class="nav-page">
-      <a class="nav-link" href="/docs/periodic-framework-python/" aria-current="page">Python</a>
+      <a class="nav-link" href="/docs/periodic-framework-python/" aria-current="page">Python Guide</a>
       <ul class="nav-sections">
         <li><a href="/docs/periodic-framework-python/#quick-start">Quick start</a></li>
-        <li><a href="/docs/periodic-framework-python/#keys">Keys</a></li>
+        <li><a href="/docs/periodic-framework-python/#declaring-a-node">Declaring a node</a></li>
+        <li><a href="/docs/periodic-framework-python/#run-time-parameters">Run-time parameters</a></li>
+        <li><a href="/docs/periodic-framework-python/#actions">Actions</a></li>
+        <li><a href="/docs/periodic-framework-python/#recording-and-replay">Recording and replay</a></li>
         <li><a href="/docs/periodic-framework-python/#payloads">Payloads</a></li>
         <li><a href="/docs/periodic-framework-python/#cycle">Cycle</a></li>
         <li><a href="/docs/periodic-framework-python/#run">run()</a></li>
@@ -90,9 +84,19 @@
         <li><a href="/docs/periodic-framework-python/#cost">Cost</a></li>
         <li><a href="/docs/periodic-framework-python/#errors">Errors</a></li>
         <li><a href="/docs/periodic-framework-python/#init-has-no-equivalent-and-does-not-need-one">init has no equivalent, and does not need one</a></li>
+        <li><a href="/docs/periodic-framework-python/#what-was-verified-and-where">What was verified, and where</a></li>
       </ul>
     </li>
       </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Boards</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/qemu/">QEMU</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/raspberry-pi-3/">Raspberry Pi 3</a>
     </li>
       </ul>
     </li>
@@ -107,63 +111,230 @@
 <article class="doc">
 <h1 id="periodic-framework-python-api">Periodic Framework — Python API</h1>
 <p>Declare a period; the framework owns the timing loop, topic admission, freshness and the
-publish. A node is a function with a decorator — there is no loop to write.</p>
-<p>This is the Python half of <a href="/docs/periodic-framework-rust/">the Rust API</a>. The keys mean the
-same things and are spelled the same way, so a reader of that page already knows this one.
-Where the two differ, this page says why.</p>
+publish point. A node is a function with a decorator — there is no loop to write.</p>
+<p>This is the Python half of <a href="/docs/periodic-framework-rust/">the Rust API</a>. The words mean
+the same things and are spelled the same way, so a reader of that page already knows this
+one. Where the two differ, this page says why.</p>
+<p>A node reads as many topics as its body has inputs, each with its own bound, takes any
+run-time parameters an operator tunes from the shell while it runs, serves at most one
+<a href="#actions">action</a> -- a goal a client sends it, which takes many releases -- and publishes
+as many topics as its body has outputs, each on the releases the body chooses.</p>
 <h2 id="quick-start">Quick start</h2>
-<p>Two programs, one of each shape: a node that only publishes and a node that only
-subscribes. Neither writes a loop or a sleep.</p>
+<p>Four programs: a node that only publishes, a node that reads one topic, a node that
+reads two, and a node that publishes two. None writes a loop or a sleep, and none declares a payload: each imports the
+standard ones from <code>tail_messages</code>, which the build prints from the Rust crate
+<code>robot_messages</code>, so a Python node and a Rust or C node hold one definition.</p>
 <p>These run on TAIL OS, under its own Python. The <code>periodic</code> module comes with it: there is
-nothing to install, and <code>import periodic</code> loads it from <code>/usr/lib/python314.zip</code>. Python
-is on the disk image of the <a href="/docs/qemu/">QEMU download</a>; the Raspberry
-Pi 3 image built from the BSP does not include Python.</p>
-<h3 id="a-python-publisher">A Python publisher</h3>
-<pre><code class="language-python">from periodic import periodic, run, Skip, Payload, Topic
+nothing to install, and <code>import periodic</code> loads it from <code>/usr/lib/python314.zip</code>.
+<code>tail_messages</code> is a file of its own on the image, <code>/usr/lib/python3.14/tail_messages.py</code>,
+printed by the image build. Python is on the disk image of the
+<a href="/docs/qemu/">QEMU download</a>; the Raspberry Pi 3 image built from the BSP
+does not include Python.</p>
+<p><strong>These are the tested examples.</strong> Each is a file under
+<code>framework/periodic/python/examples/</code>, shown here without its docstring. Every file there
+is executed on the host by <code>framework/periodic/python/test/test_examples.py</code>, which fails
+if a file is added without a test. <code>publisher.py</code> and <code>subscriber.py</code> are also compiled
+into <code>test/integration_test/tests/periodic_python_pair</code> with <code>include_str!</code> and <code>drive.py</code>
+into <code>periodic_python_two_inputs</code>, and run on QEMU <code>raspi3b</code>, each against Rust peers.
+<code>balance.py</code> (<a href="#run-time-parameters">Run-time parameters</a>) is compiled the same way into
+<code>periodic_python_parameters</code> and run there as well. <code>steer.py</code>, the node with two outputs,
+is run on the host only. Every example was rewritten for outputs on parameters and has
+passed on the host since; none has run on QEMU in that form yet.
+Nothing here ran on real hardware.</p>
+<h3 id="a-topic">A topic</h3>
+<pre><code class="language-python">from tail_messages import Range
 
-Reading = Payload(&quot;stamp:u64 counter:u32&quot;, &quot;Reading&quot;)
+# The front ranger's readings, in the `range_front` frame.
+SENSOR_RANGE = Topic(&quot;sensor/range&quot;, Range, lane=&quot;safe&quot;)
+</code></pre>
+<p>A topic is defined once: its name, the payload it carries, and the lane that carries it.
+All three belong to the topic and not to a node, because every end of a topic must agree on
+them and one node may touch several topics that differ in each. A payload carries no frame:
+the frame belongs to the topic, and its comment says which.</p>
+<h3 id="a-python-publisher">A Python publisher</h3>
+<p><code>examples/publisher.py</code>:</p>
+<pre><code class="language-python">from periodic import periodic, publish, run, monotonic_ns, Skip, Topic
+from tail_messages import Range, RANGE_INFRARED
+
+# The front ranger's readings, in the `range_front` frame.
+FROM_PYTHON = Topic(&quot;pair/from_python&quot;, Range, lane=&quot;kernel&quot;)
 
 count = 0
 
 
-@periodic(every=&quot;20ms&quot;, publish=Topic(&quot;pair/from_python&quot;, Reading),
-          lane=&quot;kernel&quot;, on_overrun=Skip)
-def sensor():
+@periodic(every=&quot;20ms&quot;, on_overrun=Skip)
+def sensor(reading=publish(FROM_PYTHON)):
     global count
     count += 1
-    return Reading.instance(stamp=0x1234_5678_0000_0000 | count, counter=count)
+    reading.publish(Range.instance(stamp_ns=monotonic_ns(), radiation_type=RANGE_INFRARED,
+                                   field_of_view=0.05, min_range=0.02, max_range=4.0,
+                                   range=0.25 * count, variance=0.0))
 
 
 run()
 </code></pre>
-<p>A node that returns a value publishes it. <code>count</code> lives at module level, which is how a
-Python node keeps state between cycles; <a href="#init-has-no-equivalent-and-does-not-need-one">below</a>
-is why Python needs no <code>init</code> for that.</p>
+<p>An output is declared on the parameter that publishes it: <code>reading=publish(FROM_PYTHON)</code>.
+On every release the body is handed an <code>Out</code> in that parameter, and <code>reading.publish(value)</code>
+hands it the release's value; the framework publishes it once the body returns. A body
+returns nothing. <code>count</code> lives at module level, which is one way
+a Python node keeps state between cycles; <a href="#init-has-no-equivalent-and-does-not-need-one">below</a>
+is why Python needs no <code>init</code> for that. <code>monotonic_ns()</code> is the stamp clock: nanoseconds
+since boot on the counter the node's releases are placed on, the clock every <code>stamp_ns</code>
+field is in, and the same one <code>periodic::monotonic_ns()</code> reads in Rust and
+<code>tail_periodic_monotonic_ns()</code> in C. <code>RANGE_INFRARED</code> is one of <code>Range</code>'s named values,
+generated beside it.</p>
+<p>There are two ways to read that clock, and they differ in a
+<a href="#recording-and-replay">replay</a>:</p>
+<table>
+<thead>
+<tr>
+<th>Call</th>
+<th>What it returns</th>
+<th>In a replay</th>
+<th>Stamp with it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>monotonic_ns()</code></td>
+<td>the counter, read when called</td>
+<td>a new reading, so what it stamps diverges</td>
+<td>a measurement, when it is taken: this sensor node</td>
+</tr>
+<tr>
+<td><code>now()</code></td>
+<td>the release's reading: the instant every input of the release was judged against; 0 before <code>run()</code> has opened the node</td>
+<td>the recorded reading, so what it stamps replays exactly</td>
+<td>a value the node decides from its inputs</td>
+</tr>
+</tbody>
+</table>
+<p><code>now()</code> is <code>periodic::now()</code> in Rust and <code>tail_periodic_now_ns(node)</code> in C. A process is
+one node, so it takes none. Call it from the body: from a thread you started it raises
+<code>RuntimeError</code>.</p>
 <h3 id="a-python-subscriber">A Python subscriber</h3>
-<pre><code class="language-python">from periodic import periodic, run, Skip, Payload, Topic
+<p>The declaration and the fail-safe branch of <code>examples/subscriber.py</code>. The rest of that
+file's body counts correct readings and exits with a verdict, so the test can judge it by
+its exit status:</p>
+<pre><code class="language-python">from periodic import periodic, run, subscribe, Skip, Topic
+from tail_messages import Range, RANGE_ULTRASOUND
 
-Range = Payload(&quot;stamp:u64 range_mm:u32 quality:u32&quot;, &quot;Range&quot;)
+# The front ranger's readings, in the `range_front` frame.
+SENSOR_RANGE = Topic(&quot;sensor/range&quot;, Range, lane=&quot;safe&quot;)
 
-@periodic(every=&quot;20ms&quot;, subscribe=Topic(&quot;sensor/range&quot;, Range),
-          lane=&quot;safe&quot;, stale_after=&quot;200ms&quot;, on_overrun=Skip)
-def brake(lidar):
+
+@periodic(every=&quot;20ms&quot;, on_overrun=Skip)
+def brake(lidar=subscribe(SENSOR_RANGE, stale_after=&quot;210ms&quot;)):
+    global seen
     reading = lidar.get()
-    brake_for(reading.range_mm if reading else 0)
+    # `get()` is None when nothing has arrived yet and when what last arrived is older than
+    # `stale_after`. The two collapse on purpose, so this is the fail-safe branch.
+    if reading is None:
+        return
+</code></pre>
+<p>An input is declared on the parameter it feeds: <code>lidar=subscribe(SENSOR_RANGE, stale_after=&quot;210ms&quot;)</code>. On every release the body is called with a <code>Cycle</code> in that
+parameter.</p>
+<h3 id="a-node-that-reads-two-topics">A node that reads two topics</h3>
+<p><code>examples/drive.py</code>, the whole program. An obstacle stop: it passes the commanded velocity
+on while a range reading says the way is clear, and publishes a stop otherwise.</p>
+<pre><code class="language-python">from periodic import periodic, publish, run, subscribe, Skip, Topic
+from tail_messages import Range, Twist, Vector3
+
+# Velocity commands, in the `base_link` frame.
+CMD_VELOCITY = Topic(&quot;cmd/velocity&quot;, Twist, lane=&quot;kernel&quot;)
+# The front ranger's readings, in the `range_front` frame.
+SENSOR_RANGE = Topic(&quot;sensor/range&quot;, Range, lane=&quot;safe&quot;)
+# The velocity the drive is given, in the `base_link` frame.
+DRIVE_VELOCITY = Topic(&quot;drive/velocity&quot;, Twist, lane=&quot;safe&quot;)
+
+STOP_WITHIN_M = 0.3
+STILL = Vector3.instance(x=0.0, y=0.0, z=0.0)
+STOP = Twist.instance(linear=STILL, angular=STILL)
+
+
+@periodic(every=&quot;20ms&quot;, on_overrun=Skip)
+def drive(command=subscribe(CMD_VELOCITY, stale_after=&quot;310ms&quot;),
+          lidar=subscribe(SENSOR_RANGE, stale_after=&quot;70ms&quot;),
+          velocity=publish(DRIVE_VELOCITY)):
+    twist, reading = command.get(), lidar.get()
+    if twist is not None and reading is not None and reading.range &gt; STOP_WITHIN_M:
+        velocity.publish(twist)
+    else:
+        # The command or the range is absent or stale, or an obstacle is close.
+        velocity.publish(STOP)
+
 
 run()
 </code></pre>
-<p>Each node retries admission until its topic appears, so it may start before or after the
-node at the other end.</p>
-<p><strong>These are the tested examples.</strong> <code>framework/periodic/python/examples/publisher.py</code> and
-<code>subscriber.py</code> are compiled into <code>test/integration_test/tests/periodic_python_pair</code> with
-<code>include_str!</code> and run on target, each against a Rust peer. The publisher above is that
-file without its docstring. The subscriber file wraps the same declaration in a few lines
-that let the test read a verdict from its exit status, so only its body differs.</p>
+<p><code>Twist</code> nests two <code>Vector3</code>s, read as <code>twist.linear.x</code>, the name Rust and C use; a nested
+payload is built from instances of the payloads it nests.</p>
+<p>Two inputs on two lanes, each with its own bound, and one output. The body is called with
+one <code>Cycle</code> per input and one <code>Out</code> per output, in the order the parameters are written.</p>
 <p><code>get()</code> returns <code>None</code> both when nothing has arrived and when what is held is older than
-<code>stale_after</code>. The two collapse on purpose, so the fail-safe branch is the branch that runs
-when the sensor goes quiet.</p>
-<h2 id="keys">Keys</h2>
-<p>The same set as the Rust attribute, with two differences noted below.</p>
+that input's <code>stale_after</code>. The two collapse on purpose, so the fail-safe branch is the
+branch that runs when a sensor goes quiet, and the one that runs when it never came up.</p>
+<p>On QEMU, with the range topic silenced and the command still published, the test saw this
+node's first stop 81 to 102 ms after the last range publication, over six runs; the
+window it asserts is over 70 ms and at most 70 ms plus two periods plus a 200 ms band. The
+command was passed on again when the range returned.</p>
+<p>Each node waits for its topics for up to ten seconds, so it may start before or after the
+nodes at its other ends.</p>
+<h3 id="a-node-that-publishes-two-topics">A node that publishes two topics</h3>
+<p><code>examples/steer.py</code>, the whole program. A steering step towards x = 2 m: it commands a
+velocity on every release it has a usable odometry reading, and on the releases the robot
+stands still it also reports where it stopped.</p>
+<pre><code class="language-python">from periodic import periodic, publish, run, subscribe, Payload, Skip, Topic
+from tail_messages import Odometry, Twist, Vector3
+
+DriveState = Payload(&quot;stamp_ns:u64 x:f64 y:f64&quot;, &quot;DriveState&quot;)
+
+# The robot's estimated pose and velocity, in the `odom` frame.
+ODOMETRY = Topic(&quot;odometry&quot;, Odometry, lane=&quot;safe&quot;)
+# Velocity commands, in the `base_link` frame.
+CMD_VELOCITY = Topic(&quot;cmd/velocity&quot;, Twist, lane=&quot;kernel&quot;)
+# Where the robot last stood still, in the `odom` frame.
+DRIVE_STATE = Topic(&quot;drive/state&quot;, DriveState, lane=&quot;kernel&quot;)
+
+GOAL_X_M = 2.0
+GAIN_PER_S = 0.5
+STILL_BELOW_M_S = 0.01
+
+# Built once and rewritten on every release: an output keeps a reference until the body
+# returns, and packs it then.
+velocity = Twist.instance(linear=Vector3.instance(x=0.0, y=0.0, z=0.0),
+                          angular=Vector3.instance(x=0.0, y=0.0, z=0.0))
+stop = DriveState.instance(stamp_ns=0, x=0.0, y=0.0)
+
+
+@periodic(every=&quot;20ms&quot;, on_overrun=Skip)
+def drive(odometry=subscribe(ODOMETRY, stale_after=&quot;50ms&quot;),
+          command=publish(CMD_VELOCITY),
+          state=publish(DRIVE_STATE)):
+    reading = odometry.get()
+    if reading is None:
+        return                          # absent or stale: neither output publishes
+    velocity.linear.x = GAIN_PER_S * (GOAL_X_M - reading.pose.position.x)
+    command.publish(velocity)
+    if abs(reading.twist.linear.x) &lt; STILL_BELOW_M_S:
+        stop.stamp_ns = reading.stamp_ns
+        stop.x, stop.y = reading.pose.position.x, reading.pose.position.y
+        state.publish(stop)
+
+
+run()
+</code></pre>
+<p>Each output is its own parameter, handed its own <code>Out</code>. When the body returns, the
+framework publishes every output that was handed a value, <strong>in the order the outputs are
+declared</strong> -- <code>command</code>, then <code>state</code> -- whatever order the body handed them over in. An
+output handed nothing publishes nothing at that release, and its readers go on holding
+what it last published: here <code>drive/state</code> carries the last stop, and a release with no
+usable reading publishes neither.</p>
+<p><code>velocity</code> and <code>stop</code> are built once and rewritten on every release. <code>publish</code> keeps a
+reference, not a copy, and the value is packed when the body returns, so changing an
+object after handing it over publishes the changed value. <code>DriveState</code> is the example's
+own payload, declared with <code>Payload</code> (<a href="#payloads">Payloads</a>).</p>
+<h2 id="declaring-a-node">Declaring a node</h2>
+<h3 id="the-nodes-keys">The node's keys</h3>
 <table>
 <thead>
 <tr>
@@ -179,67 +350,980 @@ when the sensor goes quiet.</p>
 <td>Release period: <code>&quot;20ms&quot;</code>. Releases fall on <code>start + n * period</code>, never drifting</td>
 </tr>
 <tr>
-<td><code>lane</code></td>
-<td>required</td>
-<td><code>&quot;kernel&quot;</code>, <code>&quot;safe&quot;</code> or <code>&quot;fast&quot;</code> — which transport carries the topic</td>
-</tr>
-<tr>
 <td><code>on_overrun</code></td>
 <td>required</td>
 <td><code>Skip</code>, <code>CatchUp</code> or <code>Fault</code>. No default</td>
 </tr>
+</tbody>
+</table>
+<p>Nothing about an input or an output is a node key: each is declared on its parameter.
+<code>publish=</code> was a key of <code>@periodic</code> while a node published its return value; it is refused
+now, with the declaration rewritten (<a href="#a-declaration-in-the-earlier-grammar">below</a>).</p>
+<h3 id="a-topic-1">A topic</h3>
+<p><code>Topic(name, payload, lane=...)</code>, with <code>lane</code> one of <code>&quot;kernel&quot;</code>, <code>&quot;safe&quot;</code> or <code>&quot;fast&quot;</code>.</p>
+<p>The lane has no default. A topic written without one can be constructed and cannot be
+used: <code>subscribe</code> and <code>publish</code> refuse it, saying where to write it.</p>
+<p><strong>Define a topic in a module both programs import</strong>, so its two ends cannot be written
+differently. Two definitions written separately, or one in Python and one in Rust or C,
+are compared by the payload's size and by the identity of its layout (see
+<a href="#payloads">Payloads</a>), so a payload with two fields exchanged is refused. The lane is not
+compared. <em>Failing case:</em> a Python reader that says <code>lane=&quot;kernel&quot;</code> for a topic its Rust
+writer defines on the safe lane is admitted at once and then receives nothing, and neither
+side is told.</p>
+<h3 id="an-input">An input</h3>
+<p><code>name=subscribe(TOPIC, stale_after=&quot;&lt;duration&gt;&quot;)</code>, as the default of the parameter it
+feeds. They are the same words as the Rust attribute,
+<code>#[subscribe(TOPIC, stale_after = &quot;..&quot;)]</code>, in the one position Python offers beside a
+parameter.</p>
+<p><code>stale_after</code> is this node's bound for this input: how long the topic may stay silent
+before the node stops using what it last read. Two nodes may read one topic with different
+bounds, and one node gives each of its inputs its own.</p>
+<p><strong>Sizing it.</strong> The age a node sees is a whole number of its own periods, give or take the
+wake-up jitter, so a bound that is a multiple of the period is decided by microseconds.
+Write it half a period off:</p>
+<pre><code>stale_after &gt;= (publications you tolerate losing + 1) x the publisher's period
+               + this node's period
+</code></pre>
+<p><code>drive.py</code> runs every 20 ms. Its range bound tolerates one lost reading from a 20 ms
+sensor: <code>2 x 20 + 20 = 60</code>, written <code>&quot;70ms&quot;</code>. Nothing checks the rule. A bound shorter than
+the node's period is accepted, and makes the input usable only on the cycle a publication
+arrives.</p>
+<p><strong>What the bound guarantees.</strong> It bounds how long ago <em>this node</em> received the data. The
+data may be older by the time it waited to be read: up to the gap since the node's
+previous cycle, which is one period unless a cycle ran late.</p>
+<p><strong>A node reads a topic once.</strong> Two parameters that name one topic are refused at
+decoration, naming both:</p>
+<pre><code>`drive` inputs `front` and `rear` name the same topic 'sensor/range': a node reads a topic once
+</code></pre>
+<p>A topic a node publishes may also be one of its inputs: the node then reads its own
+previous publication.</p>
+<h3 id="an-output">An output</h3>
+<p><code>name=publish(TOPIC)</code>, as the default of the parameter that publishes it. The same words
+as the Rust attribute, <code>#[publish(TOPIC)]</code>, in the position Python offers beside a
+parameter. <code>publish</code> takes the topic and nothing else; the lane is the topic's.</p>
+<p>On every release the body is handed an <code>Out</code> in that parameter:</p>
+<table>
+<thead>
 <tr>
-<td><code>publish</code></td>
-<td></td>
-<td><code>Topic(name, payload)</code> to publish the body's return value on</td>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>out.publish(value)</code></td>
+<td>Hands the output this release's value, an instance of the topic's payload. A reference is kept, not a copy</td>
 </tr>
 <tr>
-<td><code>subscribe</code></td>
-<td></td>
-<td><code>Topic(name, payload)</code> to read from. The body receives a <code>Cycle</code></td>
+<td>a second <code>out.publish(...)</code> in one release</td>
+<td><code>ValueError: output 'cmd/velocity' was already published at this release; an output carries one publication per release</code></td>
 </tr>
 <tr>
-<td><code>stale_after</code></td>
-<td>required with <code>subscribe</code></td>
-<td>How old a sample may be before it reads as absent</td>
+<td><code>out.publish(None)</code>, or no call</td>
+<td>Nothing is published on that output at this release</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Every one of these is checked when the function is decorated</strong> — which is import time,
+<p><strong>The publish point is when the body returns.</strong> Then every output holding a value is
+packed and published, in the order the outputs are declared, and emptied. A body that
+raises publishes nothing at that release, on any output. A served action's status goes out
+after all of them.</p>
+<p><strong>A body returns nothing.</strong> A body that returns a value is refused at that release with a
+<code>NodeError</code> that names the output form:</p>
+<pre><code>`drive` returned Twist, and a node publishes through its outputs, not its return value. Declare one on a parameter, output=publish(TOPIC), write output.publish(value) where `drive` returned the value, and return nothing
+</code></pre>
+<p><strong>A node publishes a topic once.</strong> Two outputs that name one topic are refused at
+decoration, naming both:</p>
+<pre><code>`drive` outputs `front` and `rear` name the same topic 'sensor/range': a node publishes a topic once
+</code></pre>
+<p><strong>A refused publish does not stop the node.</strong> When the transport refuses a publication,
+nothing is raised: the outputs after it are still published at that release, and the node
+goes on to the next. Refusals are counted per output, and the sixteenth in a row on one
+output writes one record to the console, naming the node and the topic:</p>
+<pre><code>drive: 16 consecutive publishes to drive/state refused (Refused); still trying
+</code></pre>
+<p>A publish the transport takes ends the count, and so does a release that does not publish
+that output. This is what a Rust node does, in the same words; a Rust node writes the
+record to its log ring, and a Python node to the console, so <code>logview</code> does not show it.
+A refused value is not sent again at a later release.</p>
+<h3 id="what-the-body-may-look-like">What the body may look like</h3>
+<p><code>run()</code> calls the body positionally, with one argument per parameter, in the order the
+parameters are written -- a <code>Cycle</code> for an input, an <code>Out</code> for an output, the value in
+force for a <a href="#run-time-parameters">run-time parameter</a>, the node's <code>Goal</code> for a
+<a href="#actions">served action</a> -- and nothing else. So every parameter is one of the four, and
+everything that would let a signature take an argument the loop does not pass, or lose one
+it does, is refused at decoration:</p>
+<table>
+<thead>
+<tr>
+<th>The body</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>has a parameter with none of a <code>subscribe(...)</code>, a <code>publish(...)</code>, a <code>param(...)</code> or a <code>serve(...)</code> default</td>
+<td>refused, naming the parameter</td>
+</tr>
+<tr>
+<td>returns a value</td>
+<td>refused when it does, with a <code>NodeError</code>: what a node publishes it hands to an output</td>
+</tr>
+<tr>
+<td>has a keyword-only parameter, <code>*args</code> or <code>**kwargs</code></td>
+<td>refused, naming it</td>
+</tr>
+<tr>
+<td>is <code>async def</code>, or contains <code>yield</code></td>
+<td>refused: calling it would run nothing</td>
+</tr>
+<tr>
+<td>is a wrapper around the function that declares the inputs or the run-time parameters, such as one taking <code>*args, **kwargs</code></td>
+<td>refused on its own signature, and told why: the inputs and run-time parameters declared on the wrapped function are not parameters of the wrapper. Put <code>@periodic</code> directly on the function that declares them</td>
+</tr>
+<tr>
+<td>is a wrapper that takes nothing (made with <code>functools.wraps</code>), around a function that declares an input or a run-time parameter</td>
+<td>refused, naming the one it does not take: nothing would open the input or hand the parameter a value</td>
+</tr>
+<tr>
+<td>is a bound method</td>
+<td>accepted. Its first parameter receives its object and is not an input, an output or a run-time parameter</td>
+</tr>
+<tr>
+<td>is a method decorated inside its class</td>
+<td>refused, with the bound form to write instead</td>
+</tr>
+</tbody>
+</table>
+<p>A node that publishes and reads nothing takes only its outputs; it may still take
+run-time parameters. A node must publish, read, or serve an action; one that only serves is no
+timer, since it publishes its action's status on every release.</p>
+<p>A body called by hand, without arguments, finds its parameters still holding their
+declarations. Using one as a <code>Cycle</code> raises a <code>NodeError</code> that says so: <code>run()</code> is what
+calls a periodic body. A <code>param(...)</code> declaration used as a number raises CPython's own
+<code>TypeError</code>.</p>
+<p><strong>Every one of these is checked when the function is decorated</strong>, which is import time,
 before a topic is opened and before a release is taken. Rust refuses them at compile time;
 import is the earliest equivalent Python has.</p>
-<h3 id="two-differences-from-rust-both-deliberate">Two differences from Rust, both deliberate</h3>
-<p><strong>A topic names its own payload.</strong> Rust infers it from the body's signature; Python has
-nothing to infer it from, and a transport cannot carry a shape nobody named. So a topic is
-<code>Topic(&quot;sensor/range&quot;, Range)</code> rather than a bare string — which is also where the payload
-actually belongs, since a topic has one layout and a node may touch two.</p>
+<h3 id="three-differences-from-rust-each-deliberate">Three differences from Rust, each deliberate</h3>
+<p><strong>A topic names its own payload.</strong> Rust reads the payload and the lane from the topic's
+type; Python has no type to read them from, and a transport cannot carry a shape nobody
+named. So both are arguments of <code>Topic</code>.</p>
+<p><strong>Durations are checked at decoration.</strong> A mistyped <code>every</code> or <code>stale_after</code> is a
+<code>NodeError</code> before anything is opened, naming the key and, for an input, its topic. In
+Rust the same mistake builds and stops the node at start-up.</p>
 <p><strong>There is no <code>safety</code> key.</strong> Asking for one is an error, and this is a design position
-rather than an omission — see <a href="#safety">Safety</a>.</p>
+and not an omission — see <a href="#safety">Safety</a>. Nothing keeps a Python node off the fast
+lane.</p>
+<h3 id="a-declaration-in-the-earlier-grammar">A declaration in the earlier grammar</h3>
+<p>Before a node could read several topics, <code>subscribe</code>, <code>stale_after</code>, <code>lane</code> and <code>payload</code>
+were keys of <code>@periodic</code>, and before it could publish several, so was <code>publish</code>. A
+declaration that still writes one is refused at decoration with one message that lists
+every such key it used, says where each went, and prints the declaration as it is written
+now, with its own values. A publisher in the earlier form:</p>
+<pre><code>`sensor` is declared in an earlier grammar: `publish` is no longer a key of @periodic.
+
+    publish      an output is declared on the parameter that publishes it
+
+Written as it is now, this declaration is:
+
+    OUTPUT = Topic('pair/from_python', Range, lane='kernel')
+
+    @periodic(every='20ms', on_overrun=Skip)
+    def sensor(output=publish(OUTPUT)):
+        ...
+        output.publish(value)    # the value `sensor` returned
+</code></pre>
+<p>The rewrite names the output <code>output</code>; give it a name of your own. A body that already
+declares its inputs with <code>subscribe(...)</code>, or run-time parameters with <code>param(...)</code>, which
+the earlier grammar did not have, and has such a key left over is told to remove the key;
+for <code>publish</code>, also where the output goes: <code>Remove `publish` from @periodic, add the parameter output=publish(TOPIC) for topic 'pilot/echo', and write output.publish(value) where `bridge` returned the value</code>.</p>
 <h3 id="a-node-that-converts">A node that converts</h3>
-<p>Each end names its own payload, so a filter reading 16 bytes and publishing 4 is ordinary:</p>
-<pre><code>  sensor/range              estimate/distance
+<p>Each topic names its own payload, so a filter reading 16 bytes and publishing 4 is
+ordinary:</p>
+<pre><code>  pilot/range               pilot/echo
   Range { stamp: u64,  ──►  Distance { mm: u32 }
           range_mm: u32,
           quality: u32 }
   16 bytes                  4 bytes
 </code></pre>
-<pre><code class="language-python">Range = Payload(&quot;stamp:u64 range_mm:u32 quality:u32&quot;)
-Distance = Payload(&quot;mm:u32&quot;)
+<p>The node <code>test/integration_test/tests/periodic_python_pilot</code> writes to the disk and runs
+on QEMU, between a Rust publisher and a Rust subscriber:</p>
+<pre><code class="language-python">from periodic import periodic, publish, run, subscribe, Skip, Payload, Topic
 
-@periodic(every=&quot;20ms&quot;,
-          subscribe=Topic(&quot;sensor/range&quot;, Range),
-          publish=Topic(&quot;estimate/distance&quot;, Distance),
-          lane=&quot;safe&quot;, stale_after=&quot;60ms&quot;, on_overrun=Skip)
-def filter(raw):
-    reading = raw.get()
-    return Distance.instance(mm=reading.range_mm if reading else 0)
+Range = Payload(&quot;stamp:u64 range_mm:u32 quality:u32&quot;, &quot;Range&quot;)        # 16 bytes
+Distance = Payload(&quot;mm:u32&quot;, &quot;Distance&quot;)                              # 4 bytes
+
+PILOT_RANGE = Topic(&quot;pilot/range&quot;, Range, lane=&quot;safe&quot;)
+PILOT_ECHO = Topic(&quot;pilot/echo&quot;, Distance, lane=&quot;safe&quot;)
+
+@periodic(every=&quot;20ms&quot;, on_overrun=Skip)
+def bridge(lidar=subscribe(PILOT_RANGE, stale_after=&quot;200ms&quot;), echo=publish(PILOT_ECHO)):
+    reading = lidar.get()
+    if reading is None:
+        return
+    echo.publish(Distance.instance(mm=reading.range_mm))
+
+run()
 </code></pre>
+<p>Hand the output nothing to publish nothing this cycle; that is not an overrun. This
+node's bound is on a multiple of its period: the test is older than the sizing rule and
+kept its bound when its grammar was migrated.</p>
+<h2 id="run-time-parameters">Run-time parameters</h2>
+<p>A value you tune while the node runs -- a gain, a limit, a flag -- is a run-time parameter.
+Declare it on the parameter that receives it, with <code>param(default, range=(minimum, maximum))</code>. <code>examples/balance.py</code>, the whole program:</p>
+<pre><code class="language-python">from periodic import param, periodic, publish, run, subscribe, Skip, Topic
+from tail_messages import Imu, Twist, Vector3
+
+# The IMU's readings, in the `imu_link` frame.
+IMU_DATA = Topic(&quot;imu/data&quot;, Imu, lane=&quot;safe&quot;)
+# Velocity commands, in the `base_link` frame.
+CMD_VELOCITY = Topic(&quot;cmd/velocity&quot;, Twist, lane=&quot;kernel&quot;)
+
+STILL = Vector3.instance(x=0.0, y=0.0, z=0.0)
+STOP = Twist.instance(linear=STILL, angular=STILL)
+forward = Twist.instance(linear=Vector3.instance(x=0.0, y=0.0, z=0.0), angular=STILL)
+
+
+@periodic(every=&quot;20ms&quot;, on_overrun=Skip)
+def balance(imu=subscribe(IMU_DATA, stale_after=&quot;70ms&quot;),
+            command=publish(CMD_VELOCITY),
+            kp=param(42.0, range=(0.0, 200.0)),
+            enabled=param(True)):
+    reading = imu.get()
+    if not enabled or reading is None:
+        command.publish(STOP)   # disabled from the shell, or the IMU is absent or stale
+        return
+    forward.linear.x = kp * reading.angular_velocity.y
+    command.publish(forward)
+
+
+run()
+</code></pre>
+<ul>
+<li>Each parameter is one line of the signature. Its name is the parameter's name, at most
+23 bytes; its kind is its default's type: a <code>bool</code>, an <code>int</code> (held as a 64-bit integer) or
+a <code>float</code> (a 64-bit float). <code>range</code> is a tuple of two numbers and includes both ends; an
+<code>int</code> parameter's bounds are <code>int</code>s, and a <code>float</code> parameter's may be either. A <code>bool</code>
+takes no range: <code>param(True)</code>. At most 16 parameters per node. All of it is checked when
+the function is decorated, with what to write instead.</li>
+<li>The body is handed the value in force, by value, on every release: reading one costs
+nothing, and a value never changes while the body runs.</li>
+<li>The command is one object, rewritten in place and handed to the output on every
+release, so a release allocates nothing for it (<a href="#cost">Cost</a>).</li>
+</ul>
+<p>From the shell, with <code>param</code>:</p>
+<pre><code class="language-text">tsh&gt; param list balance
+kp      = 42.0  (0.0 .. 200.0)
+enabled = true
+tsh&gt; param set balance kp 45.5
+balance: kp = 45.5 from release 112
+tsh&gt; param set balance kp 250
+param: balance kp = 250.0 is outside 0.0 .. 200.0; nothing was set
+tsh&gt; param set balance enabled false
+balance: enabled = false from release 140
+tsh&gt; param list
+balance  2 parameters
+tsh&gt; node list
+balance  pid 9  python
+</code></pre>
+<p><code>param list</code> names the nodes that declare parameters; <code>node list</code> names every running node,
+whatever it declares, with its process and program (the pid is illustrative); <code>node info balance</code> prints what the
+node declares.</p>
+<ul>
+<li><strong>A set takes effect at the start of a release.</strong> The release <code>param set</code> names is the
+first whose body is handed the new value, releases being counted from 0 at the node's
+first. A set made before the first release is handed to the first.</li>
+<li><strong>Set coupled values in one command.</strong> <code>param set balance kp 50 enabled true</code> is one
+request, handed to the body whole at one release; two commands are two releases.</li>
+<li><strong>The node checks every request</strong>, against its declared range, exactly, both ends
+included, whoever sent it: a value outside it, a NaN or a name the node does not declare
+is refused and nothing changes. <code>param</code> refuses the same way before it sends.</li>
+<li><strong>Values live for the node's life.</strong> A restart starts at the defaults again; to keep a
+value, change its default in the source.</li>
+<li><strong>Every Python node with parameters is settable.</strong> There is no <code>safety</code> key (see
+<a href="#safety">Safety</a>), so nothing marks a node whose configuration must not change at run
+time: give such a node no parameters, and its values as constants.</li>
+<li><strong>Each applied change is in the system log</strong>, written by <code>param</code>, <code>balance: kp 42.0 -&gt; 45.5 from release 112</code>. The node's release journal records the values every release was
+handed, so a recording shows the releases a change reached, and a replay hands each
+release its recorded values (<a href="#recording-and-replay">Recording and replay</a>).</li>
+</ul>
+<p>What it costs and what it takes:</p>
+<ul>
+<li><strong>One non-blocking read per release</strong>, of the node's request topic, made by the C layer
+inside <code>run()</code>'s wait for the release, inside the cycle the overrun accounting measures.
+A release that finds a request also checks at most 16 values and publishes the node's
+state.</li>
+<li><strong>The body's arguments are one tuple</strong>, built at the first release and built again only
+on a release whose values differ from the previous release's, with the new values'
+objects. A set that applies the values already in force changes nothing, and neither does
+a refused one. Every other release allocates nothing for the parameters. A node without
+parameters does none of this, and is handed its arguments as before.</li>
+<li><strong>Two kernel-lane topics per node with parameters</strong>, <code>&lt;node&gt;/__params</code> and
+<code>&lt;node&gt;/__param_set</code>, named after the decorated function: count them in the image's topic
+budget. When they cannot be opened -- the topic storage is used up, say -- the node runs
+on its defaults, which nothing can set, and says so once on the console, in the C layer's
+record:</li>
+</ul>
+<pre><code>balance: no parameter topics (topic storage full); runs with its defaults
+</code></pre>
+<ul>
+<li><strong>The interpreter is loaded from the disk</strong>, so a Python node's request handling, which
+is in the interpreter, may be faulted in from the file system on the release that handles
+its first request. A Python node is Quality Managed for the reason <a href="#safety">Safety</a>
+gives, and this is one more release whose time it does not bound.</li>
+<li><strong>Any program can set a parameter</strong>, within its declared range, by writing the request
+topic, as any program can publish any kernel-lane topic today (TAIL-632).</li>
+</ul>
+<p>A declaration that breaks a rule is refused at decoration, naming the function, the
+parameter and the rule:</p>
+<table>
+<thead>
+<tr>
+<th>Declaration</th>
+<th><code>NodeError</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mode=param(&quot;fast&quot;)</code></td>
+<td><code> `balance` parameter `mode` has default 'fast', a str; a parameter's default is a bool, an int or a float</code></td>
+</tr>
+<tr>
+<td><code>kp=param(42.0)</code></td>
+<td><code> `balance` parameter `kp` is a float parameter and declares no range: a value a shell can set needs its limits, kp=param(42.0, range=(&lt;min&gt;, &lt;max&gt;))</code></td>
+</tr>
+<tr>
+<td><code>armed=param(True, range=(False, True))</code></td>
+<td><code>`balance` parameter `armed` is a bool parameter, whose only values are False and True: remove `range`</code></td>
+</tr>
+<tr>
+<td><code>kp=param(42.0, range=[0, 200])</code></td>
+<td><code> `balance` parameter `kp` has range [0, 200]; write a pair of numbers, range=(&lt;min&gt;, &lt;max&gt;)</code></td>
+</tr>
+<tr>
+<td><code>kp=param(250.0, range=(0.0, 200.0))</code></td>
+<td><code> `balance` parameter `kp`'s default 250.0 is outside its range 0.0 .. 200.0</code></td>
+</tr>
+<tr>
+<td><code>max_torque_newton_metres=param(..)</code></td>
+<td><code> `balance` parameter `max_torque_newton_metres` is 24 bytes long; a parameter's name is at most 23</code></td>
+</tr>
+</tbody>
+</table>
+<p>The whole list, with a range that is empty, a bound that is not finite, an <code>int</code> that does
+not fit 64 bits and a seventeenth parameter, is in <code>periodic_python_design.md</code> §5.5.6.</p>
+<h2 id="actions">Actions</h2>
+<p>A request that takes many releases -- &quot;drive to (2.0, 0.5)&quot;, &quot;home the arm&quot;, &quot;dock&quot; -- is
+an action. A client sends a goal; the node accepts or refuses it at once, reports feedback
+on every release, and ends it with a result. The client can cancel it, and the node stops
+it on its own when the client is gone. It is the same mechanism as the Rust and C ones
+(<a href="/docs/periodic-framework-rust/#actions">the Rust page's Actions</a>), and any client may talk
+to any server: a Python node serves Rust and C clients, and a Python client sends to a node
+written in either.</p>
+<pre><code>  client                                     node, every 20 ms
+  DRIVE_TO.send(goal) ──── SEND ───────────► release k: goal.active() is the goal, arrived()
+          ◄──────── status, feedback ─────── release k, k+1, ...: active.feedback(...)
+  keep-alive every server period ──────────►
+  drive.cancel()  ──────── CANCEL ─────────► release k': goal.active() is None -&gt; your stop
+          ◄──────── status: cancelled ────── (the stop was published before this status)
+</code></pre>
+<p>The programs below are written for this page and show the whole surface; they are not
+among the tested example files. The Python programs <code>periodic_python_action</code> runs on QEMU,
+a server and a client of every form shown here, are that test's fixtures,
+<code>test/integration_test/tests/periodic_python_action/fixtures/</code>.</p>
+<p><strong>Define the action once</strong>, in a module the server and its clients import. Its name and
+its three payloads -- the goal, the feedback, the result -- belong to it, and a Rust or C
+definition of the same action is compared with this one, payload by payload, when its
+topics are opened: two that disagree are refused, never misread.</p>
+<pre><code class="language-python"># robot_actions.py
+from periodic import Action, Payload
+
+# Where to drive, in the `odom` frame [m]; how far the base still has to go [m]; where it
+# stopped, in the `odom` frame [m].
+DriveTo = Payload(&quot;x:f64 y:f64&quot;, &quot;DriveTo&quot;)
+DriveProgress = Payload(&quot;remaining_m:f64&quot;, &quot;DriveProgress&quot;)
+DriveDone = Payload(&quot;x:f64 y:f64&quot;, &quot;DriveDone&quot;)
+
+# Drive the base to a point.
+DRIVE_TO = Action(&quot;drive_to&quot;, DriveTo, DriveProgress, DriveDone)
+</code></pre>
+<p><strong>Serve it on one more parameter</strong>, with <code>serve(ACTION, lease=...)</code>. The body is handed the
+node's <code>Goal</code> on every release, and <code>goal.active()</code> is the goal the release runs, or <code>None</code>:</p>
+<pre><code class="language-python">import math
+
+from periodic import periodic, publish, run, serve, subscribe, Skip, Topic
+from robot_actions import DRIVE_TO, DriveDone, DriveProgress
+from tail_messages import Odometry, Twist, Vector3
+
+# The base's odometry, `base_link` in `odom`.
+ODOMETRY = Topic(&quot;odometry&quot;, Odometry, lane=&quot;safe&quot;)
+# Velocity commands, in the `base_link` frame.
+CMD_VELOCITY = Topic(&quot;cmd/velocity&quot;, Twist, lane=&quot;kernel&quot;)
+
+ARRIVED_WITHIN_M = 0.05
+STILL = Vector3.instance(x=0.0, y=0.0, z=0.0)
+STOP = Twist.instance(linear=STILL, angular=STILL)
+command = Twist.instance(linear=Vector3.instance(x=0.0, y=0.0, z=0.0), angular=STILL)
+progress = DriveProgress.instance(remaining_m=0.0)
+
+
+@periodic(every=&quot;20ms&quot;, on_overrun=Skip)
+def drive(odometry=subscribe(ODOMETRY, stale_after=&quot;50ms&quot;),
+          velocity=publish(CMD_VELOCITY),
+          goal=serve(DRIVE_TO, lease=&quot;100ms&quot;)):
+    active, reading = goal.active(), odometry.get()
+    if active is None or reading is None:
+        velocity.publish(STOP)  # no goal, cancelled, its client gone, or odometry stale
+        return
+    target, here = active.goal, reading.pose.position
+    progress.remaining_m = math.hypot(target.x - here.x, target.y - here.y)
+    if progress.remaining_m &lt; ARRIVED_WITHIN_M:
+        active.succeed(DriveDone.instance(x=here.x, y=here.y))
+        velocity.publish(STOP)
+        return
+    active.feedback(progress)
+    command.linear.x = min(0.5, progress.remaining_m)     # your control law
+    velocity.publish(command)
+
+
+run()
+</code></pre>
+<table>
+<thead>
+<tr>
+<th><code>goal</code> / <code>active</code></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>goal.active()</code></td>
+<td>The goal this release runs, as an <code>ActiveGoal</code>, or <code>None</code>: idle, and from the release at which a cancel, the client's absence past the lease, or a newer goal of the same client is read. The cases collapse on purpose, as an input's absent and stale readings do, so the stop is the branch you write anyway</td>
+</tr>
+<tr>
+<td><code>active.goal</code></td>
+<td>The goal. Borrowed, as <code>Cycle.get()</code>'s sample is: the same object, rewritten</td>
+</tr>
+<tr>
+<td><code>active.arrived()</code></td>
+<td>Whether this is the goal's first release: reset your controller here</td>
+</tr>
+<tr>
+<td><code>active.feedback(value)</code></td>
+<td>This release's feedback. The last call in a release wins; it is published after your outputs</td>
+</tr>
+<tr>
+<td><code>active.succeed(result)</code></td>
+<td>Ends the goal with its result. <code>goal.active()</code> is <code>None</code> from then, this release included</td>
+</tr>
+<tr>
+<td><code>active.abort(code)</code></td>
+<td>Ends the goal with <code>code</code>, an <code>int</code> from 0 to 4294967295. At its first release, <code>arrived()</code>, the client is told it was <strong>refused</strong> with the code instead: this is how a node refuses a goal by its content, with everything its release can see</td>
+</tr>
+</tbody>
+</table>
+<p><code>active</code> is this release's: the same object comes back at every release that runs a goal,
+and stands for whichever goal that is. Ask <code>goal.active()</code> at every release rather than
+keep one. A call on it at a release that runs no goal, or after <code>succeed</code> or <code>abort</code>, raises
+<code>NodeError</code>, where Rust refuses to build it. Call it from the body: from a thread you started,
+<code>feedback</code>, <code>succeed</code> and <code>abort</code> raise <code>RuntimeError</code>, whatever the node is doing, because
+the node runs on the thread that called <code>run()</code> and is reached from no other.</p>
+<p><strong>Send a goal from a program.</strong> The happy path is one line:</p>
+<pre><code class="language-python">done = DRIVE_TO.send(DriveTo.instance(x=2.0, y=0.5)).wait()
+</code></pre>
+<p>With feedback and a cancel:</p>
+<pre><code class="language-python">from periodic import GoalError
+from robot_actions import DRIVE_TO, DriveTo
+
+with DRIVE_TO.send(DriveTo.instance(x=2.0, y=0.5)) as drive:   # GoalError('busy' | 'refused', code)
+    for progress in drive:                                      # one per server release, until it ends
+        print(f&quot;{progress.remaining_m:.2f} m to go&quot;)
+        if bumper_pressed():
+            drive.cancel()                                      # returns once the server has stopped it
+    try:
+        done = drive.wait()
+    except GoalError as ended:
+        print(f&quot;drive_to: {ended}&quot;)                             # &quot;cancelled&quot;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>A goal's handle</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ACTION.send(goal)</code></td>
+<td>Sends the goal and waits until the server has accepted or refused it: up to ten seconds for a server to appear, so a client may start before its server, then two of its periods. Raises <code>GoalError</code> for a goal that was not accepted</td>
+</tr>
+<tr>
+<td><code>ACTION.start(goal)</code></td>
+<td>Returns at once; the goal is sent and answered through <code>poll</code>. What a periodic node uses</td>
+</tr>
+<tr>
+<td><code>poll()</code></td>
+<td>Never waits: <code>Progress.Pending</code>, <code>Progress.Running</code> or <code>Progress.Ended</code>. Sends the keep-alive that is due, and takes a new feedback into <code>feedback</code></td>
+</tr>
+<tr>
+<td><code>feedback</code></td>
+<td>The newest feedback the handle was handed, by <code>poll</code> or by iterating it; <code>None</code> until one was</td>
+</tr>
+<tr>
+<td>iterating it</td>
+<td>Each feedback once, waiting for the next, until the goal ends</td>
+</tr>
+<tr>
+<td><code>wait()</code></td>
+<td>Waits for the end: the result, or <code>GoalError</code> saying how it ended</td>
+</tr>
+<tr>
+<td><code>cancel()</code></td>
+<td>Cancels, and returns once a status shows the goal stopped: the server's stop was published before that status</td>
+</tr>
+<tr>
+<td><code>close()</code>, the end of a <code>with</code> block, the last reference released</td>
+<td>A goal that has not ended is cancelled</td>
+</tr>
+</tbody>
+</table>
+<p>Every feedback and result a handle hands over is an object of its own, which you may keep.
+<strong>A handle keeps its goal alive only while it is used</strong>: iterating it, <code>wait</code> and <code>cancel</code>
+keep it while they wait, and a periodic node calls <code>poll</code> once per release. A handle left
+unused for longer than the lease has its goal stopped by the server, <code>'abandoned'</code>.</p>
+<p><strong>A client that is itself a periodic node</strong> starts a goal and polls it, and never waits:</p>
+<pre><code class="language-python">from periodic import periodic, run, subscribe, Progress, Skip, Topic
+from robot_actions import DRIVE_TO
+from tail_messages import Range
+
+# The front ranger's readings, in the `range_front` frame.
+SENSOR_RANGE = Topic(&quot;sensor/range&quot;, Range, lane=&quot;safe&quot;)
+
+STOP_WITHIN_M = 0.3
+drive = None
+
+
+@periodic(every=&quot;50ms&quot;, on_overrun=Skip)
+def patrol(front=subscribe(SENSOR_RANGE, stale_after=&quot;120ms&quot;)):
+    global drive
+    reading = front.get()
+    if reading is None or reading.range &lt; STOP_WITHIN_M:
+        drive = None    # releasing a goal that has not ended cancels it
+        return
+    if drive is None or drive.poll() is Progress.Ended:
+        drive = DRIVE_TO.start(next_waypoint())
+
+
+run()
+</code></pre>
+<p><strong>The lease</strong> is how long a goal runs on once its client stops keeping it: a client killed,
+hung or simply gone keeps it no more, so the lease is what stops the robot, and it has no
+default. It is at least twice the node's <code>every</code>, refused at decoration otherwise, which
+lets a client be one period late. <strong>About five periods is the advice</strong> -- <code>lease=&quot;100ms&quot;</code>
+at <code>every=&quot;20ms&quot;</code> -- which survives a lost keep-alive and a period of lateness, and a client
+node up to four periods slow.</p>
+<ul>
+<li><strong>A killed client's goal is stopped within the lease and about two periods</strong>: L + 2T and
+the release's lateness and work, about 140 ms at 20 ms and 100 ms. No signal of a
+process's death reaches a node, so one period is not reachable.</li>
+<li><strong>A periodic client keeps its goal once per its own release</strong> when it is slower than the
+server. One slower than the lease less a period loses every goal to <code>'abandoned'</code>, at
+once and safely; the library cannot know your period, so size the server's lease above
+the slowest client's period.</li>
+<li><strong>One goal runs at a time.</strong> A new goal from the process whose goal runs replaces it --
+the old ends <code>'preempted'</code>, the new one runs from the same release with no stop between --
+and a goal from any other process is refused <code>'busy'</code>. There is no queue.</li>
+<li><strong>Any program can forge a client's keep-alive or cancel</strong>, as any program can write any
+kernel-lane topic today (TAIL-632). A forged keep-alive keeps an abandoned goal alive; the
+device's own lease stays the safety stop.</li>
+<li><strong>A served goal is recorded.</strong> The node's release journal holds the goal every release
+ran and whether it arrived, so a replay hands each release its recorded <code>goal.active()</code>
+and <code>arrived()</code>. In a replay <code>feedback</code>, <code>succeed</code> and <code>abort</code> keep their checks and
+publish nothing (<a href="#recording-and-replay">Recording and replay</a>).</li>
+</ul>
+<p><strong>Errors.</strong></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GoalError('busy')</code></td>
+<td>Another process's goal runs. From <code>send</code></td>
+</tr>
+<tr>
+<td><code>GoalError('refused', code)</code></td>
+<td>The server's body refused the goal at its first release, with <code>code</code>. From <code>send</code></td>
+</tr>
+<tr>
+<td><code>GoalError('aborted', code)</code></td>
+<td>The body ended the goal with <code>code</code>. From <code>wait</code></td>
+</tr>
+<tr>
+<td><code>GoalError('canceled')</code>, <code>('preempted')</code>, <code>('abandoned')</code></td>
+<td>Cancelled; replaced by a newer goal of this process; stopped because its keep-alives lapsed past the lease. From <code>wait</code></td>
+</tr>
+<tr>
+<td><code>GoalError('lost')</code></td>
+<td>No longer running, and how it ended was not seen. From <code>send</code>, <code>wait</code> or <code>cancel</code></td>
+</tr>
+<tr>
+<td><code>GoalError('no_server')</code></td>
+<td>No server answered within ten seconds. From <code>send</code>, or from <code>wait</code> after <code>start</code></td>
+</tr>
+<tr>
+<td><code>OSError</code> from <code>send</code> or <code>start</code></td>
+<td>A topic refused the client: a server that holds another definition of the action, or no seat free. The console says which</td>
+</tr>
+</tbody>
+</table>
+<p><code>GoalError</code> has <code>.reason</code> and <code>.code</code>, 0 unless the server gave one. A definition or a
+declaration that breaks a rule is a <code>NodeError</code> where it is written, naming it:</p>
+<table>
+<thead>
+<tr>
+<th>Written</th>
+<th><code>NodeError</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Action(&quot;drive_to&quot;, DriveTo, Big, DriveDone)</code> with a 4073-byte goal</td>
+<td><code>action 'drive_to' has a goal of 4073 bytes; a goal is at most 4072, since its record adds 24 bytes and the kernel lane carries 4096</code></td>
+</tr>
+<tr>
+<td><code>goal=serve(DRIVE_TO)</code></td>
+<td><code>action 'drive_to' is served with no lease: write serve(ACTION, lease=&quot;&lt;duration&gt;&quot;). A goal whose client has gone is stopped when its lease runs out, so the lease is what stops the robot, and it has no default</code></td>
+</tr>
+<tr>
+<td><code>goal=serve(DRIVE_TO, lease=&quot;39ms&quot;)</code> at <code>every=&quot;20ms&quot;</code></td>
+<td><code> `drive` serves action 'drive_to' with lease '39ms', shorter than twice the period '20ms': a lease of two periods lets a client be one period late, and about five is the advice</code></td>
+</tr>
+<tr>
+<td>two parameters with <code>serve(...)</code></td>
+<td><code> `drive` parameter `dock` serves a second action: a node serves one, which `goal` already does</code></td>
+</tr>
+<tr>
+<td><code>goal=DRIVE_TO</code></td>
+<td><code>`drive` parameter `goal` names action 'drive_to' but not its lease: write `goal=serve(ACTION, lease=&quot;&lt;duration&gt;&quot;)`</code></td>
+</tr>
+</tbody>
+</table>
+<p>The whole list is in <code>periodic_python_design.md</code> §5.5.6.</p>
+<p><strong>What it costs.</strong> Two kernel-lane topics per served action, <code>&lt;action&gt;/__goal</code> and
+<code>&lt;action&gt;/__status</code>: count them in the image's topic budget. At every release, inside
+<code>run()</code>'s wait and the cycle the overrun accounting measures, the C layer reads at most
+eight requests and publishes one status after your outputs, idle releases included. The
+<code>Goal</code>, its <code>ActiveGoal</code> and the goal's object are built once, before the heap is frozen,
+and a release keeps nothing for the action; a client's poll that takes no feedback makes
+nothing.</p>
+<h2 id="recording-and-replay">Recording and replay</h2>
+<p>Record a run, then run one node of it again, offline, through its own body, handing each
+release exactly what that release was handed live:</p>
+<pre><code class="language-text">tsh&gt; topic record -o /rec/py_replay.mcap &amp;              FIRST: before the nodes
+tsh&gt; periodic_python_replay publish-commands &amp;          the Twist on replay/cmd, every 20 ms
+tsh&gt; replay_lidar &amp; python replay_py_watch.py &amp;
+     ... the run; then stop the nodes, then the recorder ...
+tsh&gt; python replay_py_watch.py --replay /rec/py_replay.mcap
+replay: replay_py_watch life 1: 497 releases, 496 compared, identical
+facts: replay/range: 19 releases without an arrival, 245 missed, 0 rejected; replay/cmd: 0, 1, 0; 1 overruns
+replay: running release 496, the life's last; its output is in no record
+</code></pre>
+<p>The lines are the ones a Rust or C node's replay prints, from the same code; the counts here
+are illustrative. <code>replay_py_watch.py</code> is the node of the integration test
+<code>periodic_python_replay</code>, one of its fixtures
+(<code>test/integration_test/tests/periodic_python_replay/fixtures/</code>), and <strong>nothing in it was
+written for replay beyond leaving the trailing arguments alone</strong>: its own reading of
+<code>sys.argv[1]</code> takes <code>--replay</code> there as no word (<a href="#writing-a-node-that-replays">Writing a node that
+replays</a>). A node journals and replays as it is, and so does
+every example on this page that publishes. <code>python drive.py --replay /rec/run.mcap</code> replays
+the quick start's <code>drive</code>.</p>
+<p><code>periodic_python_replay publish-commands</code> is that test's own program started as the node's
+command publisher. The node reads <code>replay/cmd</code> on the safe lane, and <code>run()</code> waits up to ten
+seconds for a safe-lane input's publisher (<a href="#run"><code>run()</code></a>): without one, <code>run()</code> raises
+<code>OSError</code> and nothing is recorded. Any program that publishes a <code>Twist</code> on <code>replay/cmd</code>
+serves.</p>
+<h3 id="the-release-journal">The release journal</h3>
+<p>Every node that publishes journals each release on a kernel-lane topic of its own,
+<code>&lt;function name&gt;/__releases</code>: <code>replay_py_watch/__releases</code>, <code>drive/__releases</code>. <code>run()</code>'s
+wait for release k publishes record k before the body runs, after it read the inputs,
+handled a parameter request and read the action's requests:</p>
+<pre><code> release k:   wait: sleep -&gt; read the inputs -&gt; parameters, goal -&gt; publish record k
+              body(...)
+              publish each output handed a value -&gt; lane, and a copy into the next record
+ release k+1: wait: ... -&gt; publish record k+1, which carries release k's outputs
+</code></pre>
+<p>Record k holds release k's index and clock reading, the overruns, each input's facts and
+reading, the parameter values and the goal release k was handed, and the value each output
+published at release k-1, or zeros where it published none. It is the record a C or Rust
+node of the same declaration publishes (<a href="/docs/periodic-framework-rust/#the-release-journal">the Rust page's release
+journal</a>), and the C layer beneath writes
+it.</p>
+<p>What it costs and what it takes: <strong>one kernel-lane publish per release</strong>, of at most
+4096 B, inside <code>run()</code>'s wait and the cycle the overrun accounting measures, and <strong>one topic
+per node that publishes</strong> in the image's topic budget (one page for a record up to 192 B,
+two up to 384 B). When it cannot be opened -- the topic storage is used up, say -- the node
+runs and publishes as it would with one, cannot be replayed, and says so once on the
+console:</p>
+<pre><code>replay_py_watch: no release journal (topic storage full); this run cannot be replayed
+</code></pre>
+<p>Every node, whatever it declares, also announces itself once to <code>node list</code>, on a kernel-lane
+topic of its own, <code>&lt;function name&gt;/__node</code>, opened last, after the journal: one more topic
+per node in the image's budget. When it cannot be opened the node runs, unlisted, and says so
+once on the console:</p>
+<pre><code>replay_py_watch: no node description (topic storage full); node list does not show this node
+</code></pre>
+<h3 id="replaying">Replaying</h3>
+<p>Add <code>--replay FILE</code> <strong>at the end</strong> of the node's command line, and <code>--life N</code> after it to
+pick a later life (the node started again begins life 2):</p>
+<pre><code>python node.py [ARGS...] --replay FILE [--life N]
+</code></pre>
+<p><code>run()</code> hands the whole of <code>sys.argv</code> to the C layer, which reads only that trailing part.
+The module's code runs as in a live run; then <code>run()</code>:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Live</th>
+<th>Replay</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>opening</td>
+<td>admits the topics, up to ten seconds</td>
+<td>reads the file and checks the life; opens no topic of any kind</td>
+</tr>
+<tr>
+<td>each release</td>
+<td>sleeps to the release, reads the inputs</td>
+<td>never sleeps; compares release k-1's outputs with record k, then hands out record k</td>
+</tr>
+<tr>
+<td>an input's <code>Cycle</code></td>
+<td>the newest publication</td>
+<td>the recorded reading, its age and staleness judged by this script's <code>stale_after</code> at the recorded clock reading</td>
+</tr>
+<tr>
+<td><code>overruns()</code>, parameters, <code>goal.active()</code></td>
+<td>as they happen</td>
+<td>as recorded; <code>Fault</code> never stops it</td>
+</tr>
+<tr>
+<td><code>now()</code></td>
+<td>the release's clock reading</td>
+<td>the recorded one</td>
+</tr>
+<tr>
+<td><code>out.publish(value)</code></td>
+<td>published when the body returns</td>
+<td>captured when the body returns and sent nowhere; compared at the next release's wait, with record k+1, so the last release's is never compared (<a href="#the-end-of-a-replay">The end of a replay</a>)</td>
+</tr>
+</tbody>
+</table>
+<p>A difference names the release, the output by its topic and its first differing byte.
+<code>replay_py_watch.py altered</code> names the release after its own in its tally from release 50
+on:</p>
+<pre><code class="language-text">tsh&gt; python replay_py_watch.py altered --replay /rec/py_replay.mcap
+replay: replay_py_watch life 1: first divergence at release 50:
+  output replay/py_tally byte 0: recorded 32 00 00 00 00 00 00 00 ..., replayed 33 00 00 00 00 00 00 00 ...
+replay: 223 of 496 compared releases differ
+facts: ...
+replay: running release 496, the life's last; its output is in no record
+</code></pre>
+<p>Up to 16 bytes are shown: the first eight are the tally's <code>release</code>, 50 recorded and 51
+replayed, and <code>...</code> stands for the eight after them. Exit 1. What the replay recomputes with
+the script you run are each input's age and staleness and the body, so an edited body or a
+changed <code>stale_after</code> is a what-if. An input or output of another payload, order or count, a
+period or policy, or a parameter of another name, kind or order is refused, naming both
+declarations; a changed default or range replays.</p>
+<h3 id="the-end-of-a-replay">The end of a replay</h3>
+<p><strong>The verdict comes before the last release runs</strong>, and the process ends inside <code>run()</code>:</p>
+<pre><code> wait for record 0 ... wait for record 496:  the verdict, the facts, the last-release line
+                                             on standard output
+ body of release 496                         runs uncompared: its output is in no record
+ the next wait                               ends the process: exit 0 identical, 1 not
+</code></pre>
+<p><code>run()</code> neither returns nor raises at the end of a replay: a caught exception could not stop
+the loop from running a release no record holds. The end is a process exit, so it skips
+what a process exit skips: <code>atexit</code> callbacks, <code>finally</code> and <code>with</code> around <code>run()</code>,
+finalizers, non-daemon threads, and files the node buffered itself.</p>
+<p><strong>What the body prints is not lost.</strong> <code>run()</code> flushes <code>sys.stdout</code> and <code>sys.stderr</code> before
+it opens the node and before every release, live and in a replay. <code>replay_py_watch.py print</code> prints <code>release K</code> from every body; read through a pipe, its replay shows:</p>
+<pre><code>release 0
+...
+release 495
+replay: replay_py_watch life 1: 497 releases, 496 compared, identical
+facts: ...
+replay: running release 496, the life's last; its output is in no record
+release 496
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>The script, in a replay</th>
+<th>Exit</th>
+<th>Says</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>runs to the life's end</td>
+<td>0 identical; 1 a divergence, or a journal that lost releases</td>
+<td>the verdict, on standard output</td>
+</tr>
+<tr>
+<td>ends while recorded releases remain: <code>sys.exit</code> in a body, an exception out of <code>run()</code></td>
+<td>1</td>
+<td>on standard error: <code>replay: replay_py_watch life 1: the program ended before release 61 of 0..496; cannot claim the rest</code></td>
+</tr>
+<tr>
+<td>raises in the last release's body</td>
+<td>the interpreter's 1, with its traceback</td>
+<td>the verdict, already on standard output</td>
+</tr>
+<tr>
+<td>calls <code>os._exit</code>, or is killed</td>
+<td>its own</td>
+<td>nothing: no verdict</td>
+</tr>
+</tbody>
+</table>
+<p><code>replay_py_watch.py early</code> calls <code>sys.exit(0)</code> in release 60's body, and its replay ends with
+the &quot;ended before release 61&quot; line and exit 1. <strong>Only the <code>identical</code> line on standard
+output is a pass</strong>: a script that leaves through <code>os._exit(0)</code> has passed nothing.</p>
+<h3 id="writing-a-node-that-replays">Writing a node that replays</h3>
+<p>Write nothing for it beyond leaving the trailing arguments alone, and keep out of the
+output what no record holds. Each of these shows
+up as a divergence or as your script's own error, never as a false <code>identical</code>:</p>
+<table>
+<thead>
+<tr>
+<th>What the script does</th>
+<th>In a replay</th>
+<th>What to do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Module code before <code>run()</code> touches a device</td>
+<td>it runs, also before a refused replay is refused</td>
+<td>keep device access out of module code; replay a node that drives a device only where the device is absent</td>
+</tr>
+<tr>
+<td><code>argparse</code>'s <code>parse_args()</code> at module level</td>
+<td>sees the trailing <code>--replay FILE [--life N]</code> and fails as your own usage error</td>
+<td><code>parse_known_args()</code>; give the same arguments at replay, since they are not recorded</td>
+</tr>
+<tr>
+<td>Builds an output from a <code>set</code> of <code>str</code> or <code>bytes</code></td>
+<td>their hashing is seeded per process, so the order differs</td>
+<td>sort first, or export one <code>PYTHONHASHSEED</code> for both runs (not checked on any interpreter build)</td>
+</tr>
+<tr>
+<td><code>random</code>, <code>os.urandom</code>, <code>uuid4</code></td>
+<td>other values</td>
+<td>seed <code>random</code> with a constant, or keep randomness out of the output</td>
+</tr>
+<tr>
+<td><code>time</code>, <code>datetime</code>, <code>monotonic_ns()</code></td>
+<td>read when called, so other values</td>
+<td>stamp what the node decides with <code>now()</code></td>
+</tr>
+<tr>
+<td>Publishes from a thread it started</td>
+<td>not the body's, and in no record</td>
+<td>publish only from the body</td>
+</tr>
+</tbody>
+</table>
+<p>The fixture reads its own word from <code>sys.argv[1]</code> and takes <code>--replay</code> there as no word, so
+the trailing part stays the framework's:</p>
+<pre><code class="language-python">def variant_of(argv):
+    &quot;&quot;&quot;The variant `argv[1]` names; None with no argument or with the trailing `--replay`
+    first. An unknown word ends the program with its usage.&quot;&quot;&quot;
+    if len(argv) &lt; 2 or argv[1] == &quot;--replay&quot;:
+        return None
+</code></pre>
+<p><strong>A refused replay ends the process inside <code>run()</code></strong>, before any topic is opened, with one
+line on standard error: exit 2 for a malformed <code>--replay ...</code> tail, 1 for every other. They
+are the C layer's lines, <code>replay_py_watch</code> being the node's function:</p>
+<table>
+<thead>
+<tr>
+<th>Refusal</th>
+<th>Line</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a <code>--replay</code> not followed by exactly <code>FILE</code> or <code>FILE --life N</code>, or a trailing argument that is not UTF-8 (exit 2)</td>
+<td><code>replay: usage: replay_py_watch [ARGS...] --replay FILE [--life N]</code></td>
+</tr>
+<tr>
+<td>a node that publishes nothing</td>
+<td><code>replay: &lt;function&gt; declares no output; replay compares a node's published output and has nothing to compare</code></td>
+</tr>
+<tr>
+<td>the file cannot be opened or read</td>
+<td><code>replay: cannot read /rec/py_replay.mcap: open failed</code>, or <code>read failed</code></td>
+</tr>
+<tr>
+<td>not a recording</td>
+<td><code>replay: /rec/py_replay.mcap is not a recording (not an MCAP file)</code></td>
+</tr>
+<tr>
+<td>no journal of this node in it</td>
+<td><code>replay: /rec/py_replay.mcap has no replay_py_watch/__releases (the node ran without a journal, or the recorder did not record it)</code></td>
+</tr>
+<tr>
+<td>another declaration</td>
+<td><code>replay: replay_py_watch was built from another declaration (recorded 0x…, 200 B; this binary 0x…, 200 B): an input or an output changed layout, size or order, a parameter its name, kind or order, or the period or overrun policy changed</code></td>
+</tr>
+<tr>
+<td>the recorder attached late</td>
+<td><code>replay: life 1 starts at release 37: the recorder attached after replay_py_watch started; start topic record before the nodes</code></td>
+</tr>
+<tr>
+<td>no such life</td>
+<td><code>replay: no life 9; /rec/py_replay.mcap holds life 1</code></td>
+</tr>
+</tbody>
+</table>
+<p>The module's code has run by then. <strong>An interpreter built before replay existed does not
+read <code>--replay</code>, and runs the node live</strong>: rebuild it, and read the first line a replay
+prints.</p>
 <h2 id="payloads">Payloads</h2>
-<p>A payload crosses shared memory to a peer that may be written in Rust, so its layout is
-<code>repr(C)</code>'s. Declare the fields and the framework computes it:</p>
-<pre><code class="language-python">Range = Payload(&quot;stamp:u64 range_mm:u32 quality:u32&quot;)
-Range.size    # 16 -- the same as the Rust struct
-Range.align   # 8
+<p><strong>Import a standard payload</strong> from <code>tail_messages</code>: <code>Vector3</code>, <code>Point</code>, <code>Quaternion</code>,
+<code>Pose</code>, <code>Twist</code>, <code>Range</code>, <code>Imu</code>, <code>Odometry</code>, and <code>Range</code>'s named values <code>RANGE_ULTRASOUND</code>
+and <code>RANGE_INFRARED</code>. The module is printed by the image build from the Rust crate
+<code>robot_messages</code>, field for field, with the unit of each field in a comment, and it checks
+itself when imported: each declaration asserts that its size, alignment and layout identity
+are the Rust struct's, so a module edited by hand stops at <code>AssertionError: Range</code>.</p>
+<p><strong>The geometry conventions are in the module</strong>, in each record's comment, the words the
+Rust records carry: right-handed axes, x forward, y left and z up in a body frame; a positive
+angle turns counter-clockwise about its axis, so a yaw of +15 degrees turns left;
+<code>Quaternion</code> is a Hamilton quaternion stored x, y, z, w, with w the scalar, the identity
+(0, 0, 0, 1) and all zero meaning &quot;not estimated&quot;; a <code>Pose</code> used as a transform is the pose
+of the child frame in the parent frame; a <code>Range</code> reading lies on the sensor frame's +x
+axis; <code>Odometry</code>'s <code>pose</code> is <code>base_link</code> in <code>odom</code>. The arithmetic on them (composition,
+inversion, a rotation from roll, pitch and yaw) and frame sets with their lookup are Rust
+only in this release
+(<a href="/docs/periodic-framework-rust/#frames-and-transforms">Frames and transforms</a>); they will reach
+Python through the same bindings as C, calling the Rust code, never as a pure-Python copy.
+Until then a Python node computes them by hand, against these conventions.</p>
+<p><strong>Declare a payload of your own</strong> when no standard one fits. A payload crosses shared
+memory to a peer that may be written in Rust or C, so its layout is <code>repr(C)</code>'s. Declare
+the fields and the framework computes it:</p>
+<pre><code class="language-python">Gate = Payload(&quot;stamp_ns:u64 state:u32=OPEN:0|CLOSED:1 reserved:u32&quot;, &quot;Gate&quot;)
+Gate.size       # 16 -- the same as the Rust struct
+Gate.align      # 8
+Gate.canonical  # &quot;{stamp_ns:u64,state:u32=OPEN:0|CLOSED:1,reserved:u32}&quot;
+Gate.layout     # 0xa39598f2 -- the identity of that text, the one the Rust derive computes
 </code></pre>
 <table>
 <thead>
@@ -258,10 +1342,6 @@ Range.align   # 8
 <td>the same</td>
 </tr>
 <tr>
-<td><code>bool</code></td>
-<td><code>bool</code></td>
-</tr>
-<tr>
 <td><code>name:u8[32]</code></td>
 <td><code>[u8; 32]</code> — arrives as <code>bytes</code></td>
 </tr>
@@ -269,27 +1349,75 @@ Range.align   # 8
 <td><code>name:u32[4]</code></td>
 <td><code>[u32; 4]</code> — arrives as a tuple</td>
 </tr>
+<tr>
+<td><code>name:Vector3</code>, with <code>using=(Vector3,)</code></td>
+<td>a field of a nested record — read as <code>name.x</code></td>
+</tr>
+<tr>
+<td><code>name:u32=OPEN:0|CLOSED:1</code></td>
+<td>a field with named values, <code>#[wire_plain(values(OPEN = 0, CLOSED = 1))]</code></td>
+</tr>
 </tbody>
 </table>
-<p>Nested payloads are not supported; flatten them.</p>
+<p>A declaration a Rust payload could not have is refused at the declaration, with what to do:</p>
+<table>
+<thead>
+<tr>
+<th>Declaration</th>
+<th><code>NodeError</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&quot;stamp:u64 counter:u32&quot;</code></td>
+<td><code>payload 'Refused' has padding at its end; name it with a reserved field</code></td>
+</tr>
+<tr>
+<td><code>&quot;flag:u8 count:u64&quot;</code></td>
+<td><code>payload 'Refused' has padding before 'count'; reorder the fields or name the gap with a reserved field</code></td>
+</tr>
+<tr>
+<td><code>&quot;pressed:bool ..&quot;</code></td>
+<td><code>payload 'Refused': 'pressed' is a bool, which cannot cross the wire: only 0 and 1 are valid and a sender may send 2. Use u8.</code></td>
+</tr>
+<tr>
+<td><code>&quot;from:u32 to:u32&quot;</code></td>
+<td><code>payload 'Refused': 'from' is not a usable field name; a field is declared in C, C++ and Python alike, ..</code></td>
+</tr>
+<tr>
+<td><code>&quot;align:u64[0]&quot;</code></td>
+<td><code>payload 'Refused': 'align' is an array of no elements</code></td>
+</tr>
+<tr>
+<td><code>&quot;gain:f32=UNITY:1 ..&quot;</code></td>
+<td><code>payload 'Refused': only an integer field has named values</code></td>
+</tr>
+</tbody>
+</table>
+<p>An array of arrays or of payloads has no declaration here.</p>
+<p><code>Payload.instance(**fields)</code> makes a value to publish. Every field must be given; a nested
+field is given an instance of its payload.</p>
 <p><strong>Why not a <code>struct</code> format string.</strong> <code>struct</code> pads with native alignment only under <code>@</code>;
 under <code>&lt;</code>, <code>&gt;</code>, <code>=</code> and <code>!</code> it packs tight. So <code>repr(C) { u32, u64 }</code> is 16 bytes while
 <code>struct.calcsize(&quot;&lt;IQ&quot;)</code> is 12, and a wrong prefix would give you a subscriber reading a
 shifted field. There is no prefix to get wrong here. (<code>ctypes</code> is not available on TailOS:
 there is no libffi.)</p>
-<p><strong>What is checked, and what is not.</strong> The payload's <em>size</em> is checked against the topic on
-every lane — at open on <code>safe</code> and <code>fast</code>, and per sample on <code>kernel</code> — so a declaration
-with the wrong number of fields fails loudly at startup. Field <strong>order</strong> at an identical
-total size is checked by nothing, in any language pair. Keep the two declarations beside
-each other in review.</p>
-<h3 id="publishing-a-value">Publishing a value</h3>
-<pre><code class="language-python">@periodic(every=&quot;20ms&quot;, publish=Topic(&quot;sensor/range&quot;, Range), lane=&quot;safe&quot;, on_overrun=Skip)
-def lidar():
-    return Range.instance(stamp=0x1234_5678, range_mm=4200, quality=97)
+<p><strong>What is checked, and what is not.</strong> The payload's size and its <em>layout identity</em> -- a
+32-bit FNV-1a over the canonical text, computed from field names, their order, their
+types, nesting, array lengths and named values -- are checked against the other end at
+open, on every lane: a node whose payload disagrees does not start, and <code>run()</code> raises an
+<code>OSError</code> naming the topic. On <code>kernel</code> the reason also says what the topic carries, and
+the console record ends with it:</p>
+<pre><code>could not start: topic `range/front` refused the open: this is not the payload type the topic carries: it carries 32-byte payloads of layout 0x6772d100
 </code></pre>
-<p>Return <code>None</code> to publish nothing this cycle; that is not an overrun.</p>
+<p>A <code>kernel</code> topic lives while an end holds it, so a corrected declaration is not refused
+for ever: once every end of the old payload has closed, the corrected one creates the
+topic anew. So two declarations with the same fields in another order are refused, in any language
+pair. Not compared: the payload's name (<code>Point</code> read as <code>Vector3</code> is admitted: the bytes are
+the same three <code>f64</code>), a field's unit, and the lane.</p>
 <h2 id="cycle"><code>Cycle</code></h2>
-<p>Everything about this activation, passed to any node that subscribes.</p>
+<p>Everything about one input at this activation. A node has one per input, passed to its
+body in the order the inputs are declared.</p>
 <table>
 <thead>
 <tr>
@@ -307,16 +1435,20 @@ def lidar():
 <td>The same sample, in an object of its own</td>
 </tr>
 <tr>
+<td><code>arrived()</code></td>
+<td>Whether a newer publication was taken at this release</td>
+</tr>
+<tr>
 <td><code>since_received()</code></td>
-<td>Seconds since a sample last arrived at this node, or <code>None</code></td>
+<td>Seconds since a sample last arrived at this node, or <code>None</code> if none ever has. Exactly zero on the release <code>arrived()</code> is true</td>
 </tr>
 <tr>
 <td><code>was_stale()</code></td>
-<td>Whether data was held but had aged out</td>
+<td>Whether something was received and is now older than this input's <code>stale_after</code></td>
 </tr>
 <tr>
 <td><code>missed()</code></td>
-<td>Publications lost since the previous cycle. <strong>Not</strong> a running total</td>
+<td>Publications the lane lost for this input since the previous cycle. <strong>Not</strong> a running total</td>
 </tr>
 <tr>
 <td><code>rejected()</code></td>
@@ -324,33 +1456,139 @@ def lidar():
 </tr>
 <tr>
 <td><code>overruns()</code></td>
-<td>Releases missed since the previous cycle ran</td>
+<td>Releases the <strong>node</strong> missed since its previous cycle ran</td>
 </tr>
 <tr>
 <td><code>is_healthy()</code></td>
 <td>No loss, no rejection, no overrun</td>
 </tr>
+<tr>
+<td><code>topic()</code></td>
+<td>The name of the topic this input reads, whatever the parameter is called</td>
+</tr>
 </tbody>
 </table>
-<p><strong><code>get()</code> borrows.</strong> It returns the same object every cycle with its fields rewritten, which
-mirrors Rust's <code>get() -&gt; Option&lt;&amp;T&gt;</code>. A body that keeps it and reads it next cycle sees new
-data — use <code>copied()</code> to keep one. Rust's borrow checker catches that mistake; Python's
-cannot, so it is stated here instead.</p>
+<p>An input is in one of three states on every release:</p>
+<table>
+<thead>
+<tr>
+<th><code>get()</code></th>
+<th><code>was_stale()</code></th>
+<th><code>since_received()</code></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a sample</td>
+<td><code>False</code></td>
+<td>a number</td>
+<td>usable: received, and within <code>stale_after</code></td>
+</tr>
+<tr>
+<td><code>None</code></td>
+<td><code>False</code></td>
+<td><code>None</code></td>
+<td>not yet: nothing has been received</td>
+</tr>
+<tr>
+<td><code>None</code></td>
+<td><code>True</code></td>
+<td>a number</td>
+<td>stale: what was last received is older than <code>stale_after</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>&quot;Not yet&quot; has no deadline.</strong> An input that has never received anything is absent and is
+not stale, however long that lasts: there is no receipt to measure an age from. A node
+that must act when a publisher never comes up tests <code>get() is None</code>, which is true for
+&quot;not yet&quot; and for stale alike, and not <code>was_stale()</code>. On QEMU a node's input on a topic
+nobody publishes read &quot;not yet&quot; on every one of about 520 releases.</p>
+<p><strong><code>get()</code> answers &quot;is there a usable reading&quot;; <code>arrived()</code> answers &quot;is it a new one&quot;.</strong> A
+node fed by a slower input sees a usable reading every cycle and a new one on some.
+<code>examples/estimator.py</code> applies its odometry correction once, on the release it arrives:</p>
+<pre><code class="language-python">class Estimator:
+    &quot;&quot;&quot;A dead-reckoned heading, corrected by the wheels whenever they report.&quot;&quot;&quot;
+
+    def __init__(self):
+        self.pose = Pose.instance(x_mm=0, heading_mrad=0, corrections=0)
+
+    def step(self,
+             imu=subscribe(IMU_DATA, stale_after=&quot;35ms&quot;),
+             odometry=subscribe(WHEEL_ODOMETRY, stale_after=&quot;65ms&quot;),
+             estimate=publish(ESTIMATE_POSE)):
+        &quot;&quot;&quot;Predict from the IMU, correct from the wheels when they report, publish the pose.&quot;&quot;&quot;
+        rates = imu.get()
+        if rates is None:
+            return                                # no usable IMU: publish nothing this cycle
+        self.pose.heading_mrad += rates.yaw_rate_mrad_s // 100
+        wheels = odometry.get()
+        if odometry.arrived() and wheels is not None:
+            self.pose.x_mm = wheels.travelled_mm  # once, on the cycle the reading arrives
+            self.pose.heading_mrad = wheels.heading_mrad
+            self.pose.corrections += 1
+        estimate.publish(self.pose)
+
+
+periodic(every=&quot;10ms&quot;, on_overrun=Skip)(Estimator().step)
+run()
+</code></pre>
+<p>This file is run on the host only, against a stand-in for the transport; no on-target test
+runs it.</p>
+<p><strong>An input is a value, the newest one.</strong> A node behind a faster publisher is handed the
+newest publication at each release. The ones a newer one replaced are handed to nobody and
+are not <code>missed()</code>. So a topic that carries increments must not be read as an input: the
+odometry above is a cumulative reading for that reason. What <code>missed()</code> counts is the
+lane's own: on the kernel lane, the publications the topic overwrote before the node read
+them, counted from the input's open (the topic keeps its newest 8, and up to 20); on the
+other two, the ones the lane itself reports skipped. <code>rejected()</code> is always 0 on the
+kernel lane: a publisher of another payload is refused when it opens.</p>
+<p><strong><code>overruns()</code> is the node's, not an input's.</strong> Every input's cycle of one release carries
+the same number. Read it from one of them: adding them up counts each overrun once per
+input. A node with no input has no <code>Cycle</code> to read it from, and an overrun is not written
+to the system log on this surface (TAIL-449): under <code>Skip</code> or <code>CatchUp</code> a Python node
+that only publishes cannot observe its overruns at all.</p>
+<p><strong><code>get()</code> borrows.</strong> It returns the same object every cycle with its fields rewritten,
+which mirrors Rust's <code>get() -&gt; Option&lt;&amp;T&gt;</code>. A body that keeps it and reads it next cycle
+sees new data — use <code>copied()</code> to keep one. Rust's borrow checker catches that mistake;
+Python's cannot, so it is stated here instead. The <code>Cycle</code> objects themselves are the same
+ones on every release too.</p>
 <p>That reuse is not an optimisation detail you can ignore: it is what keeps a cycle free of
 allocation the garbage collector has to walk. See <a href="#cost">Cost</a>.</p>
 <h2 id="run"><code>run()</code></h2>
 <pre><code class="language-python">run()
 </code></pre>
-<p>Runs the declared node, and does not return until its policy stops it.</p>
-<p>Decoration cannot do this itself: a module whose import never finishes is never entered into
-<code>sys.modules</code>, and every traceback from it is reported inside an import. <code>rclpy.spin</code> exists
-for the same reason.</p>
-<p>A process is <strong>one</strong> node — which is what the Rust attribute enforces by generating <code>main</code>.
-Declaring two raises, naming both.</p>
+<p>Runs the declared node, and does not return until its policy stops it. When the command
+line ends in <code>--replay FILE [--life N]</code> it replays the node instead, and never returns: the
+process ends inside it, after the last release or at a refused replay
+(<a href="#recording-and-replay">Recording and replay</a>).</p>
+<p>It hands the framework the whole of <code>sys.argv</code> as it is when <code>run()</code> is called, each entry
+as its file-system bytes, and the framework reads only that trailing part: a script that
+consumes its own arguments by rewriting <code>sys.argv</code> before <code>run()</code> hands over what is left.
+It flushes <code>sys.stdout</code> and <code>sys.stderr</code> before it opens the node and before every release,
+skipping one that is <code>None</code>, so what a body printed is written before any call that may end
+the process.</p>
+<p>Decoration cannot do this itself: a module whose import never finishes is never entered
+into <code>sys.modules</code>, and every traceback from it is reported inside an import. <code>rclpy.spin</code>
+exists for the same reason.</p>
+<p>A process is <strong>one</strong> node — which is what the Rust attribute enforces by generating
+<code>main</code>. Declaring two raises, naming both.</p>
+<p><strong>The node starts at its first release, not when <code>run()</code> opens its topics.</strong> Whatever was
+published before that is thrown away unread: when it was received is not known, and it
+must not be presented as fresh. The time <code>run()</code> spends between opening the topics and the
+first release, freezing the heap among it, is not charged to the node as overruns. Limit:
+an input reads &quot;not yet&quot; on the first release unless another program published in the
+instant between that discard and the release's own read.</p>
+<p><code>run()</code> opens the topics the node publishes first, in the order they are declared, then
+its inputs in the order the parameters are written. The node waits for a topic nobody publishes yet for ten seconds in
+all: one wait for the node, not one per topic. A kernel-lane input never waits: it is
+admitted with no publisher and reads &quot;not yet&quot; until one publishes. While the node waits
+for a later input it holds nothing, and what was published meanwhile is dropped at the
+first release.</p>
 <h2 id="safety">Safety</h2>
 <p><strong>A Python node cannot declare a topic safety-relevant, and this is deliberate.</strong></p>
-<p>A safety classification asserts that a bound on cycle time exists and is known. Measured on
-target, under QEMU:</p>
+<p>A safety classification asserts that a bound on cycle time exists and is known. Measured
+on target, under QEMU:</p>
 <table>
 <thead>
 <tr>
@@ -369,16 +1607,18 @@ target, under QEMU:</p>
 </tr>
 </tbody>
 </table>
-<p>Both the pause and its frequency scale with <strong>your</strong> live heap, which this framework neither
-observes nor bounds. There is no bound to assert, so the claim is not available to make.</p>
+<p>Both the pause and its frequency scale with <strong>your</strong> live heap, which this framework
+neither observes nor bounds. There is no bound to assert, so the claim is not available to
+make.</p>
 <p>A Python node is Quality Managed by construction, in the way the <code>fast</code> lane is by its own
 design. It <strong>may</strong> subscribe to a topic another node has classified safety-relevant —
 consuming safety-relevant data at QM is an ordinary architecture. What it may not do is
 claim the classification for what it publishes. Put that node in Rust.</p>
 <h2 id="cost">Cost</h2>
-<p>Measured on target under QEMU on 2026-09-09. <strong>These are not board numbers</strong> — QEMU's CPU is
-not a Raspberry Pi 3's. The ratios should hold; the absolute milliseconds should not be
-quoted.</p>
+<p>Measured on target under QEMU on 2026-09-09, on a node with one input. <strong>These are not
+board numbers</strong> — QEMU's CPU is not a Raspberry Pi 3's. The ratios should hold; the
+absolute milliseconds should not be quoted. They were not measured again for a node with
+several inputs.</p>
 <table>
 <thead>
 <tr>
@@ -402,20 +1642,30 @@ quoted.</p>
 </tbody>
 </table>
 <p>That last row matters to a system integrator: a Python node is not ready for seconds after
-it is spawned. It is interpreter startup, not this framework — TAIL-326 — and the framework's
-admission retry already spans it, which is why a Python subscriber may still be started
-before its Rust publisher.</p>
+it is spawned. It is interpreter startup, not this framework — TAIL-326 — and the
+framework's admission wait already spans it, which is why a Python subscriber may still be
+started before its Rust publisher.</p>
 <p><strong>What the framework does about the collector</strong>, so you do not have to:</p>
 <ul>
 <li><code>run()</code> calls <code>gc.freeze()</code> before the first release, moving the interpreter's whole
-startup heap out of the generations the collector walks. Measured: a full collection costs
-6.6 ms before that call and 0.018 ms after it.</li>
-<li>Nothing the collector walks is allocated per cycle. The cycle object, the sample <code>get()</code>
-returns and both payload buffers are created once.</li>
+startup heap out of the generations the collector walks. Measured: a full collection
+costs 6.6 ms before that call and 0.018 ms after it.</li>
+<li>Nothing the collector walks is allocated per cycle, whatever the number of inputs. The
+cycle objects, the sample each <code>get()</code> returns and the payload buffers are created once.
+On QEMU, a node with three inputs grew the collector's tracked objects by 0 and the
+interpreter's allocated blocks by 0 between its releases 300 and 500, in each of six
+runs; the test allows fewer than 20 blocks.</li>
+<li>A node's <a href="#run-time-parameters">run-time parameters</a> are handed in one argument tuple,
+built at the first release and rebuilt only on a release whose values differ from the
+previous release's: that release makes the new tuple and the new values' objects, and
+every other release makes nothing for them. The first release's tuple is built after
+<code>gc.freeze()</code>, so it is the one object the collector walks that a node without
+parameters does not have. Measured on the host, not on target: a node with three parameters kept
+nothing over 400 releases without a set.</li>
 </ul>
-<p><strong>What you can do.</strong> A body that does not retain what it makes triggers no collection at all
-— CPython collects on allocations <em>minus</em> deallocations. Keeping a rolling window of samples
-is what makes the collector run; if you need one, that is the cost to measure.</p>
+<p><strong>What you can do.</strong> A body that does not retain what it makes triggers no collection at
+all — CPython collects on allocations <em>minus</em> deallocations. Keeping a rolling window of
+samples is what makes the collector run; if you need one, that is the cost to measure.</p>
 <h2 id="errors">Errors</h2>
 <p><code>NodeError</code> for anything wrong with a declaration, raised at decoration. <code>OSError</code> for a
 node that cannot start, carrying which topic and why. An uncaught one exits non-zero, so a
@@ -430,11 +1680,35 @@ supervisor can tell a node that never started from one that stopped cleanly.</p>
 <tbody>
 <tr>
 <td>A duration that will not parse</td>
-<td><code>NodeError</code> at decoration</td>
+<td><code>NodeError</code> at decoration, naming the key and, for an input, its topic</td>
 </tr>
 <tr>
-<td>A missing or unknown key</td>
+<td>A missing or unknown key, a topic without its lane, a body the loop cannot call</td>
 <td><code>NodeError</code> at decoration, naming it</td>
+</tr>
+<tr>
+<td>A run-time parameter whose default, range or name breaks a rule, or a seventeenth</td>
+<td><code>NodeError</code> at decoration, naming the function, the parameter and the rule (<a href="#run-time-parameters">Run-time parameters</a>)</td>
+</tr>
+<tr>
+<td>A declaration in the earlier grammar, <code>publish=</code> among its keys</td>
+<td><code>NodeError</code> at decoration, once, with its rewrite</td>
+</tr>
+<tr>
+<td>Two outputs on one topic, or a <code>publish(...)</code> without a laned topic</td>
+<td><code>NodeError</code> at decoration, naming it (<a href="#an-output">An output</a>)</td>
+</tr>
+<tr>
+<td>A body that returns a value</td>
+<td><code>NodeError</code> from <code>run()</code> at that release, nothing published, with the output form to write</td>
+</tr>
+<tr>
+<td>A second <code>out.publish(...)</code> on one output in one release</td>
+<td><code>ValueError</code> from the call, naming the output</td>
+</tr>
+<tr>
+<td>A publish the transport refused</td>
+<td>nothing raised: the outputs after it are published and the node goes on; the 16th refusal in a row on one output writes one console record naming the node and the topic (<a href="#an-output">An output</a>)</td>
 </tr>
 <tr>
 <td><code>safety=True</code></td>
@@ -442,29 +1716,197 @@ supervisor can tell a node that never started from one that stopped cleanly.</p>
 </tr>
 <tr>
 <td>A topic that never appears</td>
-<td><code>OSError</code> from <code>run()</code> after the admission attempts</td>
+<td><code>OSError</code> from <code>run()</code> after the node's ten-second wait: <code>errno</code> is <code>-3</code>, <code>filename</code> is the topic</td>
 </tr>
 <tr>
-<td>A payload that disagrees with the publisher's</td>
-<td><code>OSError</code> from <code>run()</code>, or refused per sample on <code>kernel</code></td>
+<td>A payload that disagrees with the publisher's, in size or in layout</td>
+<td><code>OSError</code> from <code>run()</code>, naming the topic, on every lane; on <code>kernel</code> the console record also says what the topic carries</td>
+</tr>
+<tr>
+<td>A declaration with padding, a <code>bool</code>, an empty array, a keyword for a name, or named values on a float</td>
+<td><code>NodeError</code> at the declaration, naming the field</td>
 </tr>
 <tr>
 <td>A cycle overrunning under <code>Fault</code></td>
 <td><code>NodeError</code> from <code>run()</code> — the ABI reports it as an <code>OSError</code>, restated in the framework's vocabulary because you asked for <code>Fault</code></td>
 </tr>
+<tr>
+<td>An action definition, a <code>serve(...)</code>, a lease under twice the period, or a second served action that breaks a rule</td>
+<td><code>NodeError</code> at the definition or at decoration, naming it (<a href="#actions">Actions</a>)</td>
+</tr>
+<tr>
+<td><code>active.feedback</code>, <code>succeed</code> or <code>abort</code> from a thread the body started</td>
+<td><code>RuntimeError</code>, on every such call: the node is reached only from the thread that called <code>run()</code> (<a href="#actions">Actions</a>)</td>
+</tr>
+<tr>
+<td>A body's <code>feedback</code>, <code>succeed</code> or <code>abort</code> with no goal running at its release</td>
+<td><code>NodeError</code> from the call</td>
+</tr>
+<tr>
+<td>A goal that did not succeed, or a send no server answered</td>
+<td><code>GoalError(reason, code)</code> from the client's call (<a href="#actions">Actions</a>)</td>
+</tr>
+<tr>
+<td>A topic that refused a goal's <code>send</code> or <code>start</code></td>
+<td><code>OSError</code> from the call; the console says why</td>
+</tr>
+<tr>
+<td>A refused replay: a malformed <code>--replay ...</code> tail, a file that is not a recording of this node, another declaration, no such life</td>
+<td>no exception: one line on standard error and the process ends inside <code>run()</code>, exit 2 for the tail and 1 for the rest, before any topic is opened (<a href="#recording-and-replay">Recording and replay</a>)</td>
+</tr>
+<tr>
+<td>The end of a replay</td>
+<td>no exception: the process ends inside <code>run()</code>, exit 0 when identical and 1 otherwise</td>
+</tr>
+<tr>
+<td>An entry of <code>sys.argv</code> holding a NUL byte</td>
+<td><code>ValueError</code> from <code>run()</code>, before the node is opened</td>
+</tr>
+<tr>
+<td>A flush of <code>sys.stdout</code> or <code>sys.stderr</code> that fails</td>
+<td>that error -- <code>BrokenPipeError</code> for a closed pipe, say -- from <code>run()</code></td>
+</tr>
 </tbody>
 </table>
+<p><strong>A node that cannot start names the topic.</strong> The fixture
+<code>test/integration_test/tests/periodic_python_two_inputs/fixtures/never_appears_node.py</code>
+declares two inputs, the second on a topic nobody creates, and catches what <code>run()</code>
+raises:</p>
+<pre><code class="language-python">try:
+    run()
+except OSError as reason:
+    print(f&quot;[never_appears] {reason}&quot;)
+    if reason.filename != MISSING.name:
+        sys.exit(5)
+    if reason.errno != NEVER_APPEARED:
+        sys.exit(3)
+    sys.exit(0)
+</code></pre>
+<p>On QEMU it printed, about eleven seconds after the interpreter was started:</p>
+<pre><code>[never_appears] [Errno -3] the topic never appeared: 'py_two_inputs/nobody'
+</code></pre>
+<p>Before the exception is raised, the layer beneath writes what was wrong on the console,
+one line per fact. This node publishes a topic, which it had created before it waited; a
+node with several outputs gets one such line per output it had created, in declaration
+order:</p>
+<pre><code>could not start: topic `py_two_inputs/nobody` never appeared
+its publication `py_two_inputs/orphan` is left without a writer
+</code></pre>
+<p>Limits: those records are on the console only, not in the system log, and they name no
+node. Only the first topic that could not be opened is named. The topic the node had
+created stays owned by the process until it exits.</p>
+<p><strong>After <code>Fault</code> stops a node, a <code>Cycle</code> the body kept reads as nothing.</strong> The fixture
+<code>fault_node.py</code> in the same directory keeps the cycle it is handed, overruns once on
+purpose, and asks the kept cycle afterwards:</p>
+<pre><code class="language-python">try:
+    run()
+except NodeError as stopped:
+    print(f&quot;[fault] {stopped}&quot;)
+    if not usable_on_the_last_release:
+        sys.exit(7)         # nothing was usable to lose, so the check below would prove nothing
+    cycle = kept[0]
+    if cycle.get() is not None or cycle.arrived() or cycle.since_received() is not None:
+        print(&quot;[fault] a cycle kept from the last good release still reads as usable&quot;)
+        sys.exit(8)
+    sys.exit(0)
+</code></pre>
+<pre><code>[fault] node: a cycle overran its deadline, and this node declared on_overrun=Fault
+</code></pre>
 <h2 id="init-has-no-equivalent-and-does-not-need-one"><code>init</code> has no equivalent, and does not need one</h2>
 <p>Rust needs <code>init</code> because a bare <code>fn</code> cannot own state between calls. A Python closure, a
-module global or a bound method already does:</p>
-<pre><code class="language-python">cycles = 0
-
-@periodic(every=&quot;20ms&quot;, publish=Topic(&quot;diag/count&quot;, Count), lane=&quot;safe&quot;, on_overrun=Skip)
-def counter():
-    global cycles
-    cycles += 1
-    return Count.instance(cycles=cycles)
+module global or a bound method already does. <code>publisher.py</code> above keeps its counter in a
+module global. <code>estimator.py</code> keeps its pose on an object and declares the method bound to
+it:</p>
+<pre><code class="language-python">periodic(every=&quot;10ms&quot;, on_overrun=Skip)(Estimator().step)
 </code></pre>
+<p>A method decorated inside its class body is refused: its first parameter is <code>self</code>, which
+no topic feeds. The message gives the bound form above.</p>
+<h2 id="what-was-verified-and-where">What was verified, and where</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Host, <code>make ci-python-test</code></td>
+<td>239 tests: payload layout and identity against the layouts and identities rustc produces; nesting and named values; every refusal at declaration and decoration, the whole text of each, every <code>param(...)</code> and action refusal among them; <code>run()</code> against a stand-in for the built-in module, the values of run-time parameters handed in signature order and the argument tuple built at the first release and rebuilt only on a release the built-in flags, never after a set of the values already in force, and no value read before the first release; the whole of <code>sys.argv</code> handed to the open as file-system bytes, a non-ASCII and an undecodable argument among them; <code>sys.stdout</code> and <code>sys.stderr</code> flushed before the open and before every release, one that is <code>None</code> skipped, and a failed flush raised before anything is opened; <code>now()</code> 0 before <code>run()</code> and the built-in's reading for the running node, never <code>monotonic_ns()</code>; a serving node's <code>Goal</code> handed in its place, what its body hands back crossing with its release, and nothing kept over 400 serving releases; a client's every call against scripted goal states; outputs: two published in declaration order whatever order the body hands them over in, one withheld, <code>None</code>, one object rewritten every release, a second publish refused, a raise after a publish publishing nothing, a returned value refused, a refused publish going on and publishing the outputs after it, an output that is also an input, and a node with two outputs keeping nothing per release; every file under <code>examples/</code> executed, <code>steer.py</code> among them, importing the <code>tail_messages</code> the build printed</td>
+</tr>
+<tr>
+<td>QEMU <code>raspi3b</code>, <code>periodic_python_pair</code></td>
+<td><code>publisher.py</code> read by a Rust subscriber, its stamps climbing and never ahead of the clock; <code>subscriber.py</code> reading a Rust publisher, both on the standard <code>Range</code></td>
+</tr>
+<tr>
+<td>QEMU <code>raspi3b</code>, <code>robot_messages_exchange</code></td>
+<td>a Python node importing <code>tail_messages</code> reads a Rust <code>Range</code> and a C <code>Twist</code> and publishes <code>Odometry</code> on the fast lane; every field checked by the Rust pilot</td>
+</tr>
+<tr>
+<td>QEMU <code>raspi3b</code>, <code>periodic_python_pilot</code></td>
+<td>the converting node above, between two Rust nodes</td>
+</tr>
+<tr>
+<td>QEMU <code>raspi3b</code>, <code>periodic_python_two_inputs</code></td>
+<td><code>drive.py</code> beside two Rust publishers; a node with three inputs on two lanes that reports what each <code>Cycle</code> said on every release; a node whose second topic never appears; a node stopped by <code>Fault</code>; a publisher of another payload size on a kernel-lane topic, refused at open and told the shape the topic carries</td>
+</tr>
+<tr>
+<td>QEMU <code>raspi3b</code>, <code>periodic_python_action</code></td>
+<td>a Python node serving an action to Rust clients: 25 feedbacks of consecutive releases, a cancel in force at the release the status names, <code>Busy</code>, a refusal by content with its code, a success at the fifth release with its result, and a killed client's goal abandoned within L + 2T and an allowance; then Python clients of a Rust node: iterated feedback, <code>cancel()</code>, <code>GoalError('refused', 7)</code>, a started goal polled to <code>Progress.Running</code> and cancelled by releasing its handle, <code>'busy'</code>, and a killed Python client's goal abandoned within the same bound. Every verdict read by release index from the node's releases and the action's statuses</td>
+</tr>
+<tr>
+<td>QEMU <code>raspi3b</code>, <code>periodic_python_parameters</code></td>
+<td>a probe node with a <code>float</code>, an <code>int</code> whose range is the whole 64 bits and a <code>bool</code>, publishing on every release which release it is and the values it was handed, beside a Rust reader of every publication: <code>param list</code> prints its three parameters; each set is handed to the body from the release <code>param set</code> reports and not before, the <code>int</code> at its 64-bit minimum among them; <code>kp 250</code> is refused with its line and changes nothing; three values of three kinds land whole at one release; each value arrives as its own Python type. Then <code>balance.py</code>, listed and set as shown above. No overrun is measured: each <code>param</code> run starts a process</td>
+</tr>
+<tr>
+<td>QEMU <code>raspi3b</code>, <code>periodic_python_replay</code></td>
+<td><strong>Not yet run: pending the gate.</strong> <code>topic record</code> started first, then <code>replay_lidar</code>, a <code>Twist</code> publisher and <code>replay_py_watch.py</code> for 10 s, each output read live, every publication. From <code>topic dump</code> of the journal: record 0 with outcome 0 and zero shares; every later record's outcome bits and its two output shares equal to what the reader saw published at the release before, a declined tally as zeros; the overruns as read live; each <code>stamp_ns</code>, taken from <code>now()</code>, within one tick of its record's clock reading. Then six replays: identical, exit 0, with at least 400 releases, nothing on standard error and nothing received by any reader; <code>altered</code>, its first divergence at release 50 on <code>replay/py_tally</code> byte 0 and the count of differing releases; <code>replay_py_watch_reordered.py</code>, its two inputs in the other order, refused as another declaration; <code>--life 9</code> refused; <code>print</code> through a pipe, every body's line present, release N-2's before the verdict and release N-1's after it; <code>early</code>, ending with &quot;the program ended before release 61&quot;. Declares <code>timing = &quot;icount&quot;</code></td>
+</tr>
+<tr>
+<td>QEMU <code>raspi3b</code>, <code>periodic_python_two_outputs</code></td>
+<td><code>steer.py</code>, its second output declined while the robot moves and once its odometry is stale; a node publishing two outputs at two cadences, every publication read, and nothing allocated between releases 300 and 500; a node reading <code>near</code> (70 ms) and <code>far</code> (310 ms) between two outputs: each input's own <code>since_received()</code> on the release it first reads stale is over its bound and at most the bound plus one period plus a 200 ms band, and the output declared first carries exactly the releases whose report shows one input usable. The first two ran in the gates of TAIL-470's several-outputs change, merged 2026-11-04, the third at <code>periodic_framework_requirement.md</code> revision 1.7</td>
+</tr>
+</tbody>
+</table>
+<p>Each test that came before recording and replay was seen to fail: 44 defects injected into
+a private copy of <code>periodic.py</code> or of an example each turned a host test red, as did 31 more injected into <code>periodic.py</code> and
+<code>balance.py</code> for run-time parameters; and 15 injected into the built-in module or
+<code>periodic.py</code> each turned <code>periodic_python_two_inputs</code> red on QEMU for the reason expected,
+and 2 more each turned <code>periodic_python_parameters</code> red: the argument tuple rebuilt one release late, red at <code>kp 45.5</code>'s reported release, and an <code>int</code> read back through 32 bits, red at <code>limit</code>'s.
+For actions, 7 more injected into <code>periodic.py</code> each turned a host test red, and 5 injected
+into the built-in module or <code>periodic.py</code> each turned <code>periodic_python_action</code> red on QEMU.</p>
+<p>No staleness transition is asserted at a bound. The node's own <code>since_received()</code> on the
+release it first read stale was 79.7 to 80.7 ms for the 70 ms input and 319.5 to 320.4 ms
+for the 310 ms input, over six runs; the window asserted is over the bound and at most the
+bound plus one period plus a 200 ms band.</p>
+<p>The interpreter the QEMU rows ran on was rebuilt with the outputs built-in, and every
+Python test above, as it stood then, ran on QEMU with outputs on parameters in the gates of
+TAIL-470's several-outputs change, merged 2026-11-04.</p>
+<p>Not verified:</p>
+<ul>
+<li>Nothing ran on real hardware, and the Raspberry Pi 3 image carries no interpreter.</li>
+<li>Recording and replay have not run on target: <code>periodic_python_replay</code> is pending the gate,
+and the interpreter must be rebuilt for it. No defect has been injected to prove it
+fires.</li>
+<li>The host tests added or changed with recording and replay have not been seen to fail on
+an injected defect: <code>sys.argv</code> handed to the open; the three of the flushes, before the
+open and every release, one stream <code>None</code>, a failed flush; the two of <code>now()</code>; no value
+read before the first release; and the argument tuple built at the first release.</li>
+<li>That one <code>PYTHONHASHSEED</code> exported for both runs makes a <code>set</code>'s order repeat is not
+checked on any interpreter build.</li>
+<li>The built-in module has no host test: it is compiled into the target interpreter only.
+<code>periodic_python_two_inputs</code> is what gates it, <code>periodic_python_parameters</code> for run-time
+parameters, and <code>periodic_python_action</code> for actions.</li>
+<li>No defect has been injected to prove the action tests fire, as was done for the others.</li>
+<li><code>estimator.py</code> runs on the host only.</li>
+<li>Two inputs of one payload type and equal bounds, bound to each other's topics in a body
+that treats them alike, are seen by no test.</li>
+<li>After an edit to <code>periodic.py</code> or to the built-in module, the next image build
+(<code>make build-release</code>, or any suite target) rebuilds the interpreter before it puts it on
+the image (<code>periodic_python_design.md</code> §5.10.4). The host tests see the edit at once, and
+the target sees it at that build. A toolchain (<code>std</code>) rebuild is outside that rule and
+has its own procedure there.</li>
+</ul>
 
 <footer class="doc-src">
   <span>Generated from <span class="mono">framework/periodic/doc/periodic_python_public.md</span> in the TAIL OS repository.</span>
@@ -474,7 +1916,10 @@ def counter():
   <span class="toc-h">On this page</span>
   <ul>
     <li><a href="#quick-start">Quick start</a></li>
-    <li><a href="#keys">Keys</a></li>
+    <li><a href="#declaring-a-node">Declaring a node</a></li>
+    <li><a href="#run-time-parameters">Run-time parameters</a></li>
+    <li><a href="#actions">Actions</a></li>
+    <li><a href="#recording-and-replay">Recording and replay</a></li>
     <li><a href="#payloads">Payloads</a></li>
     <li><a href="#cycle">Cycle</a></li>
     <li><a href="#run">run()</a></li>
@@ -482,6 +1927,7 @@ def counter():
     <li><a href="#cost">Cost</a></li>
     <li><a href="#errors">Errors</a></li>
     <li><a href="#init-has-no-equivalent-and-does-not-need-one">init has no equivalent, and does not need one</a></li>
+    <li><a href="#what-was-verified-and-where">What was verified, and where</a></li>
   </ul>
 </nav>
 </div>

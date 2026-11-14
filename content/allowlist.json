@@ -18,22 +18,70 @@
     }
   ],
   "home": {
-    "_comment": "Front-page claims. Everything here is asserted to the public without a citation, so it must be true and checkable in the published documents. quickstart is omitted until there is a command a reader without repository access can actually run.",
+    "_comment": "Front-page claims. Everything here is asserted to the public without a citation, so it must be true and checkable in the published documents. quickstart repeats the commands of the Quick Start page.",
     "highlights": [],
-    "quickstart": null
+    "quickstart": {
+      "title": "Boot TAIL OS in QEMU",
+      "doc": "quick-start",
+      "commands": [
+        "sudo apt-get install -y qemu-system-arm qemu-utils",
+        "curl -O https://tail-os.com/downloads/run_tailos_qemu.sh",
+        "chmod +x run_tailos_qemu.sh",
+        "./run_tailos_qemu.sh"
+      ],
+      "note": "Exit with Ctrl-A, then X."
+    }
   },
   "documents": [
     {
       "path": "doc/quick_start_public.md",
       "slug": "quick-start",
       "title": "Quick Start",
-      "summary": "Boot TAIL OS in QEMU with one command, then look around its shell."
+      "summary": "Boot TAIL OS in QEMU with one command, then look around its shell.",
+      "nav": [
+        "Get started"
+      ],
+      "questions": [
+        "How do I boot TAIL OS in QEMU?"
+      ]
     },
     {
       "path": "doc/install_sdk_public.md",
       "slug": "installation",
       "title": "Installation",
-      "summary": "Install the TAIL OS SDK and build your first application."
+      "summary": "Install the TAIL OS SDK and build your first application.",
+      "nav": [
+        "Get started"
+      ]
+    },
+    {
+      "path": "framework/periodic/doc/periodic_framework_public.md",
+      "slug": "periodic-framework-rust",
+      "title": "Periodic Framework (Rust)",
+      "summary": "Declare a period and let the framework own the timing loop, admission, freshness and the publish.",
+      "nav": [
+        "Guides"
+      ],
+      "navTitle": "Rust Guide",
+      "questions": [
+        "How do I write a periodic node in Rust?",
+        "What does stale_after do?",
+        "What are KernelLane, SafeLane and FastLane?",
+        "How do I change a node's parameter at run time?"
+      ]
+    },
+    {
+      "path": "framework/periodic/doc/periodic_python_public.md",
+      "slug": "periodic-framework-python",
+      "title": "Periodic Framework (Python)",
+      "summary": "Write periodic nodes in Python, with the same keys as the Rust API and on the same topics.",
+      "nav": [
+        "Guides"
+      ],
+      "navTitle": "Python Guide",
+      "questions": [
+        "How do I write a periodic node in Python?"
+      ]
     },
     {
       "path": "doc/install_qemu.md",
@@ -41,7 +89,7 @@
       "title": "Running TAIL OS in QEMU",
       "summary": "Boot the prebuilt image under QEMU on Ubuntu with a single command.",
       "nav": [
-        "BSP"
+        "Boards"
       ],
       "navTitle": "QEMU"
     },
@@ -51,31 +99,9 @@
       "title": "Installing on Raspberry Pi 3",
       "summary": "Build an SD card image from the SDK and the BSP download, flash it, and boot on real hardware.",
       "nav": [
-        "BSP"
+        "Boards"
       ],
       "navTitle": "Raspberry Pi 3"
-    },
-    {
-      "path": "framework/periodic/doc/periodic_framework_public.md",
-      "slug": "periodic-framework-rust",
-      "title": "Periodic Framework (Rust)",
-      "summary": "Declare a period and let the framework own the timing loop, admission, freshness and the publish.",
-      "nav": [
-        "Development guide",
-        "Periodic"
-      ],
-      "navTitle": "Rust"
-    },
-    {
-      "path": "framework/periodic/doc/periodic_python_public.md",
-      "slug": "periodic-framework-python",
-      "title": "Periodic Framework (Python)",
-      "summary": "Write periodic nodes in Python, with the same keys as the Rust API and on the same topics.",
-      "nav": [
-        "Development guide",
-        "Periodic"
-      ],
-      "navTitle": "Python"
     },
     {
       "path": "doc/license_guide_public.md",

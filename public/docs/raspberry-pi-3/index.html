@@ -12,13 +12,13 @@
 <meta property="og:url" content="https://tail-os.com/docs/raspberry-pi-3/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/a04dbcb6183f/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/085c498a91ec/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/a04dbcb6183f/css/style.css">
-<script type="module" src="/assets/a04dbcb6183f/js/copy.js"></script>
-<script type="module" src="/assets/a04dbcb6183f/js/reveal.js"></script>
+<link rel="stylesheet" href="/assets/085c498a91ec/css/style.css">
+<script type="module" src="/assets/085c498a91ec/js/copy.js"></script>
+<script type="module" src="/assets/085c498a91ec/js/reveal.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -52,14 +52,30 @@
 <aside class="side">
   <nav aria-label="Documentation">
     <ul class="nav-docs">
-    <li class="nav-page">
+    <li class="nav-group">
+      <span class="nav-label">Get started</span>
+      <ul class="nav-list">
+        <li class="nav-page">
       <a class="nav-link" href="/docs/quick-start/">Quick Start</a>
     </li>
     <li class="nav-page">
       <a class="nav-link" href="/docs/installation/">Installation</a>
     </li>
+      </ul>
+    </li>
     <li class="nav-group">
-      <span class="nav-label">BSP</span>
+      <span class="nav-label">Guides</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-rust/">Rust Guide</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-python/">Python Guide</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Boards</span>
       <ul class="nav-list">
         <li class="nav-page">
       <a class="nav-link" href="/docs/qemu/">QEMU</a>
@@ -80,22 +96,6 @@
         <li><a href="/docs/raspberry-pi-3/#boot-sequence">Boot Sequence</a></li>
         <li><a href="/docs/raspberry-pi-3/#configtxt-reference">config.txt Reference</a></li>
         <li><a href="/docs/raspberry-pi-3/#troubleshooting">Troubleshooting</a></li>
-      </ul>
-    </li>
-      </ul>
-    </li>
-    <li class="nav-group">
-      <span class="nav-label">Development guide</span>
-      <ul class="nav-list">
-        <li class="nav-group">
-      <span class="nav-label">Periodic</span>
-      <ul class="nav-list">
-        <li class="nav-page">
-      <a class="nav-link" href="/docs/periodic-framework-rust/">Rust</a>
-    </li>
-    <li class="nav-page">
-      <a class="nav-link" href="/docs/periodic-framework-python/">Python</a>
-    </li>
       </ul>
     </li>
       </ul>
@@ -126,7 +126,7 @@ script that builds the image. To try TAIL OS without hardware, see
 <tbody>
 <tr>
 <td>Raspberry Pi 3B or 3B+</td>
-<td></td>
+<td>The 3A+ (512 MB) boots the same image in QEMU but has not yet been booted on a board</td>
 </tr>
 <tr>
 <td>MicroSD card (8 GB+)</td>
@@ -347,6 +347,11 @@ TAIL OS kernel
 <td><code>core_freq</code></td>
 <td><code>250</code></td>
 <td>Pin the core clock so the mini-UART's baud rate stays stable</td>
+</tr>
+<tr>
+<td><code>gpio</code></td>
+<td><code>40,41=ip</code></td>
+<td>Make GPIO 40/41 inputs. The firmware otherwise routes PWM0/PWM1 to the audio jack on those pins, and TAIL OS drives the same two channels out on GPIO 18/19, so the jack would carry every motor and step pulse too</td>
 </tr>
 </tbody>
 </table>

@@ -12,13 +12,13 @@
 <meta property="og:url" content="https://tail-os.com/docs/license-guide/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/a04dbcb6183f/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/085c498a91ec/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/a04dbcb6183f/css/style.css">
-<script type="module" src="/assets/a04dbcb6183f/js/copy.js"></script>
-<script type="module" src="/assets/a04dbcb6183f/js/reveal.js"></script>
+<link rel="stylesheet" href="/assets/085c498a91ec/css/style.css">
+<script type="module" src="/assets/085c498a91ec/js/copy.js"></script>
+<script type="module" src="/assets/085c498a91ec/js/reveal.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -52,36 +52,36 @@
 <aside class="side">
   <nav aria-label="Documentation">
     <ul class="nav-docs">
-    <li class="nav-page">
+    <li class="nav-group">
+      <span class="nav-label">Get started</span>
+      <ul class="nav-list">
+        <li class="nav-page">
       <a class="nav-link" href="/docs/quick-start/">Quick Start</a>
     </li>
     <li class="nav-page">
       <a class="nav-link" href="/docs/installation/">Installation</a>
     </li>
+      </ul>
+    </li>
     <li class="nav-group">
-      <span class="nav-label">BSP</span>
+      <span class="nav-label">Guides</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-rust/">Rust Guide</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-python/">Python Guide</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Boards</span>
       <ul class="nav-list">
         <li class="nav-page">
       <a class="nav-link" href="/docs/qemu/">QEMU</a>
     </li>
     <li class="nav-page">
       <a class="nav-link" href="/docs/raspberry-pi-3/">Raspberry Pi 3</a>
-    </li>
-      </ul>
-    </li>
-    <li class="nav-group">
-      <span class="nav-label">Development guide</span>
-      <ul class="nav-list">
-        <li class="nav-group">
-      <span class="nav-label">Periodic</span>
-      <ul class="nav-list">
-        <li class="nav-page">
-      <a class="nav-link" href="/docs/periodic-framework-rust/">Rust</a>
-    </li>
-    <li class="nav-page">
-      <a class="nav-link" href="/docs/periodic-framework-python/">Python</a>
-    </li>
-      </ul>
     </li>
       </ul>
     </li>
@@ -141,7 +141,7 @@ license from TAIL OS and the applicable license fees.</p>
 <h2 id="files-under-other-licenses">Files under other licenses</h2>
 <p>A TAIL OS file may contain contributions from others. Read each file for other
 proprietary rights or license notices. Two components that come with the Raspberry Pi 3
-BSP carry their own licenses:</p>
+BSP carry their own licenses, and the benchmarks' emulator carries its own:</p>
 <ul>
 <li><strong>Bluetooth firmware.</strong> The BSP includes Broadcom's firmware for the Raspberry Pi 3B+
 Bluetooth controller, <code>BCM4345C0.hcd</code>, with Broadcom's license beside it in
@@ -150,6 +150,12 @@ for use with a Raspberry Pi device.</li>
 <li><strong>Raspberry Pi boot firmware.</strong> <code>make-disk.sh</code> downloads the Raspberry Pi boot
 firmware from the official <code>raspberrypi/firmware</code> repository. It is not part of the
 BSP, and it comes under that repository's licenses.</li>
+<li><strong>QEMU, for the benchmarks and the icount tests.</strong> <code>test/benchmark_test/qemu/build_qemu.sh</code>
+downloads the QEMU source release from <code>download.qemu.org</code> and builds it. QEMU comes under
+the GNU General Public License, version 2 or later. The two changes applied to it,
+<code>test/benchmark_test/qemu/raspi-minimum-page-bits.patch</code> (QEMU's <code>hw/arm/raspi.c</code>) and
+<code>test/benchmark_test/qemu/wfe-yields-round-robin.patch</code> (QEMU's
+<code>target/arm/tcg/op_helper.c</code>), come under the same license.</li>
 </ul>
 
 <footer class="doc-src">

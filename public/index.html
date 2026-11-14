@@ -12,13 +12,13 @@
 <meta property="og:url" content="https://tail-os.com/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/a04dbcb6183f/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/085c498a91ec/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/a04dbcb6183f/css/style.css">
-<script type="module" src="/assets/a04dbcb6183f/js/copy.js"></script>
-<script type="module" src="/assets/a04dbcb6183f/js/reveal.js"></script>
+<link rel="stylesheet" href="/assets/085c498a91ec/css/style.css">
+<script type="module" src="/assets/085c498a91ec/js/copy.js"></script>
+<script type="module" src="/assets/085c498a91ec/js/reveal.js"></script>
 </head>
 <body class="page-home">
 <header class="hdr">
@@ -58,10 +58,31 @@
       <button class="ask-go" type="submit" aria-label="Ask">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
       </button>
-
+      <div class="chips">
+        <a class="chip" href="/ask/?q=How%20do%20I%20boot%20TAIL%20OS%20in%20QEMU%3F">How do I boot TAIL OS in QEMU?</a>
+        <a class="chip" href="/ask/?q=How%20do%20I%20write%20a%20periodic%20node%20in%20Rust%3F">How do I write a periodic node in Rust?</a>
+        <a class="chip" href="/ask/?q=What%20does%20stale_after%20do%3F">What does stale_after do?</a>
+        <a class="chip" href="/ask/?q=What%20are%20KernelLane%2C%20SafeLane%20and%20FastLane%3F">What are KernelLane, SafeLane and FastLane?</a>
+        <a class="chip" href="/ask/?q=How%20do%20I%20change%20a%20node's%20parameter%20at%20run%20time%3F">How do I change a node's parameter at run time?</a>
+      </div>
     </form>
   </section>
 
+
+  <section class="quick">
+    <div class="quick-head">
+      <h2>Boot TAIL OS in QEMU</h2>
+      <a href="/docs/quick-start/">Read the full guide</a>
+    </div>
+    <pre class="term" data-copy="sudo apt-get install -y qemu-system-arm qemu-utils
+curl -O https://tail-os.com/downloads/run_tailos_qemu.sh
+chmod +x run_tailos_qemu.sh
+./run_tailos_qemu.sh"><code><span class="pr">$</span> sudo apt-get install -y qemu-system-arm qemu-utils
+<span class="pr">$</span> curl -O https://tail-os.com/downloads/run_tailos_qemu.sh
+<span class="pr">$</span> chmod +x run_tailos_qemu.sh
+<span class="pr">$</span> ./run_tailos_qemu.sh</code></pre>
+    <p class="quick-note">Exit with Ctrl-A, then X.</p>
+  </section>
 
   <section class="docs-cards" aria-label="Documentation">
       <a class="card" href="/docs/quick-start/">
@@ -72,14 +93,6 @@
         <span class="card-t">Installation</span>
         <span class="card-d">Install the TAIL OS SDK and build your first application.</span>
       </a>
-      <a class="card" href="/docs/qemu/">
-        <span class="card-t">Running TAIL OS in QEMU</span>
-        <span class="card-d">Boot the prebuilt image under QEMU on Ubuntu with a single command.</span>
-      </a>
-      <a class="card" href="/docs/raspberry-pi-3/">
-        <span class="card-t">Installing on Raspberry Pi 3</span>
-        <span class="card-d">Build an SD card image from the SDK and the BSP download, flash it, and boot on real hardware.</span>
-      </a>
       <a class="card" href="/docs/periodic-framework-rust/">
         <span class="card-t">Periodic Framework (Rust)</span>
         <span class="card-d">Declare a period and let the framework own the timing loop, admission, freshness and the publish.</span>
@@ -87,6 +100,14 @@
       <a class="card" href="/docs/periodic-framework-python/">
         <span class="card-t">Periodic Framework (Python)</span>
         <span class="card-d">Write periodic nodes in Python, with the same keys as the Rust API and on the same topics.</span>
+      </a>
+      <a class="card" href="/docs/qemu/">
+        <span class="card-t">Running TAIL OS in QEMU</span>
+        <span class="card-d">Boot the prebuilt image under QEMU on Ubuntu with a single command.</span>
+      </a>
+      <a class="card" href="/docs/raspberry-pi-3/">
+        <span class="card-t">Installing on Raspberry Pi 3</span>
+        <span class="card-d">Build an SD card image from the SDK and the BSP download, flash it, and boot on real hardware.</span>
       </a>
       <a class="card" href="/docs/license-guide/">
         <span class="card-t">License Guide</span>
