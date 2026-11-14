@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shell Tools — TAIL OS</title>
+<meta name="description" content="Inspect and tune a running robot from the TAIL OS shell: topics, nodes, parameters and logs.">
+<link rel="canonical" href="https://tail-os.com/docs/shell-tools/">
+<meta property="og:title" content="Shell Tools — TAIL OS">
+<meta property="og:description" content="Inspect and tune a running robot from the TAIL OS shell: topics, nodes, parameters and logs.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tail-os.com/docs/shell-tools/">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="/assets/ecd0f0dae0d1/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/assets/ecd0f0dae0d1/css/style.css">
+<script type="module" src="/assets/ecd0f0dae0d1/js/copy.js"></script>
+<script type="module" src="/assets/ecd0f0dae0d1/js/reveal.js"></script>
+</head>
+<body class="page-shell">
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 32" width="22" height="22" fill="none" aria-hidden="true"><path d="M4 8h24M4 16h16M4 24h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span>TAIL OS</span><span class="ver">v0.9.0</span></a>
+    <form class="hdr-search" action="/ask/" method="get" role="search">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" name="q" placeholder="Search or ask a question" aria-label="Search or ask a question" autocomplete="off">
+    </form>
+    <nav class="hdr-nav" aria-label="Primary">
+      <a href="/docs/">Docs</a>
+      <details class="hdr-menu">
+        <summary class="hdr-menu-btn" aria-haspopup="true">
+          <span>Support</span>
+          <svg class="hdr-menu-chevron" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
+        </summary>
+        <div class="hdr-menu-panel">
+          <div class="hdr-menu-desc">Questions, hardware bring-up, or general inquiries:</div>
+          <a class="hdr-menu-action" href="mailto:support@tail-os.com">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <span>Email us</span>
+          </a>
+          <span class="hdr-menu-sub mono">support@tail-os.com</span>
+        </div>
+      </details>
+      
+    </nav>
+  </div>
+</header>
+<div class="shell">
+<aside class="side">
+  <nav aria-label="Documentation">
+    <ul class="nav-docs">
+    <li class="nav-group">
+      <span class="nav-label">Get started</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/quick-start/">Quick Start</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/installation/">Installation</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Guides</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-rust/">Rust Guide</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-python/">Python Guide</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Boards</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/qemu/">QEMU</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/raspberry-pi-3/">Raspberry Pi 3</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Reference</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/shell-tools/" aria-current="page">Shell Tools</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/shell-tools/#a-first-session">A first session</a></li>
+        <li><a href="/docs/shell-tools/#topic">topic</a></li>
+        <li><a href="/docs/shell-tools/#node">node</a></li>
+        <li><a href="/docs/shell-tools/#param">param</a></li>
+        <li><a href="/docs/shell-tools/#logview">logview</a></li>
+      </ul>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/license-guide/">License Guide</a>
+    </li>
+    </ul>
+  </nav>
+</aside>
+<main class="content">
+<div class="doc-wrap">
+<article class="doc">
+<h1 id="shell-tools-for-robot-applications">Shell Tools for Robot Applications</h1>
+<p>Four programs on the target shell (<code>tsh</code>) show what a running robot application is doing,
+without changing a line of it:</p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Answers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#topic"><code>topic</code></a></td>
+<td>Which topics exist, how fast are they published, what do they carry? Record them, print a recording, play it back.</td>
+</tr>
+<tr>
+<td><a href="#node"><code>node</code></a></td>
+<td>Which periodic nodes are running, and how is each one declared?</td>
+</tr>
+<tr>
+<td><a href="#param"><code>param</code></a></td>
+<td>What are a node's run-time parameters, and set them while it runs.</td>
+</tr>
+<tr>
+<td><a href="#logview"><code>logview</code></a></td>
+<td>What did each program write to the system log, including programs that have exited?</td>
+</tr>
+</tbody>
+</table>
+<p>They work the same for nodes written in Rust and in Python: each node announces itself,
+journals its releases and serves its parameters through the framework, so the tools see
+every node alike.</p>
+<figure class="diagram"><svg id="diagram-1146246ade" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" viewBox="4 4 557.984375 301.25" aria-roledescription="flowchart-v2" aria-describedby="chart-desc-diagram-1146246ade" aria-labelledby="chart-title-diagram-1146246ade" width="558" role="img"><title id="chart-title-diagram-1146246ade">What each shell tool reads from a node</title><desc id="chart-desc-diagram-1146246ade">A periodic node publishes its topics, read by topic; its description, read by node; and its parameters, read by param, which also writes requests back to the node. The node's log ring is read by logview.</desc><g><marker id="diagram-1146246ade_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath"/></marker><marker id="diagram-1146246ade_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath"/></marker><marker id="diagram-1146246ade_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath"/></marker><marker id="diagram-1146246ade_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath"/></marker><marker id="diagram-1146246ade_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-1146246ade_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-1146246ade_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-1146246ade_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-1146246ade_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath"/></marker><marker id="diagram-1146246ade_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath"/></marker><marker id="diagram-1146246ade_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath"/></marker><marker id="diagram-1146246ade_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath"/></marker><g class="root"><g class="clusters"/><g class="edges edgePaths"><path d="M164,166.75L176.92893218813452,166.75Q184,166.75 184,159.67893218813452L184,39.571067811865476Q184,32.5 191.07106781186548,32.5L397.984375,32.5" id="diagram-1146246ade-L_N_T_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_N_T_0" data-points="W3sieCI6MTY0LCJ5IjoxNjYuNzV9LHsieCI6MTg0LCJ5IjoxNjYuNzV9LHsieCI6MTg0LCJ5IjozMi41fSx7IngiOjQwMS45ODQzNzUsInkiOjMyLjV9XQ==" data-look="neo" marker-end="url(#diagram-1146246ade_flowchart-v2-pointEnd-margin)"/><path d="M164,170.25L196.92893218813452,170.25Q204,170.25 204,163.17893218813452L204,120.57106781186548Q204,113.5 211.07106781186548,113.5L397.984375,113.5" id="diagram-1146246ade-L_N_D_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_N_D_0" data-points="W3sieCI6MTY0LCJ5IjoxNzAuMjV9LHsieCI6MjA0LCJ5IjoxNzAuMjV9LHsieCI6MjA0LCJ5IjoxMTMuNX0seyJ4Ijo0MDEuOTg0Mzc1LCJ5IjoxMTMuNX1d" data-look="neo" marker-end="url(#diagram-1146246ade_flowchart-v2-pointEnd-margin)"/><path d="M164,173.75L374.9133071881345,173.75Q381.984375,173.75 381.984375,180.82106781186548L381.984375,184.67893218813452Q381.984375,191.75 389.0554428118655,191.75L397.984375,191.75" id="diagram-1146246ade-L_N_P_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_N_P_0" data-points="W3sieCI6MTY0LCJ5IjoxNzMuNzV9LHsieCI6MzgxLjk4NDM3NSwieSI6MTczLjc1fSx7IngiOjM4MS45ODQzNzUsInkiOjE5MS43NX0seyJ4Ijo0MDEuOTg0Mzc1LCJ5IjoxOTEuNzV9XQ==" data-look="neo" marker-end="url(#diagram-1146246ade_flowchart-v2-pointEnd-margin)"/><path d="M401.984375,198.75L389.0554428118655,198.75Q381.984375,198.75 381.984375,205.82106781186548L381.984375,209.67893218813452Q381.984375,216.75 374.9133071881345,216.75L211.07106781186548,216.75Q204,216.75 204,209.67893218813452L204,184.32106781186548Q204,177.25 196.92893218813452,177.25L168,177.25" id="diagram-1146246ade-L_P_N_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_P_N_0" data-points="W3sieCI6NDAxLjk4NDM3NSwieSI6MTk4Ljc1fSx7IngiOjM4MS45ODQzNzUsInkiOjE5OC43NX0seyJ4IjozODEuOTg0Mzc1LCJ5IjoyMTYuNzV9LHsieCI6MjA0LCJ5IjoyMTYuNzV9LHsieCI6MjA0LCJ5IjoxNzcuMjV9LHsieCI6MTY0LCJ5IjoxNzcuMjV9XQ==" data-look="neo" marker-end="url(#diagram-1146246ade_flowchart-v2-pointEnd-margin)"/><path d="M164,180.75L176.92893218813452,180.75Q184,180.75 184,187.82106781186548L184,269.6789321881345Q184,276.75 191.07106781186548,276.75L397.984375,276.75" id="diagram-1146246ade-L_N_L_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_N_L_0" data-points="W3sieCI6MTY0LCJ5IjoxODAuNzV9LHsieCI6MTg0LCJ5IjoxODAuNzV9LHsieCI6MTg0LCJ5IjoyNzYuNzV9LHsieCI6NDAxLjk4NDM3NSwieSI6Mjc2Ljc1fV0=" data-look="neo" marker-end="url(#diagram-1146246ade_flowchart-v2-pointEnd-margin)"/></g><g class="edgeLabels"><g class="edgeLabel" transform="translate(292.9921875, 32)"><g class="label" data-id="L_N_T_0" transform="translate(0, -10.5)"><g><rect class="background" x="-33.125" y="0" width="66.25" height="21"/><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">its</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> topics</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(292.9921875, 113)"><g class="label" data-id="L_N_D_0" transform="translate(-0.046875, -11)"><g><rect class="background" x="-48.71875" y="0" width="97.53125" height="22"/><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">node/__node</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(292.9921875, 173.25)"><g class="label" data-id="L_N_P_0" transform="translate(0, -11)"><g><rect class="background" x="-57.59375" y="0" width="115.1875" height="22"/><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">node/__params</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(292.9921875, 216.25)"><g class="label" data-id="L_P_N_0" transform="translate(-0.2734375, -11)"><g><rect class="background" x="-68.71875" y="0" width="137.984375" height="22"/><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">node/__param_set</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(292.9921875, 276.25)"><g class="label" data-id="L_N_L_0" transform="translate(0, -10.5)"><g><rect class="background" x="-28.2421875" y="0" width="56.484375" height="21"/><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">log</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> ring</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default" id="diagram-1146246ade-flowchart-N-0" data-look="neo" transform="translate(88, 173.75)"><rect class="basic label-container" x="-76" y="-20.5" width="152" height="41"/><g class="label" transform="translate(0, -8.5)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">periodic</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> node</tspan></tspan></text></g></g></g><g class="node default" id="diagram-1146246ade-flowchart-T-1" data-look="neo" transform="translate(477.984375, 32.5)"><rect class="basic label-container" x="-76" y="-20.5" width="152" height="41"/><g class="label" transform="translate(0, -8.5)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">topic</tspan></tspan></text></g></g></g><g class="node default" id="diagram-1146246ade-flowchart-D-3" data-look="neo" transform="translate(477.984375, 113.5)"><rect class="basic label-container" x="-76" y="-20.5" width="152" height="41"/><g class="label" transform="translate(0, -8.5)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">node</tspan></tspan></text></g></g></g><g class="node default" id="diagram-1146246ade-flowchart-P-5" data-look="neo" transform="translate(477.984375, 195.25)"><rect class="basic label-container" x="-76" y="-20.5" width="152" height="41"/><g class="label" transform="translate(0, -8.5)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">param</tspan></tspan></text></g></g></g><g class="node default" id="diagram-1146246ade-flowchart-L-9" data-look="neo" transform="translate(477.984375, 276.75)"><rect class="basic label-container" x="-76" y="-20.5" width="152" height="41"/><g class="label" transform="translate(0, -8.5)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">logview</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="diagram-1146246ade-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="diagram-1146246ade-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="diagram-1146246ade-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg></figure>
+<p><em>A node publishes its topics, its description and its parameters; <code>topic</code>, <code>node</code> and
+<code>param</code> read them, <code>param</code> also writes a request back, and <code>logview</code> reads the node's log
+ring.</em></p>
+<p>Every tool prints <code>usage: ...</code> and exits 2 on a malformed command line, and exits 1 with a
+one-line reason on standard error when it cannot do what was asked. Output examples on this
+page are illustrative: process ids, counts and layout identities differ on your system.</p>
+<h2 id="a-first-session">A first session</h2>
+<pre><code class="language-text">tsh&gt; lidar &amp; brake &amp; drive &amp;
+tsh&gt; node list
+brake  pid 9   brake
+drive  pid 10  drive
+lidar  pid 8   lidar
+tsh&gt; topic list
+brake/__node        kernel   1 writer    0/8 readers       96 B   layout 0x...
+brake/__releases    kernel   1 writer    0/8 readers      120 B   layout 0x...
+cmd/velocity        kernel   1 writer    1/8 readers       48 B   Twist
+sensor/range        safe     1 writer    1/8 readers       32 B   Range
+...
+tsh&gt; topic hz -n 3 sensor/range
+# times are when topic saw each publication (1 ms poll); they may not match the publisher's timing
+average rate: 50.00 Hz   min: 19.0 ms   max: 21.0 ms   window: 50
+average rate: 50.00 Hz   min: 19.0 ms   max: 21.0 ms   window: 50
+average rate: 50.00 Hz   min: 19.0 ms   max: 21.0 ms   window: 50
+tsh&gt; topic echo -n 1 cmd/velocity
+# cmd/velocity: kernel lane, Twist, 48 B, layout 0x...
+linear.x=0.5 linear.y=0 linear.z=0 angular.x=0 angular.y=0 angular.z=-0.25
+</code></pre>
+<p>The topics ending in <code>/__node</code>, <code>/__releases</code>, <code>/__params</code> and <code>/__param_set</code> belong to
+the framework: a node's description, its release journal and its parameter channel. They
+are listed like any other topic.</p>
+<h2 id="topic"><code>topic</code></h2>
+<pre><code class="language-text">usage: topic list
+       topic hz     [-n REPORTS] [--lane kernel|safe|fast] NAME
+       topic echo   [-n COUNT]   [--lane kernel|safe|fast] [--as &quot;DECL&quot;] NAME
+       topic record [-o PATH] [-d SECONDS] [NAME...]
+       topic dump   FILE [--topic NAME] [-n COUNT]
+       topic play   FILE [-r RATE] [-s SECONDS] NAME...
+</code></pre>
+<p><code>topic COMMAND --help</code> prints the full description of one command.</p>
+<h3 id="topic-list"><code>topic list</code></h3>
+<p>One line per topic on every lane, sorted by name: the name, the lane (<code>kernel</code>, <code>safe</code> or
+<code>fast</code>), its writers, its readers out of its reader capacity, its payload size, and its
+type. The type is a standard payload's name (<code>Twist</code>, <code>Range</code>, <code>Odometry</code>, ...) when the
+topic's layout identity and size match one, and <code>layout 0x...</code> otherwise.</p>
+<p>Listing opens nothing and changes no count. The counts can over-report:</p>
+<ul>
+<li>a running <code>topic hz</code> or <code>topic echo</code> is an ordinary reader, and is counted as one;</li>
+<li>a fast-lane reader, or a safe- or fast-lane writer, that dropped its end stays counted
+until its process exits.</li>
+</ul>
+<h3 id="topic-hz"><code>topic hz</code></h3>
+<p>Measures the rate a topic is published at and prints one report a second:</p>
+<pre><code class="language-text">average rate: 50.00 Hz   min: 19.0 ms   max: 21.0 ms   window: 50
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>window</code></td>
+<td>publications in the last second, counted from the publisher's own sequence numbers, so exact even for publications the poll did not see</td>
+</tr>
+<tr>
+<td><code>average rate</code></td>
+<td><code>window</code> divided by the time between the two observations that bound it</td>
+</tr>
+<tr>
+<td><code>min</code>, <code>max</code></td>
+<td>shortest and longest gap between two consecutive publications the poll saw; <code>n/a</code> when every change it saw spanned several publications</td>
+</tr>
+<tr>
+<td><code>not seen</code></td>
+<td>publications counted in the window that the poll did not see one by one</td>
+</tr>
+</tbody>
+</table>
+<p><code>hz</code> reads as one ordinary reader, polling every 1 ms at the lowest priority. Its times are
+when it saw each publication, not when the publisher published it, which is what its first
+line says: under load <code>max</code> grows and a rate can read low, but <code>window</code> stays exact.
+<code>no new messages</code> is printed for a second with nothing new.</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-n REPORTS</code></td>
+<td>exit 0 after REPORTS reports; without it, <code>hz</code> runs until stopped</td>
+</tr>
+<tr>
+<td><code>--lane LANE</code></td>
+<td>read NAME on this lane, when a topic of that name exists on more than one</td>
+</tr>
+</tbody>
+</table>
+<p><code>hz</code> exits 1 when the topic has no writer, or once its writer is gone.</p>
+<h3 id="topic-echo"><code>topic echo</code></h3>
+<p>Prints a topic's payloads as <code>field=value</code> pairs. The first line names the lane, the type,
+the size and the layout identity. <code>echo</code> polls every 10 ms and prints the newest
+publication it has not printed yet; publications it skipped are counted on a line of their
+own, <code># missed N</code>.</p>
+<p>A payload is decoded by the first of these that applies:</p>
+<ol>
+<li><code>--as &quot;DECL&quot;</code>: a declaration in the Python <code>Payload</code> grammar, used only when its layout
+identity and size equal the topic's. Otherwise <code>echo</code> says why and prints hex.<pre><code class="language-text">tsh&gt; topic echo --as &quot;stamp:u64 range_mm:u32 quality:u32&quot; lidar/raw
+tsh&gt; topic echo --as &quot;linear:Vector3 angular:Vector3&quot; cmd/velocity
+</code></pre>
+</li>
+<li>A standard payload of <code>robot_messages</code>, found by layout identity and size.</li>
+<li>Hex: the first 256 bytes and the total length.</li>
+</ol>
+<p><code>-n COUNT</code> exits 0 after COUNT printed publications; <code>--lane</code> is as for <code>hz</code>. <code>echo</code> exits
+1 when the topic has no writer, or once its writer is gone.</p>
+<h3 id="topic-record"><code>topic record</code></h3>
+<p>Records every publication of every topic on every lane, or of the topics named, into an
+<a href="https://mcap.dev" rel="noopener">MCAP</a> file, each with its lane sequence number and the time it was read.
+Standard MCAP tools on a development host can open the file.</p>
+<pre><code class="language-text">tsh&gt; topic record -o /recordings/run7.mcap &amp;        start it BEFORE the nodes
+recording to /recordings/run7.mcap
+tsh&gt; lidar &amp; brake &amp; drive &amp;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-o PATH</code></td>
+<td>write PATH, which must not exist. Without it: the next <code>/recordings/run&lt;N&gt;.mcap</code>, the directory created if absent</td>
+</tr>
+<tr>
+<td><code>-d SECONDS</code></td>
+<td>stop after SECONDS, write each topic's counts and the file's footer, and exit 0. Without it, <code>record</code> runs until stopped, and the file is readable up to its last whole record</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Start <code>record</code> before the nodes.</strong> A kernel-lane topic hands a late reader only the
+newest 8 publications it still holds, and replaying a node needs its journal from its
+first release.</li>
+<li><strong>Nothing is lost silently.</strong> A topic <code>record</code> cannot attach to (every reader seat taken,
+or a payload over 65489 bytes) is in the file with the reason and named on standard
+error. A publication overwritten before it was read is a gap in its topic's sequence,
+which <code>topic dump</code> reports.</li>
+<li><code>record</code> reads at priority 30, below every node, polls every 1 ms and looks for new
+topics every 100 ms. It exits 1 if PATH exists, or as soon as a write fails or the disk is
+full, saying how many bytes the file holds.</li>
+</ul>
+<h3 id="topic-dump"><code>topic dump</code></h3>
+<p>Prints a recording: its time base, each topic where it first appears, and each
+publication as</p>
+<pre><code class="language-text">RECEIPT_NS seq SEQUENCE NAME: field=value ...
+</code></pre>
+<p>Standard payloads are decoded; anything else is printed as hex, with the reason on its
+topic's line. Every sequence number from 1 to the last one read is either a record or
+accounted for on a line of its own:</p>
+<pre><code class="language-text"># sensor/range: 12 before the recording (seq 1..12)
+# sensor/range: missed 3 (seq 140..142)
+# sensor/range: missed 1 after the last record (seq 2104..2104)
+</code></pre>
+<p><code>--topic NAME</code> prints one topic only; <code>-n COUNT</code> stops after COUNT records.</p>
+<h3 id="topic-play"><code>topic play</code></h3>
+<p>Publishes again what a recording holds for the topics named: each payload byte for byte,
+on its recorded topic name and lane, at its recorded distance from the first one played.</p>
+<pre><code class="language-text">tsh&gt; topic play /recordings/run7.mcap sensor/range
+playing sensor/range  safe  32 B  Range
+sensor/range  safe  2104 published  0 skipped  worst lateness 0.412 ms
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-r RATE</code></td>
+<td>publish RATE times as fast, e.g. <code>0.5</code> or <code>2</code>; default 1. Only the data's pace changes, never a node's period</td>
+</tr>
+<tr>
+<td><code>-s SECONDS</code></td>
+<td>start SECONDS into the recording; earlier records are counted as skipped</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>At least one topic must be named; <code>topic dump FILE</code> lists what a recording holds.</li>
+<li><code>play</code> refuses a topic that already has a live writer: stop the node that publishes it
+first. This is how a node is fed its recorded inputs live, with the real sensors off.</li>
+<li>A record is never published early and never skipped: one found late is published at
+once, and the summary reports each topic's worst lateness.</li>
+<li>At <code>-r 0.5</code>, an input whose <code>stale_after</code> is under twice the topic's period reads stale on
+some releases; at <code>-r 2</code>, a node misses publications. That is the data's pace changing,
+not a fault.</li>
+</ul>
+<h3 id="replaying-one-node">Replaying one node</h3>
+<p>Replaying a node is not a <code>topic</code> command: the node itself does it, from a recording, when
+<code>--replay FILE</code> ends its command line. It runs the node's body once per recorded release
+against exactly what that release was handed, and compares the outputs:</p>
+<pre><code class="language-text">tsh&gt; brake --replay /recordings/run7.mcap
+replay: brake life 1: 2104 releases, 2103 compared, identical
+tsh&gt; python steer.py --replay /recordings/run7.mcap
+</code></pre>
+<p>The periodic framework guides explain it in full:
+<a href="/docs/periodic-framework-rust/#recording-and-replay">Rust</a>,
+<a href="/docs/periodic-framework-python/#recording-and-replay">Python</a>.</p>
+<h2 id="node"><code>node</code></h2>
+<pre><code class="language-text">usage: node list | node info NODE
+</code></pre>
+<p>Every periodic node, Rust or Python, announces itself when it starts. <code>node</code> reads those
+announcements; the node does nothing extra for it.</p>
+<pre><code class="language-text">tsh&gt; node list
+balance  pid 7  balance
+tsh&gt; node info balance
+balance
+  Process: pid 7 (balance), thread 0
+  Period: 5ms, on_overrun Skip
+  Priority: 31
+  Subscribers:
+    imu/data: safe, stale_after 12ms
+  Publishers:
+    motor/command: kernel
+  Action Servers:
+  Parameters: 2, settable
+</code></pre>
+<p><code>node list</code> prints one line per running node: its name, its process id and its program.
+<code>node info</code> prints, for each running node of that name, its process and thread, its period
+and overrun policy, its priority when it started, every input with its lane and
+<code>stale_after</code>, every output with its lane, the actions it serves, and how many run-time
+parameters it has.</p>
+<ul>
+<li>A node that has stopped is not listed.</li>
+<li>A node replaying a recording announces nothing, so it is not listed.</li>
+<li>Two running nodes with one name are both listed, with a warning: node names should be
+unique within an image.</li>
+<li>If the image's topic storage is full, a node runs unlisted and says so once in its log:
+<code>brake: no node description (topic storage full); node list does not show this node</code>.</li>
+</ul>
+<h2 id="param"><code>param</code></h2>
+<pre><code class="language-text">usage: param list [NODE] | param set NODE NAME VALUE [NAME VALUE...]
+</code></pre>
+<p>Lists and sets the run-time parameters a node declares, such as a controller's gains,
+while it runs.</p>
+<pre><code class="language-text">tsh&gt; param list
+balance  2 parameters
+tsh&gt; param list balance
+kp = 42.0  (0.0 .. 200.0)
+kd = 1.5   (0.0 .. 20.0)
+tsh&gt; param set balance kp 45.5
+balance: kp = 45.5 from release 18342
+tsh&gt; param list balance
+kp = 45.5  (0.0 .. 200.0, default 42.0)
+kd = 1.5   (0.0 .. 20.0)
+tsh&gt; param set balance kp 250
+param: balance kp = 250.0 is outside 0.0 .. 200.0; nothing was set
+</code></pre>
+<ul>
+<li><strong>A set takes effect at the start of a release.</strong> The release <code>param set</code> names is the
+first whose body sees the new value; a body never sees a value change while it runs.</li>
+<li><strong>Set coupled values in one command.</strong> <code>param set balance kp 50 kd 2.5</code> is one request,
+applied whole at one release. Two commands are two requests, and at least one release
+runs between them with the new <code>kp</code> and the old <code>kd</code>.</li>
+<li><strong>The node checks every request</strong> against its declared ranges, both ends included. A
+value outside its range, a NaN, or an unknown name is refused, and nothing changes.</li>
+<li><code>param set</code> succeeds only on the node's own answer. It exits 1 with what was refused, or
+when the node does not answer within eight of its periods plus 250 ms.</li>
+<li><strong>Values last for the node's life.</strong> A restart starts at the defaults again; <code>param list</code>
+shows each changed value beside its default, so you can copy it into the source.</li>
+<li><strong>Each applied change is logged</strong> by <code>param</code> in its own log ring:
+<code>balance: kp 42.0 -&gt; 45.5 from release 18342</code>. Read it with <code>logview -s param</code>.</li>
+<li><code>param list</code> names only nodes that declare parameters; <code>node list</code> names every node. A
+node declared <code>safety</code> has no run-time parameters.</li>
+</ul>
+<p>How a node declares parameters:
+<a href="/docs/periodic-framework-rust/#run-time-parameters">Rust</a>,
+<a href="/docs/periodic-framework-python/#run-time-parameters">Python</a>.</p>
+<h2 id="logview"><code>logview</code></h2>
+<pre><code class="language-text">usage: logview [-s &lt;ring&gt;] [-l &lt;level&gt;] [-f]
+       logview console &lt;all|info|status|warning|error|none&gt;
+</code></pre>
+<p>Each process that logs has a log ring of its own, in memory shared with the log server.
+Writing a record costs no system call; <code>logview</code> reads the rings directly and prints
+their records merged by time stamp. A ring stays readable after its process exits, so the
+last words of a crashed program are still there.</p>
+<pre><code class="language-text">tsh&gt; logview
+logview: 5 ring(s)
+  brake            pid=9      1 page(s) live
+  param            pid=14     1 page(s) dead
+  ...
+tsh&gt; logview -s brake -l warning
+tsh&gt; logview -f
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-s RING</code></td>
+<td>only rings whose name starts with RING: <code>-s wifi</code> matches <code>wifi_rpi3</code></td>
+</tr>
+<tr>
+<td><code>-l LEVEL</code></td>
+<td>only records at LEVEL or worse: <code>trace</code>, <code>info</code>, <code>status</code> (also <code>start</code>, <code>success</code>), <code>warning</code>, <code>error</code></td>
+</tr>
+<tr>
+<td><code>-f</code></td>
+<td>follow: keep printing new records until stopped</td>
+</tr>
+<tr>
+<td><code>console LEVEL</code></td>
+<td>set which records the log server also prints to the console: <code>all</code>, <code>info</code>, <code>status</code> (the default: the boot narrative and anything worse), <code>warning</code>, <code>error</code> or <code>none</code></td>
+</tr>
+</tbody>
+</table>
+<p>If records were overwritten in a ring before <code>logview</code> read them, it says how many.</p>
+<p>What lands where:</p>
+<ul>
+<li>A Rust program writes records with <code>log!(INFO, &quot;...&quot;)</code>. The periodic framework writes a
+Rust node's own reports (a refused publish, a missing journal) to the node's ring, so
+<code>logview -s &lt;node&gt;</code> shows them.</li>
+<li>A Python node reports a run of refused publishes on the console, not in a log ring, so
+<code>logview</code> does not show it.</li>
+<li><code>param</code> logs every applied change in its ring, <code>param</code>.</li>
+</ul>
+
+<footer class="doc-src">
+  <span>Generated from <span class="mono">utility/doc/shell_tools_public.md</span> in the TAIL OS repository.</span>
+</footer>
+</article>
+<nav class="toc" aria-label="On this page">
+  <span class="toc-h">On this page</span>
+  <ul>
+    <li><a href="#a-first-session">A first session</a></li>
+    <li><a href="#topic">topic</a></li>
+    <li><a href="#node">node</a></li>
+    <li><a href="#param">param</a></li>
+    <li><a href="#logview">logview</a></li>
+  </ul>
+</nav>
+</div>
+</main>
+</div>
+<footer class="ftr">
+  <span>TAIL OS &mdash; real-time OS in Rust</span>
+  <span class="ftr-sep">/</span>
+  <span class="mono">v0.9.0</span>
+</footer>
+
+</body>
+</html>

@@ -400,7 +400,7 @@ within its group, so a leaf reads *Guides → Rust Guide* rather than repeating 
 as *Guides → Periodic Framework (Rust)*.
 
 The groups follow the reader's journey, not the repository: **Get started** (run it),
-**Guides** (build with it), **Boards** (put it on hardware), then the License Guide at the
+**Guides** (build with it), **Boards** (put it on hardware), **Reference** (look something up), then the License Guide at the
 top level. Each group holds one kind of page, and a group is added only when its first real
 page exists, so no section is ever an empty promise. Rust and Python are separate pages in
 Guides; the site covers no other language.

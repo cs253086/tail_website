@@ -12,13 +12,13 @@
 <meta property="og:url" content="https://tail-os.com/docs/periodic-framework-rust/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/a83915e5b99b/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/ecd0f0dae0d1/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/a83915e5b99b/css/style.css">
-<script type="module" src="/assets/a83915e5b99b/js/copy.js"></script>
-<script type="module" src="/assets/a83915e5b99b/js/reveal.js"></script>
+<link rel="stylesheet" href="/assets/ecd0f0dae0d1/css/style.css">
+<script type="module" src="/assets/ecd0f0dae0d1/js/copy.js"></script>
+<script type="module" src="/assets/ecd0f0dae0d1/js/reveal.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -103,6 +103,14 @@
     </li>
     <li class="nav-page">
       <a class="nav-link" href="/docs/raspberry-pi-3/">Raspberry Pi 3</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Reference</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/shell-tools/">Shell Tools</a>
     </li>
       </ul>
     </li>
@@ -740,9 +748,9 @@ one output does not stop the others, and is counted and reported for that output
 </tr>
 </tbody>
 </table>
-<p>Compared with ROS 2, where a node calls <code>create_publisher</code> once per topic and
-<code>publisher-&gt;publish(msg)</code> sends at the call, an output here is declared, not created, and
-publishes at the end of the release: a half-run release publishes nothing.</p>
+<p>An output is declared, not created, and <code>publish</code> sends nothing at the call: what the
+body hands its outputs is published at the end of the release, so a half-run release
+publishes nothing.</p>
 <h3 id="subscriber">Subscriber</h3>
 <pre><code class="language-rust">use periodic::{periodic, Cycle};
 use robot_topics::{Range, SENSOR_RANGE};
@@ -2144,10 +2152,10 @@ and one record that names the key and, for an input, its topic:</p>
 by the same grammar, so <code>lease = &quot;100&quot;</code> does not build (see <a href="#actions">Actions</a>).</p>
 <h2 id="payloads">Payloads</h2>
 <p><strong>Use a standard payload</strong> when one fits: <code>robot_messages</code> has <code>geometry::{Vector3, Point, Quaternion, Pose, Twist}</code>, <code>sensor::{Range, Imu}</code> and <code>navigation::Odometry</code>, with the
-field names of the ROS 2 common interfaces, SI units in each field's doc comment, and
-<code>stamp_ns</code> (nanoseconds since boot: <code>periodic::monotonic_ns()</code> at the hardware boundary,
-<code>periodic::now()</code> in a node that decides, so a replay reproduces it) where ROS has a
-header. A C node reads the same payload through <code>&lt;tail/messages.h&gt;</code> and a Python node
+field names robotics code commonly uses (<code>position</code>, <code>orientation</code>, <code>linear</code>, <code>angular</code>),
+SI units in each field's doc comment, and a <code>stamp_ns</code> field as the record's time stamp
+(nanoseconds since boot: <code>periodic::monotonic_ns()</code> at the hardware boundary,
+<code>periodic::now()</code> in a node that decides, so a replay reproduces it). A C node reads the same payload through <code>&lt;tail/messages.h&gt;</code> and a Python node
 through <code>tail_messages</code>, both generated from these structs by the build.</p>
 <p><strong>Declare your own</strong> as a <code>#[repr(C)]</code> struct that derives <code>WirePlain</code>:</p>
 <pre><code class="language-rust">use wire_plain::WirePlain;
@@ -2392,8 +2400,8 @@ refuses any <code>unsafe</code> or warning in them; a program of yours needs nei
 <h3 id="the-conventions">The conventions</h3>
 <p>Each is stated on a record of <code>robot_messages</code>, in its doc comment, which the build also
 prints into <code>&lt;tail/messages.h&gt;</code> and <code>tail_messages</code>, so a C or Python node reads the same
-words. They are ROS's: REP 103's axes and units, REP 105's frame names, <code>geometry_msgs</code>'
-quaternion order and tf2's transform direction.</p>
+words. They are the conventions most robotics software already uses, so a pose, a
+quaternion or a frame name means here what it means elsewhere.</p>
 <table>
 <thead>
 <tr>
@@ -2431,7 +2439,7 @@ quaternion order and tf2's transform direction.</p>
 <td><code>Range</code></td>
 </tr>
 <tr>
-<td>REP 105's frames: <code>map</code>, <code>odom</code>, <code>base_link</code>; <code>pose</code> is <code>base_link</code> in <code>odom</code>, <code>twist</code> is in the body frame</td>
+<td>The standard frames: <code>map</code>, <code>odom</code>, <code>base_link</code>; <code>pose</code> is <code>base_link</code> in <code>odom</code>, <code>twist</code> is in the body frame</td>
 <td><code>Odometry</code></td>
 </tr>
 </tbody>
@@ -2442,7 +2450,7 @@ quaternion order and tf2's transform direction.</p>
 use frames::{frames, Angle};
 
 frames! {
-    /// The rover's coordinate frames, named as REP 105 names them.
+    /// The rover's coordinate frames, with the standard frame names.
     pub ROVER {
         /// World-fixed and continuous; drifts without bound.
         ODOM,
@@ -2477,7 +2485,7 @@ frames! {
 </tbody>
 </table>
 <p>Each frame becomes a constant of the module, with the doc comment written on it, and the set
-a <code>static</code>. A frame prints in REP 105's spelling: <code>RANGE_FRONT</code> prints <code>range_front</code>. An angle
+a <code>static</code>. A frame prints in lower case: <code>RANGE_FRONT</code> prints <code>range_front</code>. An angle
 is <code>Angle::from_degrees</code> or <code>Angle::from_radians</code>, never a bare number. A set holds at most
 256 frames, and a module one set. The build refuses a set that is not one tree:</p>
 <table>
@@ -2582,8 +2590,8 @@ fn obstacle(
 }
 </code></pre>
 <p><code>lookup(target, source)</code> returns <code>T_target_source</code>, the transform that takes coordinates in
-<code>source</code> to coordinates in <code>target</code>, in the argument order of tf2's
-<code>lookupTransform(target, source)</code>. It walks both frames up the tree to where they meet and
+<code>source</code> to coordinates in <code>target</code>; the target comes first, as in the transform's
+name. It walks both frames up the tree to where they meet and
 composes the links it crosses: at most N - 1 of an N-frame set, with no allocation, no lock
 and no clock. A lookup between frames joined by mounts always succeeds, and
 <code>range.get()?.point()?</code> is <code>None</code> when the reading is absent, stale, or not a measured

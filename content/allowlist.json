@@ -104,6 +104,20 @@
       "navTitle": "Raspberry Pi 3"
     },
     {
+      "path": "utility/doc/shell_tools_public.md",
+      "slug": "shell-tools",
+      "title": "Shell Tools",
+      "summary": "Inspect and tune a running robot from the TAIL OS shell: topics, nodes, parameters and logs.",
+      "nav": [
+        "Reference"
+      ],
+      "navTitle": "Shell Tools",
+      "questions": [
+        "How do I record and replay a topic?",
+        "How do I list the running nodes?"
+      ]
+    },
+    {
       "path": "doc/license_guide_public.md",
       "slug": "license-guide",
       "title": "License Guide",
