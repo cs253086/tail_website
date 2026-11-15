@@ -24,8 +24,10 @@ const K1 = 1.2;
 // one-line sections with long layout boxes and listings; at 0.75 the passage
 // holding "26 programs" -- inside the SD card layout box, 6.6 times the median
 // length -- ranked seventh for "How many programs are on the Raspberry Pi 3
-// image?". Measured on functions/api/retrieval.test.js; see DESIGN.md 5.2.
-const B = 0.5;
+// image?". Lowered again to 0.2 when the robotics documents joined the corpus
+// and pushed the passage that names the shipped Python version to rank 12.
+// Measured on functions/api/retrieval.test.js; see DESIGN.md 5.2.
+const B = 0.2;
 
 // A section titled "Run TailOS (one command)" is a far stronger signal of what
 // it answers than the same words appearing once in a paragraph. Weighting the

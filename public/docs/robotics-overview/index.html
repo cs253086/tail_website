@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Robot Applications on TAIL OS: Concepts — TAIL OS</title>
+<meta name="description" content="How a robot's programs fit together on TAIL OS: periodic and service programs, topics and lanes, and what runs where.">
+<link rel="canonical" href="https://tail-os.com/docs/robotics-overview/">
+<meta property="og:title" content="Robot Applications on TAIL OS: Concepts — TAIL OS">
+<meta property="og:description" content="How a robot's programs fit together on TAIL OS: periodic and service programs, topics and lanes, and what runs where.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tail-os.com/docs/robotics-overview/">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="/assets/70d74c3270ec/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/assets/70d74c3270ec/css/style.css">
+<script type="module" src="/assets/70d74c3270ec/js/copy.js"></script>
+<script type="module" src="/assets/70d74c3270ec/js/reveal.js"></script>
+</head>
+<body class="page-shell">
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 32" width="22" height="22" fill="none" aria-hidden="true"><path d="M4 8h24M4 16h16M4 24h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span>TAIL OS</span><span class="ver">v0.9.0</span></a>
+    <form class="hdr-search" action="/ask/" method="get" role="search">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" name="q" placeholder="Search or ask a question" aria-label="Search or ask a question" autocomplete="off">
+    </form>
+    <nav class="hdr-nav" aria-label="Primary">
+      <a href="/docs/">Docs</a>
+      <details class="hdr-menu">
+        <summary class="hdr-menu-btn" aria-haspopup="true">
+          <span>Support</span>
+          <svg class="hdr-menu-chevron" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
+        </summary>
+        <div class="hdr-menu-panel">
+          <div class="hdr-menu-desc">Questions, hardware bring-up, or general inquiries:</div>
+          <a class="hdr-menu-action" href="mailto:support@tail-os.com">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <span>Email us</span>
+          </a>
+          <span class="hdr-menu-sub mono">support@tail-os.com</span>
+        </div>
+      </details>
+      
+    </nav>
+  </div>
+</header>
+<div class="shell">
+<aside class="side">
+  <nav aria-label="Documentation">
+    <ul class="nav-docs">
+    <li class="nav-group">
+      <span class="nav-label">Get started</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/quick-start/">Quick Start</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/installation/">Installation</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Concepts</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/robotics-overview/" aria-current="page">How Robot Applications Work</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/robotics-overview/#what-runs-where">What runs where</a></li>
+        <li><a href="/docs/robotics-overview/#two-kinds-of-program">Two kinds of program</a></li>
+        <li><a href="/docs/robotics-overview/#topics-and-lanes">Topics and lanes</a></li>
+        <li><a href="/docs/robotics-overview/#payloads-and-frames">Payloads and frames</a></li>
+        <li><a href="/docs/robotics-overview/#built-into-every-node">Built into every node</a></li>
+        <li><a href="/docs/robotics-overview/#record-replay-inspect">Record, replay, inspect</a></li>
+        <li><a href="/docs/robotics-overview/#languages">Languages</a></li>
+        <li><a href="/docs/robotics-overview/#current-limits">Current limits</a></li>
+        <li><a href="/docs/robotics-overview/#next">Next</a></li>
+      </ul>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Guides</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-rust/">Rust Guide</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-python/">Python Guide</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/aperiodic-framework-rust/">Service Framework (Rust)</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/device-framework-rust/">Device Framework (Rust)</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Boards</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/qemu/">QEMU</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/raspberry-pi-3/">Raspberry Pi 3</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Reference</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/shell-tools/">Shell Tools</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/license-guide/">License Guide</a>
+    </li>
+    </ul>
+  </nav>
+</aside>
+<main class="content">
+<div class="doc-wrap">
+<article class="doc">
+<h1 id="robot-applications-on-tailos-concepts">Robot Applications on TailOS: Concepts</h1>
+<p>TailOS is a microkernel real-time operating system for robots. User programs get the full
+Rust standard library, and Python runs on the same framework. A robot application is a set
+of small programs: <strong>nodes</strong> that run on a fixed period and exchange data on <strong>topics</strong>,
+and <strong>services</strong> that answer requests. This page names the pieces and shows where each
+one runs. The guides linked at the end show how to write them.</p>
+<h2 id="what-runs-where">What runs where</h2>
+<figure class="diagram"><svg id="diagram-fc8762fdbb" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" viewBox="4 4 892.375 397.3999938964844" aria-roledescription="flowchart-v2" aria-describedby="chart-desc-diagram-fc8762fdbb" aria-labelledby="chart-title-diagram-fc8762fdbb" width="893" role="img"><title id="chart-title-diagram-fc8762fdbb">What runs where in a TailOS robot application</title><desc id="chart-desc-diagram-fc8762fdbb">Periodic nodes, aperiodic services, device drivers, servers and shell tools are each separate user-space processes. Nodes reach the microkernel through topics and services through requests; the drivers, servers and tools also run on the microkernel, which provides threads, scheduling, memory, IPC and topics.</desc><g><marker id="diagram-fc8762fdbb_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath"/></marker><marker id="diagram-fc8762fdbb_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath"/></marker><marker id="diagram-fc8762fdbb_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath"/></marker><marker id="diagram-fc8762fdbb_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath"/></marker><marker id="diagram-fc8762fdbb_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-fc8762fdbb_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-fc8762fdbb_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-fc8762fdbb_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-fc8762fdbb_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath"/></marker><marker id="diagram-fc8762fdbb_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath"/></marker><marker id="diagram-fc8762fdbb_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath"/></marker><marker id="diagram-fc8762fdbb_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath"/></marker><g class="root"><g class="clusters"/><g class="edges edgePaths"><path d="M88,105.80000305175781L88,254.92893218813452Q88,262 95.07106781186548,262L377.3039321881345,262Q384.375,262 384.375,269.0710678118655L384.375,278" id="diagram-fc8762fdbb-L_NODE_KERNEL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_NODE_KERNEL_0" data-points="W3sieCI6ODgsInkiOjEwNS44MDAwMDMwNTE3NTc4MX0seyJ4Ijo4OCwieSI6MjYyfSx7IngiOjM4NC4zNzUsInkiOjI2Mn0seyJ4IjozODQuMzc1LCJ5IjoyODJ9XQ==" data-look="neo" marker-end="url(#diagram-fc8762fdbb_flowchart-v2-pointEnd-margin)"/><path d="M280,105.80000305175781L280,234.92893218813452Q280,242 287.0710678118655,242L399.3039321881345,242Q406.375,242 406.375,249.07106781186548L406.375,278" id="diagram-fc8762fdbb-L_SVC_KERNEL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_SVC_KERNEL_0" data-points="W3sieCI6MjgwLCJ5IjoxMDUuODAwMDAzMDUxNzU3ODF9LHsieCI6MjgwLCJ5IjoyNDJ9LHsieCI6NDA2LjM3NSwieSI6MjQyfSx7IngiOjQwNi4zNzUsInkiOjI4Mn1d" data-look="neo" marker-end="url(#diagram-fc8762fdbb_flowchart-v2-pointEnd-margin)"/><path d="M428.375,222L428.375,278" id="diagram-fc8762fdbb-L_DRV_KERNEL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_DRV_KERNEL_0" data-points="W3sieCI6NDI4LjM3NSwieSI6MjIyfSx7IngiOjQyOC4zNzUsInkiOjI4Mn1d" data-look="neo" marker-end="url(#diagram-fc8762fdbb_flowchart-v2-pointEnd-margin)"/><path d="M620.375,222L620.375,234.92893218813452Q620.375,242 613.3039321881345,242L457.4460678118655,242Q450.375,242 450.375,249.07106781186548L450.375,278" id="diagram-fc8762fdbb-L_SRV_KERNEL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_SRV_KERNEL_0" data-points="W3sieCI6NjIwLjM3NSwieSI6MjIyfSx7IngiOjYyMC4zNzUsInkiOjI0Mn0seyJ4Ijo0NTAuMzc1LCJ5IjoyNDJ9LHsieCI6NDUwLjM3NSwieSI6MjgyfV0=" data-look="neo" marker-end="url(#diagram-fc8762fdbb_flowchart-v2-pointEnd-margin)"/><path d="M812.375,222L812.375,254.92893218813452Q812.375,262 805.3039321881345,262L479.4460678118655,262Q472.375,262 472.375,269.0710678118655L472.375,278" id="diagram-fc8762fdbb-L_TOOLS_KERNEL_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_TOOLS_KERNEL_0" data-points="W3sieCI6ODEyLjM3NSwieSI6MjIyfSx7IngiOjgxMi4zNzUsInkiOjI2Mn0seyJ4Ijo0NzIuMzc1LCJ5IjoyNjJ9LHsieCI6NDcyLjM3NSwieSI6MjgyfV0=" data-look="neo" marker-end="url(#diagram-fc8762fdbb_flowchart-v2-pointEnd-margin)"/></g><g class="edgeLabels"><g class="edgeLabel" transform="translate(87.8984375, 183.9000015258789)"><g class="label" data-id="L_NODE_KERNEL_0" transform="translate(0, -10.5)"><g><rect class="background" x="-22.8984375" y="0" width="45.796875" height="21"/><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">topics</tspan></tspan></text></g></g></g><g class="edgeLabel" transform="translate(279.6875, 183.9000015258789)"><g class="label" data-id="L_SVC_KERNEL_0" transform="translate(0, -10.5)"><g><rect class="background" x="-32.6875" y="0" width="65.375" height="21"/><text y="-10.1" text-anchor="middle"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em" text-anchor="middle"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">requests</tspan></tspan></text></g></g></g></g><g class="nodes"><g class="node default" id="diagram-fc8762fdbb-flowchart-NODE-0" data-look="neo" transform="translate(88, 58.900001525878906)"><rect class="basic label-container" x="-76" y="-46.900001525878906" width="152" height="93.80000305175781"/><g class="label" transform="translate(0, -34.900001525878906)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">periodic</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> nodes:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">sensor,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">estimator,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">controller</tspan></tspan></text></g></g></g><g class="node default" id="diagram-fc8762fdbb-flowchart-SVC-1" data-look="neo" transform="translate(280, 58.900001525878906)"><rect class="basic label-container" x="-76" y="-46.900001525878906" width="152" height="93.80000305175781"/><g class="label" transform="translate(0, -34.900001525878906)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">aperiodic</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">services:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">request</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> and</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">reply</tspan></tspan></text></g></g></g><g class="node default" id="diagram-fc8762fdbb-flowchart-DRV-2" data-look="neo" transform="translate(428.375, 183.9000015258789)"><rect class="basic label-container" x="-76" y="-38.099998474121094" width="152" height="76.19999694824219"/><g class="label" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">device</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> drivers:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">GPIO,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> I2C,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">PWM,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> stepper</tspan></tspan></text></g></g></g><g class="node default" id="diagram-fc8762fdbb-flowchart-SRV-3" data-look="neo" transform="translate(620.375, 183.9000015258789)"><rect class="basic label-container" x="-76" y="-38.099998474121094" width="152" height="76.19999694824219"/><g class="label" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">servers:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> file</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">system,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">terminal,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> log</tspan></tspan></text></g></g></g><g class="node default" id="diagram-fc8762fdbb-flowchart-TOOLS-4" data-look="neo" transform="translate(812.375, 183.9000015258789)"><rect class="basic label-container" x="-76" y="-38.099998474121094" width="152" height="76.19999694824219"/><g class="label" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">shell</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> tools:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> topic,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">node,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> param,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">logview</tspan></tspan></text></g></g></g><g class="node default" id="diagram-fc8762fdbb-flowchart-KERNEL-5" data-look="neo" transform="translate(428.375, 337.70000076293945)"><rect class="basic label-container" x="-76" y="-55.70000076293945" width="152" height="111.4000015258789"/><g class="label" transform="translate(0, -43.70000076293945)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">microkernel:</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">threads,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">scheduling,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="3.2em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">memory,</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> IPC,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="4.300000000000001em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">topics</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="diagram-fc8762fdbb-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="diagram-fc8762fdbb-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="diagram-fc8762fdbb-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg></figure>
+<p><em>Your nodes and services, the drivers, the servers and the tools are all separate
+user-space processes; the microkernel underneath provides only threads, scheduling, memory,
+IPC and topics.</em></p>
+<p>The kernel does as little as it can: it creates processes and threads, schedules them by
+priority, isolates their memory, and carries messages between them. Everything else runs
+as an ordinary process with its own address space, so a fault in a driver or a server
+cannot corrupt the kernel or another program.</p>
+<h2 id="two-kinds-of-program">Two kinds of program</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Periodic node</th>
+<th>Aperiodic service</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Runs</td>
+<td>once per declared period: wake, read inputs, compute, publish</td>
+<td>once per request: receive, handle, reply exactly once</td>
+</tr>
+<tr>
+<td>Talks over</td>
+<td>topics: many readers, the latest value</td>
+<td>requests: one client, one reply</td>
+</tr>
+<tr>
+<td>You write</td>
+<td>one function with a <code>#[periodic]</code> attribute</td>
+<td>a trait, its implementation, and a client call</td>
+</tr>
+<tr>
+<td>Typical use</td>
+<td>sensor drivers, estimators, controllers, actuator commands</td>
+<td>device drivers, configuration, anything asked for on demand</td>
+</tr>
+</tbody>
+</table>
+<p>A <strong>periodic node</strong> is the shape most robot code takes. You declare its period, what it
+does on an overrun, and what it reads and publishes; the framework owns the loop:</p>
+<pre><code class="language-rust">#[periodic(every = &quot;20ms&quot;, on_overrun = Skip)]
+fn brake(
+    #[subscribe(SENSOR_RANGE, stale_after = &quot;70ms&quot;)] range: Cycle&lt;Range&gt;,
+    #[publish(CMD_VELOCITY)] command: Out&lt;Twist&gt;,
+) {
+    command.publish(match range.get() {
+        Some(reading) if reading.range &gt; 0.30 =&gt; cruise(),
+        _ =&gt; stop(),   // too close, no reading, or a reading too old
+    });
+}
+</code></pre>
+<p>What the framework does for every node:</p>
+<ul>
+<li><strong>Fixed timing.</strong> Each release wakes at an absolute time on the period's grid, so the
+period never drifts. An overrun is detected, handled by the declared policy, and
+reported.</li>
+<li><strong>Freshness.</strong> Each input has a <code>stale_after</code> bound. A reading that never arrived and a
+reading that is too old are the same case, <code>None</code>, so a node cannot act on stale data
+by accident.</li>
+<li><strong>All-or-nothing outputs.</strong> What the body publishes goes out when the body returns, in
+declaration order. A body that panics halfway publishes nothing.</li>
+</ul>
+<p>An <strong>aperiodic service</strong> is a server: a client calls it and blocks until the one reply
+arrives. Drivers are services, and so is anything an application asks for on demand.</p>
+<h2 id="topics-and-lanes">Topics and lanes</h2>
+<p>A topic is a named stream of fixed-size values, with any number of readers. Each reader
+gets the latest value; a slow reader misses values but never blocks the writer. A topic is
+defined once, in a crate both ends import, with its name, its payload type and its
+<strong>lane</strong>:</p>
+<pre><code class="language-rust">pub const SENSOR_RANGE: Topic&lt;Range, SafeLane&gt;   = Topic::new(&quot;sensor/range&quot;);
+pub const CMD_VELOCITY: Topic&lt;Twist, KernelLane&gt; = Topic::new(&quot;cmd/velocity&quot;);
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Lane</th>
+<th>How a value travels</th>
+<th>Safety class</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>KernelLane</code></td>
+<td>copied in and out by the kernel, one system call per message; payloads up to 4 KiB</td>
+<td>safety</td>
+</tr>
+<tr>
+<td><code>SafeLane</code></td>
+<td>zero-copy through shared memory; the kernel lets the writer change only the slot it is filling, so a published value cannot be corrupted</td>
+<td>safety</td>
+</tr>
+<tr>
+<td><code>FastLane</code></td>
+<td>zero-copy through shared memory, no system call per message, no such protection</td>
+<td>quality-managed</td>
+</tr>
+</tbody>
+</table>
+<p>Changing a topic's lane is a one-word edit to its definition; no node changes. A node
+declared <code>safety</code> refuses to build if it reads or publishes a topic on a quality-managed
+lane.</p>
+<p>Both ends of a topic must agree on the payload. Every payload type has a <strong>layout
+identity</strong> computed from its fields, and an end whose payload differs in size or layout
+is refused when it opens the topic, with a message that says why.</p>
+<h2 id="payloads-and-frames">Payloads and frames</h2>
+<ul>
+<li><strong>Standard payloads</strong> (<code>robot_messages</code>): <code>Vector3</code>, <code>Point</code>, <code>Quaternion</code>, <code>Pose</code>,
+<code>Twist</code>, <code>Range</code>, <code>Imu</code>, <code>Odometry</code>, in SI units; sensor and odometry records carry a
+time stamp in nanoseconds since boot.
+Rust and Python read the same definitions, and the Python module is generated from the
+Rust structs by the build.</li>
+<li><strong>Your own payloads</strong> are plain structs that derive <code>WirePlain</code>, which proves at build
+time that they have no padding and computes their layout identity.</li>
+<li><strong>Coordinate frames</strong> (<code>frames</code>): a robot's frames are declared once as a tree, checked
+at build time, and looked up with <code>lookup(target, source)</code>, with no allocation and a
+bounded cost. A moving link takes its value from a node input, so it goes stale like any
+other input.</li>
+</ul>
+<h2 id="built-into-every-node">Built into every node</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>What you get</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Run-time parameters</td>
+<td>declare a gain with a default and a range; change it from the shell with <code>param set</code> while the node runs</td>
+</tr>
+<tr>
+<td>Actions</td>
+<td>a long-running goal (drive to a point, home an axis) with feedback, cancel and a dead-man lease</td>
+</tr>
+<tr>
+<td>Release journal</td>
+<td>every node with an output journals each release, so a recording can replay it</td>
+</tr>
+<tr>
+<td>Description</td>
+<td>every node announces its period, inputs, outputs and parameters, which <code>node info</code> prints</td>
+</tr>
+</tbody>
+</table>
+<h2 id="record-replay-inspect">Record, replay, inspect</h2>
+<pre><code class="language-text">tsh&gt; topic record -o /recordings/run7.mcap &amp;     record every topic
+tsh&gt; lidar &amp; brake &amp; drive &amp;                     run the robot
+tsh&gt; brake --replay /recordings/run7.mcap        re-run one node against what it saw
+replay: brake life 1: 2104 releases, 2103 compared, identical
+</code></pre>
+<p>Recordings are standard MCAP files. Replaying a node runs its body once per recorded
+release, with exactly the inputs, parameters and timing that release had, and compares
+every output. An edited node replays too, which answers &quot;what would it have done?&quot;.</p>
+<h2 id="languages">Languages</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Rust</th>
+<th>Python</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Periodic nodes</td>
+<td><code>#[periodic]</code> attribute</td>
+<td><code>@periodic</code> decorator</td>
+</tr>
+<tr>
+<td>Parameters, actions, record and replay</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Coordinate frames</td>
+<td>yes</td>
+<td>not yet</td>
+</tr>
+<tr>
+<td>Services and device classes</td>
+<td>yes</td>
+<td>no</td>
+</tr>
+</tbody>
+</table>
+<p>A Rust node and a Python node exchange topics with each other; both use the same
+transports.</p>
+<h2 id="current-limits">Current limits</h2>
+<ul>
+<li>TailOS targets the Raspberry Pi 3. The robotics framework is tested on the QEMU
+emulation of that board. The Python interpreter is not yet on the board image.</li>
+<li>No process supervisor ships: a node that exits is not restarted.</li>
+<li>Run-time parameter values last for the node's life; a restart starts at the defaults.</li>
+</ul>
+<h2 id="next">Next</h2>
+<ul>
+<li><a href="/docs/periodic-framework-rust/">Periodic nodes in Rust</a></li>
+<li><a href="/docs/periodic-framework-python/">Periodic nodes in Python</a></li>
+<li><a href="/docs/aperiodic-framework-rust/">Services in Rust</a></li>
+<li><a href="/docs/device-framework-rust/">Devices in Rust</a></li>
+<li><a href="/docs/shell-tools/">Shell tools</a></li>
+</ul>
+
+<footer class="doc-src">
+  <span>Generated from <span class="mono">doc/robotics_overview_public.md</span> in the TAIL OS repository.</span>
+</footer>
+</article>
+<nav class="toc" aria-label="On this page">
+  <span class="toc-h">On this page</span>
+  <ul>
+    <li><a href="#what-runs-where">What runs where</a></li>
+    <li><a href="#two-kinds-of-program">Two kinds of program</a></li>
+    <li><a href="#topics-and-lanes">Topics and lanes</a></li>
+    <li><a href="#payloads-and-frames">Payloads and frames</a></li>
+    <li><a href="#built-into-every-node">Built into every node</a></li>
+    <li><a href="#record-replay-inspect">Record, replay, inspect</a></li>
+    <li><a href="#languages">Languages</a></li>
+    <li><a href="#current-limits">Current limits</a></li>
+    <li><a href="#next">Next</a></li>
+  </ul>
+</nav>
+</div>
+</main>
+</div>
+<footer class="ftr">
+  <span>TAIL OS &mdash; real-time OS in Rust</span>
+  <span class="ftr-sep">/</span>
+  <span class="mono">v0.9.0</span>
+</footer>
+
+</body>
+</html>

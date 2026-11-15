@@ -55,6 +55,19 @@
       ]
     },
     {
+      "path": "doc/robotics_overview_public.md",
+      "slug": "robotics-overview",
+      "title": "Robot Applications on TAIL OS: Concepts",
+      "summary": "How a robot's programs fit together on TAIL OS: periodic and service programs, topics and lanes, and what runs where.",
+      "nav": [
+        "Concepts"
+      ],
+      "navTitle": "How Robot Applications Work",
+      "questions": [
+        "How do nodes, topics and lanes fit together?"
+      ]
+    },
+    {
       "path": "framework/periodic/doc/periodic_framework_public.md",
       "slug": "periodic-framework-rust",
       "title": "Periodic Framework (Rust)",
@@ -81,6 +94,32 @@
       "navTitle": "Python Guide",
       "questions": [
         "How do I write a periodic node in Python?"
+      ]
+    },
+    {
+      "path": "framework/aperiodic/doc/aperiodic_framework_public.md",
+      "slug": "aperiodic-framework-rust",
+      "title": "Aperiodic Framework (Rust)",
+      "summary": "Write a driver or service as a trait and one generated main, with clients that connect by name.",
+      "nav": [
+        "Guides"
+      ],
+      "navTitle": "Service Framework (Rust)",
+      "questions": [
+        "How do I write a service in Rust?"
+      ]
+    },
+    {
+      "path": "framework/device/doc/device_framework_public.md",
+      "slug": "device-framework-rust",
+      "title": "Device Framework (Rust)",
+      "summary": "Use GPIO, I2C, PWM and stepper devices by class and name, without touching board registers.",
+      "nav": [
+        "Guides"
+      ],
+      "navTitle": "Device Framework (Rust)",
+      "questions": [
+        "How do I drive a PWM or stepper device?"
       ]
     },
     {

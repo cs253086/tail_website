@@ -16,10 +16,11 @@ import { DEFAULT_MODEL, ModelError, answer as callModel } from './_model.js';
 
 const MAX_QUESTION = 500;
 // Ranked passages handed to the model, before document openings are added.
-// Eight, with the softer length normalisation in bm25.mjs, puts the answering
+// Ten, with the softer length normalisation in bm25.mjs, puts the answering
 // passage of every question in retrieval.test.js within reach with a rank to
-// spare; six missed two of them. See DESIGN.md 5.2.
-const PASSAGES = 8;
+// spare; eight missed one of them once the robotics documents joined the corpus.
+// See DESIGN.md 5.2.
+const PASSAGES = 10;
 const RESULTS = 5;
 
 const json = (payload, status = 200) =>

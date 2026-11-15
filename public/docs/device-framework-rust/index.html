@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Device Framework (Rust) — TAIL OS</title>
+<meta name="description" content="Use GPIO, I2C, PWM and stepper devices by class and name, without touching board registers.">
+<link rel="canonical" href="https://tail-os.com/docs/device-framework-rust/">
+<meta property="og:title" content="Device Framework (Rust) — TAIL OS">
+<meta property="og:description" content="Use GPIO, I2C, PWM and stepper devices by class and name, without touching board registers.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tail-os.com/docs/device-framework-rust/">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="/assets/70d74c3270ec/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/assets/70d74c3270ec/css/style.css">
+<script type="module" src="/assets/70d74c3270ec/js/copy.js"></script>
+<script type="module" src="/assets/70d74c3270ec/js/reveal.js"></script>
+</head>
+<body class="page-shell">
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 32" width="22" height="22" fill="none" aria-hidden="true"><path d="M4 8h24M4 16h16M4 24h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span>TAIL OS</span><span class="ver">v0.9.0</span></a>
+    <form class="hdr-search" action="/ask/" method="get" role="search">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" name="q" placeholder="Search or ask a question" aria-label="Search or ask a question" autocomplete="off">
+    </form>
+    <nav class="hdr-nav" aria-label="Primary">
+      <a href="/docs/">Docs</a>
+      <details class="hdr-menu">
+        <summary class="hdr-menu-btn" aria-haspopup="true">
+          <span>Support</span>
+          <svg class="hdr-menu-chevron" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
+        </summary>
+        <div class="hdr-menu-panel">
+          <div class="hdr-menu-desc">Questions, hardware bring-up, or general inquiries:</div>
+          <a class="hdr-menu-action" href="mailto:support@tail-os.com">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <span>Email us</span>
+          </a>
+          <span class="hdr-menu-sub mono">support@tail-os.com</span>
+        </div>
+      </details>
+      
+    </nav>
+  </div>
+</header>
+<div class="shell">
+<aside class="side">
+  <nav aria-label="Documentation">
+    <ul class="nav-docs">
+    <li class="nav-group">
+      <span class="nav-label">Get started</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/quick-start/">Quick Start</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/installation/">Installation</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Concepts</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/robotics-overview/">How Robot Applications Work</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Guides</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-rust/">Rust Guide</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-python/">Python Guide</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/aperiodic-framework-rust/">Service Framework (Rust)</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/device-framework-rust/" aria-current="page">Device Framework (Rust)</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/device-framework-rust/#quick-start">Quick start</a></li>
+        <li><a href="/docs/device-framework-rust/#opening-an-instance">Opening an instance</a></li>
+        <li><a href="/docs/device-framework-rust/#gpio">GPIO</a></li>
+        <li><a href="/docs/device-framework-rust/#i2c">I2C</a></li>
+        <li><a href="/docs/device-framework-rust/#pwm">PWM</a></li>
+        <li><a href="/docs/device-framework-rust/#stepper">Stepper</a></li>
+        <li><a href="/docs/device-framework-rust/#using-a-device-from-a-periodic-node">Using a device from a periodic node</a></li>
+        <li><a href="/docs/device-framework-rust/#ownership">Ownership</a></li>
+        <li><a href="/docs/device-framework-rust/#what-is-portable-and-what-is-the-boards">What is portable and what is the board's</a></li>
+        <li><a href="/docs/device-framework-rust/#writing-a-driver-for-a-new-board">Writing a driver for a new board</a></li>
+      </ul>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Boards</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/qemu/">QEMU</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/raspberry-pi-3/">Raspberry Pi 3</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Reference</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/shell-tools/">Shell Tools</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/license-guide/">License Guide</a>
+    </li>
+    </ul>
+  </nav>
+</aside>
+<main class="content">
+<div class="doc-wrap">
+<article class="doc">
+<h1 id="device-framework-rust-api">Device Framework — Rust API</h1>
+<p>Say which device you want by its class and the name the board gave it; the framework finds
+the driver, checks your request against what the device can do, and carries it there. An
+application never names a process, a register, a pin-mux code or a wire format.</p>
+<p>The framework has two tiers:</p>
+<ul>
+<li><strong>The class tier</strong>, one crate per device class: <code>tail_device_gpio</code>, <code>tail_device_i2c</code>,
+<code>tail_device_pwm</code> and <code>tail_device_stepper</code>. Each holds the class's vocabulary (its
+values, its errors, its capability record), the application's handle types, and the
+trait a driver of that class implements. An application and a driver each name only
+their class crate.</li>
+<li><strong>The core tier</strong>, <code>tail_device_core</code>, is what every driver needs whatever its class:
+the board's resources for the driver, a mapped register window, and the interrupt path.
+Applications never touch it, and a driver reaches it through its class crate.</li>
+</ul>
+<p>Every driver is an ordinary user-space process. It is started by the board's image
+manifest, told its registers and interrupts on its startup line, and advertises itself
+under an <strong>instance name</strong> the board assigns: <code>gpio-lines</code>, <code>sensor-bus</code>, <code>pwm-channels</code>,
+<code>drive-motors</code>. Each class crate exports those names as constants, so an application
+writes <code>gpio::LINES</code>, never a string and never a board fact.</p>
+<figure class="diagram"><svg id="diagram-d6c4192909" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" viewBox="4 4 784 256.99998474121094" aria-roledescription="flowchart-v2" aria-describedby="chart-desc-diagram-d6c4192909" aria-labelledby="chart-title-diagram-d6c4192909" width="784" role="img"><title id="chart-title-diagram-d6c4192909">Device instances and what each one uses</title><desc id="chart-desc-diagram-d6c4192909">An application opens gpio-lines, sensor-bus, pwm-channels and drive-motors by name. The stepper driver behind drive-motors uses pwm-channels and gpio-lines; the PWM and I2C drivers use gpio-lines for their pins.</desc><g><marker id="diagram-d6c4192909_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath"/></marker><marker id="diagram-d6c4192909_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath"/></marker><marker id="diagram-d6c4192909_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath"/></marker><marker id="diagram-d6c4192909_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath"/></marker><marker id="diagram-d6c4192909_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-d6c4192909_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-d6c4192909_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-d6c4192909_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-d6c4192909_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath"/></marker><marker id="diagram-d6c4192909_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath"/></marker><marker id="diagram-d6c4192909_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath"/></marker><marker id="diagram-d6c4192909_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath"/></marker><g class="root"><g class="clusters"/><g class="edges edgePaths"><path d="M164,104.85999844868978L176.92893218813452,104.85999844868978Q184,104.85999844868978 184,97.7889306368243L184,19.071067811865476Q184,12 191.07106781186548,12L300,12L492,12L600.9289321881345,12Q608,12 608,19.071067811865476L608,93.64893112001928Q608,100.71999893188476 615.0710678118655,100.71999893188476L624,100.71999893188476" id="diagram-d6c4192909-L_app_lines_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_app_lines_0" data-points="W3sieCI6MTY0LCJ5IjoxMDQuODU5OTk4NDQ4Njg5Nzh9LHsieCI6MTg0LCJ5IjoxMDQuODU5OTk4NDQ4Njg5Nzh9LHsieCI6MTg0LCJ5IjoxMn0seyJ4IjozMDAsInkiOjEyfSx7IngiOjQ5MiwieSI6MTJ9LHsieCI6NjA4LCJ5IjoxMn0seyJ4Ijo2MDgsInkiOjEwMC43MTk5OTg5MzE4ODQ3Nn0seyJ4Ijo2MjgsInkiOjEwMC43MTk5OTg5MzE4ODQ3Nn1d" data-look="neo" marker-end="url(#diagram-d6c4192909_flowchart-v2-pointEnd-margin)"/><path d="M164,109.05999844868978L196.92893218813452,109.05999844868978Q204,109.05999844868978 204,101.9889306368243L204,69.87106704892602Q204,62.79999923706055 211.07106781186548,62.79999923706055L300,62.79999923706055L412,62.79999923706055" id="diagram-d6c4192909-L_app_bus_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_app_bus_0" data-points="W3sieCI6MTY0LCJ5IjoxMDkuMDU5OTk4NDQ4Njg5Nzh9LHsieCI6MjA0LCJ5IjoxMDkuMDU5OTk4NDQ4Njg5Nzh9LHsieCI6MjA0LCJ5Ijo2Mi43OTk5OTkyMzcwNjA1NX0seyJ4IjozMDAsInkiOjYyLjc5OTk5OTIzNzA2MDU1fSx7IngiOjQxNiwieSI6NjIuNzk5OTk5MjM3MDYwNTV9XQ==" data-look="neo" marker-end="url(#diagram-d6c4192909_flowchart-v2-pointEnd-margin)"/><path d="M164,113.25999844868977L196.92893218813452,113.25999844868977Q204,113.25999844868977 204,120.33106626055525L204,148.7289301536293Q204,155.79999796549478 211.07106781186548,155.79999796549478L300,155.79999796549478L412,155.79999796549478" id="diagram-d6c4192909-L_app_pwmc_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_app_pwmc_0" data-points="W3sieCI6MTY0LCJ5IjoxMTMuMjU5OTk4NDQ4Njg5Nzd9LHsieCI6MjA0LCJ5IjoxMTMuMjU5OTk4NDQ4Njg5Nzd9LHsieCI6MjA0LCJ5IjoxNTUuNzk5OTk3OTY1NDk0Nzh9LHsieCI6MzAwLCJ5IjoxNTUuNzk5OTk3OTY1NDk0Nzh9LHsieCI6NDE2LCJ5IjoxNTUuNzk5OTk3OTY1NDk0Nzh9XQ==" data-look="neo" marker-end="url(#diagram-d6c4192909_flowchart-v2-pointEnd-margin)"/><path d="M164,117.45999844868977L176.92893218813452,117.45999844868977Q184,117.45999844868977 184,124.53106626055525L184,207.8289286277504Q184,214.89999643961588 191.07106781186548,214.89999643961588L220,214.89999643961588" id="diagram-d6c4192909-L_app_motors_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_app_motors_0" data-points="W3sieCI6MTY0LCJ5IjoxMTcuNDU5OTk4NDQ4Njg5Nzd9LHsieCI6MTg0LCJ5IjoxMTcuNDU5OTk4NDQ4Njg5Nzd9LHsieCI6MTg0LCJ5IjoyMTQuODk5OTk2NDM5NjE1ODh9LHsieCI6MjI0LCJ5IjoyMTQuODk5OTk2NDM5NjE1ODh9XQ==" data-look="neo" marker-end="url(#diagram-d6c4192909_flowchart-v2-pointEnd-margin)"/><path d="M376,205.5333302815755L388.9289321881345,205.5333302815755Q396,205.5333302815755 396,198.46226246971003L396,176.07106526873397Q396,168.9999974568685 403.0710678118655,168.9999974568685L412,168.9999974568685" id="diagram-d6c4192909-L_motors_pwmc_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_motors_pwmc_0" data-points="W3sieCI6Mzc2LCJ5IjoyMDUuNTMzMzMwMjgxNTc1NX0seyJ4IjozOTYsInkiOjIwNS41MzMzMzAyODE1NzU1fSx7IngiOjM5NiwieSI6MTY4Ljk5OTk5NzQ1Njg2ODV9LHsieCI6NDE2LCJ5IjoxNjguOTk5OTk3NDU2ODY4NX1d" data-look="neo" marker-end="url(#diagram-d6c4192909_flowchart-v2-pointEnd-margin)"/><path d="M376,224.26666259765625L492,224.26666259765625L600.9289321881345,224.26666259765625Q608,224.26666259765625 608,217.19559478579077L608,131.5510658282229Q608,124.47999801635743 615.0710678118655,124.47999801635743L624,124.47999801635743" id="diagram-d6c4192909-L_motors_lines_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_motors_lines_0" data-points="W3sieCI6Mzc2LCJ5IjoyMjQuMjY2NjYyNTk3NjU2MjV9LHsieCI6NDkyLCJ5IjoyMjQuMjY2NjYyNTk3NjU2MjV9LHsieCI6NjA4LCJ5IjoyMjQuMjY2NjYyNTk3NjU2MjV9LHsieCI6NjA4LCJ5IjoxMjQuNDc5OTk4MDE2MzU3NDN9LHsieCI6NjI4LCJ5IjoxMjQuNDc5OTk4MDE2MzU3NDN9XQ==" data-look="neo" marker-end="url(#diagram-d6c4192909_flowchart-v2-pointEnd-margin)"/><path d="M568,162.39999771118164L580.9289321881345,162.39999771118164Q588,162.39999771118164 588,155.32892989931617L588,123.63106613339869Q588,116.55999832153321 595.0710678118655,116.55999832153321L624,116.55999832153321" id="diagram-d6c4192909-L_pwmc_lines_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_pwmc_lines_0" data-points="W3sieCI6NTY4LCJ5IjoxNjIuMzk5OTk3NzExMTgxNjR9LHsieCI6NTg4LCJ5IjoxNjIuMzk5OTk3NzExMTgxNjR9LHsieCI6NTg4LCJ5IjoxMTYuNTU5OTk4MzIxNTMzMjF9LHsieCI6NjI4LCJ5IjoxMTYuNTU5OTk4MzIxNTMzMjF9XQ==" data-look="neo" marker-end="url(#diagram-d6c4192909_flowchart-v2-pointEnd-margin)"/><path d="M568,62.79999923706055L580.9289321881345,62.79999923706055Q588,62.79999923706055 588,69.87106704892602L588,101.56893081484351Q588,108.63999862670899 595.0710678118655,108.63999862670899L624,108.63999862670899" id="diagram-d6c4192909-L_bus_lines_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_bus_lines_0" data-points="W3sieCI6NTY4LCJ5Ijo2Mi43OTk5OTkyMzcwNjA1NX0seyJ4Ijo1ODgsInkiOjYyLjc5OTk5OTIzNzA2MDU1fSx7IngiOjU4OCwieSI6MTA4LjYzOTk5ODYyNjcwODk5fSx7IngiOjYyOCwieSI6MTA4LjYzOTk5ODYyNjcwODk5fV0=" data-look="neo" marker-end="url(#diagram-d6c4192909_flowchart-v2-pointEnd-margin)"/></g><g class="edgeLabels"/><g class="nodes"><g class="node default" id="diagram-d6c4192909-flowchart-app-0" data-look="neo" transform="translate(88, 111.15999844868978)"><rect class="basic label-container" x="-76" y="-20.5" width="152" height="41"/><g class="label" transform="translate(0, -8.5)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">your</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> application</tspan></tspan></text></g></g></g><g class="node default" id="diagram-d6c4192909-flowchart-lines-1" data-look="neo" transform="translate(704, 112.5999984741211)"><rect class="basic label-container" x="-76" y="-29.799999237060547" width="152" height="59.599998474121094"/><g class="label" transform="translate(0, -17.799999237060547)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">gpio-lines</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(gpio_rpi3)</tspan></tspan></text></g></g></g><g class="node default" id="diagram-d6c4192909-flowchart-bus-3" data-look="neo" transform="translate(492, 62.79999923706055)"><rect class="basic label-container" x="-76" y="-29.799999237060547" width="152" height="59.599998474121094"/><g class="label" transform="translate(0, -17.799999237060547)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">sensor-bus</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(i2c_rpi3)</tspan></tspan></text></g></g></g><g class="node default" id="diagram-d6c4192909-flowchart-pwmc-5" data-look="neo" transform="translate(492, 162.39999771118164)"><rect class="basic label-container" x="-76" y="-29.799999237060547" width="152" height="59.599998474121094"/><g class="label" transform="translate(0, -17.799999237060547)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">pwm-channels</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(pwm_rpi3)</tspan></tspan></text></g></g></g><g class="node default" id="diagram-d6c4192909-flowchart-motors-7" data-look="neo" transform="translate(300, 214.89999643961588)"><rect class="basic label-container" x="-76" y="-38.099998474121094" width="152" height="76.19999694824219"/><g class="label" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">drive-motors</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">(stepper_step_di</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">r)</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="diagram-d6c4192909-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="diagram-d6c4192909-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="diagram-d6c4192909-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg></figure>
+<p><em>An application opens instances by name; the stepper driver drives its motors through the
+PWM and GPIO instances, and the PWM and I2C drivers take their pins from the GPIO instance.</em></p>
+<h2 id="quick-start">Quick start</h2>
+<p>The class crates are libraries of the SDK: a program in the BSP's <code>app/</code> directory names
+them with <code>use</code> and nothing more (see
+<a href="/docs/raspberry-pi-3/#add-your-own-programs">Installing TAIL OS on Raspberry Pi 3</a>).</p>
+<h3 id="blink-a-gpio-line">Blink a GPIO line</h3>
+<pre><code class="language-rust">// app/blink/src/main.rs
+use std::{thread, time::Duration};
+use tail_device_gpio::{gpio, Gpio, Level};
+
+/// The LED's line: GPIO17, header pin 11 on a Raspberry Pi 3.
+const LED: u32 = 17;
+
+fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    let gpio = Gpio::open(gpio::LINES)?;
+    let led = gpio.output(LED, Level::Low)?;
+    for _ in 0..10 {
+        led.set_high()?;
+        thread::sleep(Duration::from_millis(250));
+        led.set_low()?;
+        thread::sleep(Duration::from_millis(250));
+    }
+    Ok(())
+}
+</code></pre>
+<p><code>output</code> claims the line for this process and configures it in the same call, and the
+line starts at the level you gave, never at whatever the hardware held before. Dropping
+<code>led</code> releases it.</p>
+<h3 id="read-an-i2c-register">Read an I2C register</h3>
+<pre><code class="language-rust">// app/who_am_i/src/main.rs
+use tail_device_i2c::{i2c, I2c};
+
+/// An MPU-6050 IMU on the sensor bus, and its WHO_AM_I register.
+const IMU: u8 = 0x68;
+const WHO_AM_I: u8 = 0x75;
+
+fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    let bus = I2c::open(i2c::SENSOR_BUS)?;
+    let [id]: [u8; 1] = bus.write_read(IMU, &amp;[WHO_AM_I])?;
+    println!(&quot;WHO_AM_I = {id:#04x}&quot;);
+    Ok(())
+}
+</code></pre>
+<p><code>write_read</code> writes the register number and reads the answer as <strong>one</strong> transaction, so
+no other program's transfer on the same bus can land between the two halves.</p>
+<p>Every error type of every class implements <code>std::error::Error</code> and <code>Display</code>, so <code>?</code> into
+<code>Box&lt;dyn Error&gt;</code> works as above.</p>
+<h2 id="opening-an-instance">Opening an instance</h2>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Open</th>
+<th>Instance constant</th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPIO</td>
+<td><code>Gpio::open(gpio::LINES)</code></td>
+<td><code>tail_device_gpio::gpio::LINES</code></td>
+<td><code>gpio-lines</code></td>
+</tr>
+<tr>
+<td>I2C</td>
+<td><code>I2c::open(i2c::SENSOR_BUS)</code></td>
+<td><code>tail_device_i2c::i2c::SENSOR_BUS</code></td>
+<td><code>sensor-bus</code></td>
+</tr>
+<tr>
+<td>PWM</td>
+<td><code>Pwm::open(pwm::CHANNELS)</code></td>
+<td><code>tail_device_pwm::pwm::CHANNELS</code></td>
+<td><code>pwm-channels</code></td>
+</tr>
+<tr>
+<td>Stepper</td>
+<td><code>Stepper::open(stepper::DRIVE_MOTORS)</code></td>
+<td><code>tail_device_stepper::stepper::DRIVE_MOTORS</code></td>
+<td><code>drive-motors</code></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong><code>open</code> waits for the driver.</strong> If the instance is not advertised yet, <code>open</code> retries
+for about two seconds (100 attempts, 20 ms apart). If it never appears, it fails with
+<code>DriverGone</code>, so a program can start before its drivers without a retry loop of its own.</li>
+<li><strong>The capability record is fetched once, at open.</strong> <code>capabilities()</code> on the handle makes
+no call. Each class checks a request against it before sending, so a request the device
+cannot honour fails locally with the reason (<code>Unsupported</code>, <code>OutOfRange</code>,
+<code>TooManySegments { max }</code> and so on).</li>
+<li><strong>A handle does not re-resolve.</strong> If the driver exits after a successful open, the next
+call fails with <code>DriverGone</code> or <code>Transport(..)</code>.</li>
+<li>Error enums are <code>#[non_exhaustive]</code>: give a <code>match</code> on one a default arm. A status the
+build does not know arrives as <code>Unknown { code }</code>.</li>
+</ul>
+<h2 id="gpio">GPIO</h2>
+<p>A <code>Gpio</code> is an opened bank of lines; a <code>GpioLine</code> is your claim on one line.</p>
+<table>
+<thead>
+<tr>
+<th>Acquire</th>
+<th>Gives you</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gpio.output(line, level)</code></td>
+<td>an output, driven to <code>level</code> from its first edge</td>
+</tr>
+<tr>
+<td><code>gpio.input(line, bias)</code></td>
+<td>an input with <code>Bias::PullUp</code>, <code>PullDown</code> or <code>Disabled</code></td>
+</tr>
+<tr>
+<td><code>gpio.input_watching(line, edges)</code></td>
+<td>an input already armed for <code>EdgeMask::RISING</code>, <code>FALLING</code> or both (<code>RISING | FALLING</code>)</td>
+</tr>
+<tr>
+<td><code>gpio.board_function(line)</code></td>
+<td>the line handed to the peripheral the board wired it for; you never name an alternate-function number</td>
+</tr>
+<tr>
+<td><code>gpio.lines(&amp;selectors, config)</code></td>
+<td>several lines with one <code>PinConfig</code>, all or none</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>On a <code>GpioLine</code></th>
+<th>Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>set_high()</code>, <code>set_low()</code>, <code>set_level(level)</code></td>
+<td>drive an output; on a line that is not an output, <code>InvalidRequest</code></td>
+</tr>
+<tr>
+<td><code>level()</code></td>
+<td>sample the line</td>
+</tr>
+<tr>
+<td><code>configure(config)</code></td>
+<td>apply every field of a <code>PinConfig</code> that is not <code>Unchanged</code></td>
+</tr>
+<tr>
+<td><code>watch(edges)</code>, <code>disarm()</code></td>
+<td>arm or disarm edge detection</td>
+</tr>
+<tr>
+<td><code>wait_edge()</code></td>
+<td>block until an armed edge arrives; returns an <code>EdgeEvent { line, edges, .. }</code></td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-rust">use tail_device_gpio::{gpio, EdgeMask, Gpio};
+
+/// An emergency-stop button on GPIO27, pulling the line low when pressed.
+const ESTOP: u32 = 27;
+
+fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    let gpio = Gpio::open(gpio::LINES)?;
+    let estop = gpio.input_watching(ESTOP, EdgeMask::FALLING)?;
+    loop {
+        let event = estop.wait_edge()?;
+        println!(&quot;e-stop pressed on line {}&quot;, event.line);
+    }
+}
+</code></pre>
+<p>Arming inside the acquire means no edge can fall between claiming the line and arming it.</p>
+<p>Things to know:</p>
+<ul>
+<li><strong>Lines are addressed by number.</strong> <code>LineSelector</code> also accepts a name, but board line
+names are not resolved yet: a name fails with <code>UnknownLine</code> on every board.</li>
+<li><strong>Edges report the armed mask, not the direction</strong>, on <code>gpio_rpi3</code>
+(<code>capabilities().event_reports_direction</code> is 0). Sample <code>level()</code> if you need the
+direction. QEMU does not emulate GPIO edge interrupts, so <code>wait_edge</code> waits forever
+there; it works on the board.</li>
+<li>A bias takes effect when <code>configure</code> returns, but a line with a capacitive load reaches
+it only as fast as the load allows. Let it settle before sampling or arming.</li>
+<li><code>gpio_rpi3</code> supports bias; it has no programmable drive strength or polarity, so a
+<code>PinConfig</code> asking for either fails <code>Unsupported</code>.</li>
+<li>Releasing or disarming a line cancels a <code>wait_edge</code> parked on it with <code>Cancelled</code>.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><code>GpioError</code></th>
+<th>Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>UnknownLine</code></td>
+<td>no such line on this instance</td>
+</tr>
+<tr>
+<td><code>InUse</code></td>
+<td>another process holds the line, or the line is a driver's (see <a href="#ownership">Ownership</a>)</td>
+</tr>
+<tr>
+<td><code>Reserved</code></td>
+<td>the system holds the line (the serial console's GPIO14/15)</td>
+</tr>
+<tr>
+<td><code>NotOwner</code></td>
+<td>you operated a line you do not hold</td>
+</tr>
+<tr>
+<td><code>Unsupported</code>, <code>InvalidRequest</code></td>
+<td>the instance cannot apply the configuration, or the request is wrong for the line's role</td>
+</tr>
+<tr>
+<td><code>WaiterCapacity</code>, <code>Cancelled</code></td>
+<td>too many parked waits; a wait cancelled by release or disarm</td>
+</tr>
+<tr>
+<td><code>DriverGone</code>, <code>Transport(..)</code></td>
+<td>the driver is not there, or the call itself failed</td>
+</tr>
+</tbody>
+</table>
+<h2 id="i2c">I2C</h2>
+<p>An <code>I2c</code> is an opened bus. A transaction is atomic: its segments run back to back with a
+repeated START between them, and no other client's transaction runs in between. Clients
+need no lock and no claim; the driver queues and serializes them.</p>
+<table>
+<thead>
+<tr>
+<th>On an <code>I2c</code></th>
+<th>Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>write(address, &amp;bytes)</code></td>
+<td>one write</td>
+</tr>
+<tr>
+<td><code>read::&lt;N&gt;(address)</code></td>
+<td>one read of <code>N</code> bytes, returned as <code>[u8; N]</code></td>
+</tr>
+<tr>
+<td><code>write_read::&lt;N&gt;(address, &amp;command)</code></td>
+<td>write then read, as one transaction</td>
+</tr>
+<tr>
+<td><code>transaction()</code></td>
+<td>build a transaction of up to 8 segments: <code>.write(..)</code>, <code>.read(address, len)</code>, then <code>.execute()</code> returns the read bytes as a <code>Vec&lt;u8&gt;</code></td>
+</tr>
+<tr>
+<td><code>set_bus_speed(hz)</code></td>
+<td>set the bus clock; returns the rate actually achieved. It applies to every client of the bus</td>
+</tr>
+</tbody>
+</table>
+<p><code>N</code> is inferred from the binding (<code>let bytes: [u8; 6] = bus.read(IMU)?;</code>). An address
+written as a <code>u8</code> is a 7-bit address; <code>I2cAddress::ten_bit(0x123)?</code> is the 10-bit form,
+and <code>I2cAddress::seven_bit(0xD0)</code> fails <code>AddressOutOfRange { max: 0x7F }</code> rather than
+silently addressing another device. <code>i2c_rpi3</code> supports 7-bit addresses, standard and
+fast mode, one read segment per transaction (and it must be last), and one device
+address per transaction.</p>
+<p>On QEMU the emulated controller has no repeated START, so <code>write_read</code> and any
+multi-segment transaction fail with <code>AtomicityLost { segments_completed: 1 }</code>. There,
+use a <code>write</code> followed by a <code>read</code> as two transactions.</p>
+<table>
+<thead>
+<tr>
+<th><code>I2cError</code></th>
+<th>Means</th>
+<th>Retry?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Nack { phase, bytes_transferred }</code></td>
+<td>the device did not acknowledge</td>
+<td>unchanged only if <code>bytes_transferred == 0</code></td>
+</tr>
+<tr>
+<td><code>Timeout { .. }</code>, <code>ClockStretchTimeout { .. }</code></td>
+<td>the transfer missed the driver's deadline, or the device held the clock too long</td>
+<td>same rule</td>
+</tr>
+<tr>
+<td><code>AtomicityLost { segments_completed }</code></td>
+<td>the bus was released between segments, so part of it ran</td>
+<td>never unchanged: re-read the device's state first</td>
+</tr>
+<tr>
+<td><code>BusInUse</code></td>
+<td>the driver's queue is full</td>
+<td>yes, immediately</td>
+</tr>
+<tr>
+<td><code>BusBusy</code>, <code>ArbitrationLost</code></td>
+<td>the wire is busy, or another master won</td>
+<td>yes</td>
+</tr>
+<tr>
+<td><code>Unsupported</code>, <code>AddressOutOfRange</code>, <code>TooManySegments</code>, <code>PayloadTooLarge</code>, <code>Malformed</code></td>
+<td>the transaction cannot run on this instance</td>
+<td>fix the request</td>
+</tr>
+<tr>
+<td><code>ShortRead</code>, <code>DriverGone</code>, <code>Transport(..)</code></td>
+<td>the driver answered short, is gone, or the call failed</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h2 id="pwm">PWM</h2>
+<p>A <code>Pwm</code> is an opened set of channels. A <code>PwmChannel</code> is a plain value naming one channel;
+making, copying or dropping it does nothing.</p>
+<pre><code class="language-rust">use std::{thread, time::Duration};
+use tail_device_pwm::{pwm, Pwm};
+
+fn main() -&gt; Result&lt;(), Box&lt;dyn std::error::Error&gt;&gt; {
+    let pwm = Pwm::open(pwm::CHANNELS)?;
+    let servo = pwm.channel(0)?; // GPIO18 on a Raspberry Pi 3
+    for _ in 0..100 {
+        // 50 Hz, 1.5 ms pulse (servo centre); stops by itself 100 ms after the last refresh
+        let wave = servo.apply(
+            Duration::from_millis(20),
+            Duration::from_micros(1500),
+            Duration::from_millis(100),
+        )?;
+        let _ = wave.period(); // what the hardware actually emits, after quantization
+        thread::sleep(Duration::from_millis(20));
+    }
+    servo.stop()?;
+    Ok(())
+}
+</code></pre>
+<p><strong>Every <code>apply</code> carries a hold.</strong> The channel belongs to your process until you call
+<code>stop</code>, or until the hold passes without another <code>apply</code>; then the class stops the output
+itself, whether your program exited, crashed, hung or was starved. The hold is a dead-man
+interval, between <code>MIN_HOLD_MS</code> (1) and <code>MAX_HOLD_MS</code> (1000) milliseconds: refresh faster
+than it. <code>apply</code> returns the <code>PwmWaveform</code> the hardware will emit, quantized to the
+instance's clock (<code>capabilities().clock_hz</code>).</p>
+<table>
+<thead>
+<tr>
+<th><code>PwmError</code></th>
+<th>Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>InUse</code></td>
+<td>another process is driving the channel; nothing changed. Its lease ends within its hold</td>
+</tr>
+<tr>
+<td><code>NotOwner</code></td>
+<td>you tried to <code>stop</code> a channel another process is driving</td>
+</tr>
+<tr>
+<td><code>OutOfRange</code></td>
+<td>a hold out of range (nothing touched), or a period or high time the instance refuses (the channel is left stopped and free)</td>
+</tr>
+<tr>
+<td><code>Hardware</code></td>
+<td>the hardware did not take the setting (channel stopped and freed), or a <code>stop</code> could not make the output safe</td>
+</tr>
+<tr>
+<td><code>UnknownChannel</code>, <code>DriverGone</code>, <code>Transport(..)</code></td>
+<td>no such channel; driver gone; call failed</td>
+</tr>
+</tbody>
+</table>
+<h2 id="stepper">Stepper</h2>
+<p>A <code>Stepper</code> drives every motor of an instance at once. <code>drive-motors</code> is a differential
+drive with two motors, <strong>motor 0 the left wheel and motor 1 the right</strong>, seen from behind.</p>
+<pre><code class="language-rust">use tail_device_stepper::{stepper, StepRate, Stepper};
+
+let motors = Stepper::open(stepper::DRIVE_MOTORS)?;
+let forward = StepRate::from_full_steps_per_second(100.0);
+let [left, right] = motors.drive([forward, forward])?; // the rates actually emitted
+// ... one drive per control cycle ...
+motors.disable()?; // stop and de-energize now, not when the lease runs out
+</code></pre>
+<ul>
+<li><strong>The lease.</strong> Each <code>drive</code> is valid for <code>capabilities().lease_ms</code> (between 2 and 500 ms,
+set by the board). If no fresh <code>drive</code> arrives in time, the class disables every motor
+itself. Another process is refused with <code>InUse</code> while the lease is live.</li>
+<li><strong>Every lease starts from rest.</strong> The first <code>drive</code> of a lease emits zero on every motor;
+later ones are clamped to the instance's maximum rate, limited by its acceleration, and
+floored to zero below its minimum rate. The returned array says what was emitted.</li>
+<li><strong>No enable, direction or claim to manage.</strong> The class enables the motors while a lease
+is live and sets direction from the sign of each rate.</li>
+<li>The array length must equal <code>capabilities().motor_count</code>, or <code>drive</code> fails
+<code>WrongMotorCount</code> without a call. <code>full_steps_per_revolution</code> in the same record turns
+a wheel speed into a rate.</li>
+</ul>
+<p><code>StepperError</code>: <code>WrongMotorCount</code>, <code>InUse</code>, <code>NotOwner</code> (a <code>disable</code> while another process
+holds the lease), <code>Hardware</code> (an output did not take the setting: the lease is ended and
+the motors disabled), <code>DriverGone</code>, <code>Transport(..)</code>.</p>
+<h2 id="using-a-device-from-a-periodic-node">Using a device from a periodic node</h2>
+<p>A <a href="/docs/periodic-framework-rust/">periodic node</a> keeps a device handle as
+its state, built once by <code>init</code>. Here a node commands the drive motors every 2 ms from a
+velocity topic, and stops commanding when the command goes stale:</p>
+<pre><code class="language-rust">use periodic::{periodic, Cycle};
+use robot_topics::{Twist, CMD_VELOCITY};
+use tail_device_stepper::{stepper, StepRate, Stepper};
+
+/// Full steps per metre of wheel travel, for this robot's wheels.
+const STEPS_PER_METRE: f32 = 1000.0;
+
+/// The drive motors; a node that cannot reach them has nothing to do.
+fn open_motors() -&gt; Stepper {
+    Stepper::open(stepper::DRIVE_MOTORS).expect(&quot;drive-motors is not advertised&quot;)
+}
+
+#[periodic(every = &quot;2ms&quot;, on_overrun = Skip, init = open_motors())]
+fn wheels(motors: &amp;Stepper, #[subscribe(CMD_VELOCITY, stale_after = &quot;100ms&quot;)] command: Cycle&lt;Twist&gt;) {
+    if let Some(twist) = command.get() {
+        let rate = StepRate::from_full_steps_per_second(twist.linear.x as f32 * STEPS_PER_METRE);
+        let _ = motors.drive([rate, rate]);
+    }
+    // No fresh command: send nothing, and the lease disables the motors.
+}
+</code></pre>
+<p>The node's state is not dropped when the framework ends the node, so a device's safe state
+cannot rest on <code>Drop</code>. For PWM and stepper it rests on the lease, which ends on its own
+when the node stops refreshing it for any reason. A GPIO output has no lease: see below.</p>
+<h2 id="ownership">Ownership</h2>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Who may use it</th>
+<th>How it ends</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPIO</td>
+<td>one process per line, from claim to release; a second claim, even from the same process, is <code>InUse</code></td>
+<td><code>GpioLine</code> dropped. Lines held by a process that exits are released when another process next claims one of them; <strong>until then they keep their level</strong></td>
+</tr>
+<tr>
+<td>I2C</td>
+<td>every process; transactions are serialized</td>
+<td>nothing to end</td>
+</tr>
+<tr>
+<td>PWM</td>
+<td>the process whose <code>apply</code> took the channel</td>
+<td><code>stop</code>, or the hold passing without a refresh</td>
+</tr>
+<tr>
+<td>Stepper</td>
+<td>the process whose <code>drive</code> took the lease</td>
+<td><code>disable</code>, or the lease passing without a <code>drive</code></td>
+</tr>
+</tbody>
+</table>
+<p>Drivers claim lines from <code>gpio-lines</code> like any other client, so on a Raspberry Pi 3 GPIO2
+and GPIO3 belong to <code>i2c_rpi3</code> and GPIO18 and GPIO19 to <code>pwm_rpi3</code>, and a claim on them is
+<code>InUse</code>. GPIO14 and GPIO15 carry the serial console and are always <code>Reserved</code>. A released
+or reclaimed line is left driving nothing.</p>
+<h2 id="what-is-portable-and-what-is-the-boards">What is portable and what is the board's</h2>
+<p>Your application depends on the <strong>class</strong>: its crate, its instance names and its
+capability record. Which chip sits behind an instance, which pins it uses and what its
+limits are is the <strong>board's</strong>, written once on the driver's line in the image manifest.
+These are the Raspberry Pi 3 lines:</p>
+<pre><code class="language-text">gpio_rpi3 base=0x3F200000 size=0x1000 irq=49,50,51 instance=gpio-lines altmap=2:4,3:4,18:2,19:2,...
+pwm_rpi3  base=0x3F20C000 size=0x1000 clock=0x3F101000 lines=18,19 instance=pwm-channels
+i2c_rpi3  base=0x3F804000 size=0x1000 irq=53 core_clock_hz=250000000 lines=2,3 instance=sensor-bus
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Instance</th>
+<th>Driver</th>
+<th>Board image</th>
+<th>QEMU image</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gpio-lines</code></td>
+<td><code>gpio_rpi3</code>: the BCM2837's 54 lines</td>
+<td>started</td>
+<td>started; no edge interrupts</td>
+</tr>
+<tr>
+<td><code>sensor-bus</code></td>
+<td><code>i2c_rpi3</code>: BSC1 on GPIO2 (SDA) and GPIO3 (SCL)</td>
+<td>started</td>
+<td>started; no repeated START</td>
+</tr>
+<tr>
+<td><code>pwm-channels</code></td>
+<td><code>pwm_rpi3</code>: channel 0 on GPIO18, channel 1 on GPIO19</td>
+<td>started</td>
+<td>not started: QEMU models no PWM</td>
+</tr>
+<tr>
+<td><code>drive-motors</code></td>
+<td><code>stepper_step_dir</code>: STEP from <code>pwm-channels</code>, DIR and ENABLE from <code>gpio-lines</code></td>
+<td>packed, not started</td>
+<td>not started</td>
+</tr>
+</tbody>
+</table>
+<p><code>stepper_step_dir</code> has no registers of its own, so it runs on any board that has a PWM and
+a GPIO instance. It is not started by default because its pins belong to a stepper HAT
+that may not be fitted. An image for a robot with one adds a line like:</p>
+<pre><code class="language-text">stepper_step_dir step_channels=1,0 dir_lines=13,24 dir_inverted=0,1 enable_lines=12,4
+    enable_active=high microsteps=16 full_steps_per_revolution=200
+    max_rate_full_steps_per_s=1250 min_rate_full_steps_per_s=32
+    max_acceleration_full_steps_per_s2=10000 step_pulse_ns=2500 lease_ms=6
+    instance=drive-motors
+</code></pre>
+<p>(one line in the manifest; wrapped here). Motor <code>i</code> is the <code>i</code>-th entry of each list, and
+the driver refuses a line whose lists disagree, exiting before the name is advertised.</p>
+<h2 id="writing-a-driver-for-a-new-board">Writing a driver for a new board</h2>
+<p>A driver for an existing class implements the class's trait and hands it to the class's
+<code>serve</code>. The class crate does the rest: the wire protocol, the request loop, validation,
+the reply, and the class's rules. For PWM and stepper those rules include the lease, so a
+new driver gets the dead-man stop without writing it.</p>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Trait</th>
+<th>The driver provides</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GPIO</td>
+<td><code>GpioController</code></td>
+<td><code>capabilities</code>, <code>claim</code>, <code>release</code>, <code>configure</code>, <code>set_level</code>, <code>level</code>, <code>enable_event</code>, <code>disable_event</code>, <code>wait_event</code> (parks a ticket, never blocks)</td>
+</tr>
+<tr>
+<td>I2C</td>
+<td><code>I2cController</code></td>
+<td><code>capabilities</code>, <code>transfer</code> (queues the transaction with a completion ticket, never blocks), <code>set_bus_speed</code></td>
+</tr>
+<tr>
+<td>PWM</td>
+<td><code>PwmController</code></td>
+<td><code>capabilities</code>, <code>apply(channel, period_ns, high_ns)</code>, <code>stop(channel)</code></td>
+</tr>
+<tr>
+<td>Stepper</td>
+<td><code>StepperController</code> + <code>StepperEnable</code></td>
+<td><code>initialize</code> (returns the enable half), <code>capabilities</code>, <code>emit</code> (sets each motor's step output); <code>set_enabled</code> on the enable half</td>
+</tr>
+</tbody>
+</table>
+<p>Each trait has an <code>initialize</code> that runs <strong>before</strong> the instance name is advertised: if it
+fails, no client can ever reach a half-initialised device. This is the whole <code>main</code> of
+<code>pwm_rpi3</code>:</p>
+<pre><code class="language-rust">use tail_device_pwm::{log_tag, Resource};
+
+fn main() {
+    let resource = match Resource::from_args(std::env::args()) {
+        Ok(resource) =&gt; resource,
+        Err(error) =&gt; {
+            eprintln!(&quot;pwm_rpi3: missing or invalid resource arguments: {error}&quot;);
+            std::process::exit(1);
+        }
+    };
+    let args = match DriverArgs::from_args(std::env::args()) { // this driver's own tokens
+        Ok(args) =&gt; args,
+        Err(error) =&gt; {
+            eprintln!(&quot;pwm_rpi3: invalid clock or line arguments: {error}&quot;);
+            std::process::exit(1);
+        }
+    };
+    let driver = PwmDriver::new(&amp;resource, args);
+    tail_device_pwm::serve(log_tag!(&quot;pwm&quot;), driver)
+}
+</code></pre>
+<p>What the class crate re-exports for a driver, from the core tier:</p>
+<ul>
+<li><strong><code>Resource</code></strong> — <code>base()</code>, <code>size()</code> and <code>irqs()</code> from the driver's manifest line.</li>
+<li><strong><code>DeviceRegion::map(base, size)</code></strong> — maps the register window, or fails so <code>initialize</code>
+can fail. <code>region.reg::&lt;u32&gt;(offset)</code> returns a register whose every access is exactly
+that width; an offset outside the window or misaligned for the width panics, naming it.</li>
+<li><strong><code>InterruptDispatcher::attach(&amp;irqs, region.base(), scan, handler)</code></strong> — <code>scan</code> runs in
+kernel context: it reads and acknowledges the device's status and returns the fired
+sources as a bit mask, and it must not lock, allocate or make a system call.
+<code>handler.handle(base, latched)</code> then runs in a worker thread, where it may lock and
+reply. One dispatcher per process.</li>
+</ul>
+<p><code>serve</code> reads the instance name from the line's <code>instance=</code> token. A line without one, or
+with one longer than the limit, makes the driver exit with status 1 and a message naming
+the class, so a driver never advertises a name the board did not give it. A driver may
+use other classes' instances as a client, as <code>pwm_rpi3</code> claims its output lines from
+<code>gpio-lines</code> and <code>stepper_step_dir</code> drives through <code>pwm-channels</code>.</p>
+
+<footer class="doc-src">
+  <span>Generated from <span class="mono">framework/device/doc/device_framework_public.md</span> in the TAIL OS repository.</span>
+</footer>
+</article>
+<nav class="toc" aria-label="On this page">
+  <span class="toc-h">On this page</span>
+  <ul>
+    <li><a href="#quick-start">Quick start</a></li>
+    <li><a href="#opening-an-instance">Opening an instance</a></li>
+    <li><a href="#gpio">GPIO</a></li>
+    <li><a href="#i2c">I2C</a></li>
+    <li><a href="#pwm">PWM</a></li>
+    <li><a href="#stepper">Stepper</a></li>
+    <li><a href="#using-a-device-from-a-periodic-node">Using a device from a periodic node</a></li>
+    <li><a href="#ownership">Ownership</a></li>
+    <li><a href="#what-is-portable-and-what-is-the-boards">What is portable and what is the board's</a></li>
+    <li><a href="#writing-a-driver-for-a-new-board">Writing a driver for a new board</a></li>
+  </ul>
+</nav>
+</div>
+</main>
+</div>
+<footer class="ftr">
+  <span>TAIL OS &mdash; real-time OS in Rust</span>
+  <span class="ftr-sep">/</span>
+  <span class="mono">v0.9.0</span>
+</footer>
+
+</body>
+</html>

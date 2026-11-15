@@ -174,7 +174,7 @@ answerable questions measured:
 | 6, 0.75 (before) | 33 | 8 | 8.3 on average |
 | 8, 0.75 | 35 | 8 | 10.7 |
 | 6, 0.3 | 35 | 6 | 8.3 |
-| **8, 0.5 (now)** | **35** | **7** | **10.7** |
+| 8, 0.5 | 35 | 7 | 10.7 |
 
 The misses were long sections — the SD card layout box is 6.6 times the median length —
 which textbook length normalisation (0.75) pushes down. Each change alone reaches 35
@@ -183,6 +183,22 @@ questions went from 29 answered (1 refused for want of the passage, 6 correct bu
 uncited and so discarded by §5.3) to 33 (2 uncited, 1 provider error), one run each.
 Passing two more passages costs about 30% more model input per question; the daily
 ceiling counts calls, not tokens.
+
+On 2026-11-14 the robotics documents took the corpus from 8 documents to 11, and "Which
+Python version does TAIL OS ship?" fell to rank 12: the new pages say "Python" and
+"version" too, and the one passage that answers sits in the QEMU page. Re-measured on the
+36 answerable questions:
+
+| Passages, length normalisation `B` | Questions reached | Worst rank of an answer |
+|---|---|---|
+| 8, 0.5 (before) | 35 | 12 |
+| 8, 0.2 | 35 | 9 |
+| 10, 0.5 | 35 | 12 |
+| **10, 0.2 (now)** | **36** | **9** |
+
+Neither change alone reaches all 36. Both together do, with one rank to spare, for about
+25% more model input per question. Adding a document can move a rank, which is what the
+retrieval test is for: re-measure this table when it fails, and do not loosen the test.
 
 ### 5.3 Citations are enforced mechanically, not requested politely
 

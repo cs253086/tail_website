@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aperiodic Framework (Rust) — TAIL OS</title>
+<meta name="description" content="Write a driver or service as a trait and one generated main, with clients that connect by name.">
+<link rel="canonical" href="https://tail-os.com/docs/aperiodic-framework-rust/">
+<meta property="og:title" content="Aperiodic Framework (Rust) — TAIL OS">
+<meta property="og:description" content="Write a driver or service as a trait and one generated main, with clients that connect by name.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tail-os.com/docs/aperiodic-framework-rust/">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="/assets/70d74c3270ec/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/assets/70d74c3270ec/css/style.css">
+<script type="module" src="/assets/70d74c3270ec/js/copy.js"></script>
+<script type="module" src="/assets/70d74c3270ec/js/reveal.js"></script>
+</head>
+<body class="page-shell">
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="/"><svg class="mark" viewBox="0 0 32 32" width="22" height="22" fill="none" aria-hidden="true"><path d="M4 8h24M4 16h16M4 24h8" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span>TAIL OS</span><span class="ver">v0.9.0</span></a>
+    <form class="hdr-search" action="/ask/" method="get" role="search">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" name="q" placeholder="Search or ask a question" aria-label="Search or ask a question" autocomplete="off">
+    </form>
+    <nav class="hdr-nav" aria-label="Primary">
+      <a href="/docs/">Docs</a>
+      <details class="hdr-menu">
+        <summary class="hdr-menu-btn" aria-haspopup="true">
+          <span>Support</span>
+          <svg class="hdr-menu-chevron" viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
+        </summary>
+        <div class="hdr-menu-panel">
+          <div class="hdr-menu-desc">Questions, hardware bring-up, or general inquiries:</div>
+          <a class="hdr-menu-action" href="mailto:support@tail-os.com">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <span>Email us</span>
+          </a>
+          <span class="hdr-menu-sub mono">support@tail-os.com</span>
+        </div>
+      </details>
+      
+    </nav>
+  </div>
+</header>
+<div class="shell">
+<aside class="side">
+  <nav aria-label="Documentation">
+    <ul class="nav-docs">
+    <li class="nav-group">
+      <span class="nav-label">Get started</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/quick-start/">Quick Start</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/installation/">Installation</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Concepts</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/robotics-overview/">How Robot Applications Work</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Guides</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-rust/">Rust Guide</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/periodic-framework-python/">Python Guide</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/aperiodic-framework-rust/" aria-current="page">Service Framework (Rust)</a>
+      <ul class="nav-sections">
+        <li><a href="/docs/aperiodic-framework-rust/#quick-start">Quick start</a></li>
+        <li><a href="/docs/aperiodic-framework-rust/#declaring-an-interface">Declaring an interface</a></li>
+        <li><a href="/docs/aperiodic-framework-rust/#writing-a-server">Writing a server</a></li>
+        <li><a href="/docs/aperiodic-framework-rust/#deferred-replies">Deferred replies</a></li>
+        <li><a href="/docs/aperiodic-framework-rust/#calling-a-service">Calling a service</a></li>
+        <li><a href="/docs/aperiodic-framework-rust/#errors-a-caller-sees">Errors a caller sees</a></li>
+        <li><a href="/docs/aperiodic-framework-rust/#message-sizes">Message sizes</a></li>
+        <li><a href="/docs/aperiodic-framework-rust/#several-services-in-one-process">Several services in one process</a></li>
+        <li><a href="/docs/aperiodic-framework-rust/#the-enum-form">The enum form</a></li>
+        <li><a href="/docs/aperiodic-framework-rust/#what-the-framework-guarantees">What the framework guarantees</a></li>
+        <li><a href="/docs/aperiodic-framework-rust/#what-you-must-not-do">What you must not do</a></li>
+      </ul>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/device-framework-rust/">Device Framework (Rust)</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Boards</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/qemu/">QEMU</a>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/raspberry-pi-3/">Raspberry Pi 3</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-group">
+      <span class="nav-label">Reference</span>
+      <ul class="nav-list">
+        <li class="nav-page">
+      <a class="nav-link" href="/docs/shell-tools/">Shell Tools</a>
+    </li>
+      </ul>
+    </li>
+    <li class="nav-page">
+      <a class="nav-link" href="/docs/license-guide/">License Guide</a>
+    </li>
+    </ul>
+  </nav>
+</aside>
+<main class="content">
+<div class="doc-wrap">
+<article class="doc">
+<h1 id="aperiodic-framework-rust-api">Aperiodic Framework — Rust API</h1>
+<p>Declare an interface once; the framework generates the typed client every caller uses and
+the dispatch every server runs. A server is an <code>impl</code> block with an attribute — there is no
+<code>main</code>, no receive loop and no reply bookkeeping to write.</p>
+<p>An <strong>aperiodic service</strong> is a server whose work arrives when something asks for it, not on a
+clock. Each request goes through the same three steps: the framework <strong>receives</strong> it,
+<strong>dispatches</strong> it to your handler, and sends <strong>exactly one reply</strong>. A driver that answers
+&quot;read this pin&quot;, a log server that hands out rings, a planner that answers &quot;is this path
+clear?&quot; are all aperiodic services.</p>
+<p>Its sibling, the <a href="/docs/periodic-framework-rust/">periodic node</a>, runs a body
+once per declared period and exchanges data over topics. Use a periodic node for a control
+loop that runs at a fixed rate. Use an aperiodic service for a question that one caller asks
+and one server answers, at any time.</p>
+<figure class="diagram"><svg id="diagram-4ba4f84971" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" viewBox="4 4 1128 112.44999694824219" aria-roledescription="flowchart-v2" aria-describedby="chart-desc-diagram-4ba4f84971" aria-labelledby="chart-title-diagram-4ba4f84971" width="1128" role="img"><title id="chart-title-diagram-4ba4f84971">The path of one request</title><desc id="chart-desc-diagram-4ba4f84971">A caller thread's request is copied by the kernel to the server's receiving thread, decoded with its operation and length checked, handed to your handler, and answered with exactly one reply back to the caller.</desc><g><marker id="diagram-4ba4f84971_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath"/></marker><marker id="diagram-4ba4f84971_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath"/></marker><marker id="diagram-4ba4f84971_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath"/></marker><marker id="diagram-4ba4f84971_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath"/></marker><marker id="diagram-4ba4f84971_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-4ba4f84971_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-4ba4f84971_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-4ba4f84971_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-4ba4f84971_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath"/></marker><marker id="diagram-4ba4f84971_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath"/></marker><marker id="diagram-4ba4f84971_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath"/></marker><marker id="diagram-4ba4f84971_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath"/></marker><g class="root"><g class="clusters"/><g class="edges edgePaths"><path d="M164,72.71666463216147L176.92893218813452,72.71666463216147Q184,72.71666463216147 184,65.64559682029599L184,57.17106628598657Q184,50.099998474121094 191.07106781186548,50.099998474121094L200,50.099998474121094" id="diagram-4ba4f84971-L_caller_kernel_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_caller_kernel_0" data-points="W3sieCI6MTY0LCJ5Ijo3Mi43MTY2NjQ2MzIxNjE0N30seyJ4IjoxODQsInkiOjcyLjcxNjY2NDYzMjE2MTQ3fSx7IngiOjE4NCwieSI6NTAuMDk5OTk4NDc0MTIxMDk0fSx7IngiOjIwNCwieSI6NTAuMDk5OTk4NDc0MTIxMDk0fV0=" data-look="neo" marker-end="url(#diagram-4ba4f84971_flowchart-v2-pointEnd-margin)"/><path d="M356,50.099998474121094L392,50.099998474121094" id="diagram-4ba4f84971-L_kernel_receiver_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_kernel_receiver_0" data-points="W3sieCI6MzU2LCJ5Ijo1MC4wOTk5OTg0NzQxMjEwOTR9LHsieCI6Mzk2LCJ5Ijo1MC4wOTk5OTg0NzQxMjEwOTR9XQ==" data-look="neo" marker-end="url(#diagram-4ba4f84971_flowchart-v2-pointEnd-margin)"/><path d="M548,50.099998474121094L584,50.099998474121094" id="diagram-4ba4f84971-L_receiver_check_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_receiver_check_0" data-points="W3sieCI6NTQ4LCJ5Ijo1MC4wOTk5OTg0NzQxMjEwOTR9LHsieCI6NTg4LCJ5Ijo1MC4wOTk5OTg0NzQxMjEwOTR9XQ==" data-look="neo" marker-end="url(#diagram-4ba4f84971_flowchart-v2-pointEnd-margin)"/><path d="M740,50.099998474121094L776,50.099998474121094" id="diagram-4ba4f84971-L_check_handler_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_check_handler_0" data-points="W3sieCI6NzQwLCJ5Ijo1MC4wOTk5OTg0NzQxMjEwOTR9LHsieCI6NzgwLCJ5Ijo1MC4wOTk5OTg0NzQxMjEwOTR9XQ==" data-look="neo" marker-end="url(#diagram-4ba4f84971_flowchart-v2-pointEnd-margin)"/><path d="M932,50.099998474121094L944.9289321881345,50.099998474121094Q952,50.099998474121094 952,57.17106628598657L952,65.64559682029599Q952,72.71666463216147 959.0710678118655,72.71666463216147L968,72.71666463216147" id="diagram-4ba4f84971-L_handler_reply_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_handler_reply_0" data-points="W3sieCI6OTMyLCJ5Ijo1MC4wOTk5OTg0NzQxMjEwOTR9LHsieCI6OTUyLCJ5Ijo1MC4wOTk5OTg0NzQxMjEwOTR9LHsieCI6OTUyLCJ5Ijo3Mi43MTY2NjQ2MzIxNjE0N30seyJ4Ijo5NzIsInkiOjcyLjcxNjY2NDYzMjE2MTQ3fV0=" data-look="neo" marker-end="url(#diagram-4ba4f84971_flowchart-v2-pointEnd-margin)"/><path d="M972,85.58333079020183L959.0710678118655,85.58333079020183Q952,85.58333079020183 952,92.6543986020673L952,101.12892913637671Q952,108.19999694824219 944.9289321881345,108.19999694824219L856,108.19999694824219L664,108.19999694824219L472,108.19999694824219L280,108.19999694824219L191.07106781186548,108.19999694824219Q184,108.19999694824219 184,101.12892913637671L184,92.6543986020673Q184,85.58333079020183 176.92893218813452,85.58333079020183L168,85.58333079020183" id="diagram-4ba4f84971-L_reply_caller_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_reply_caller_0" data-points="W3sieCI6OTcyLCJ5Ijo4NS41ODMzMzA3OTAyMDE4M30seyJ4Ijo5NTIsInkiOjg1LjU4MzMzMDc5MDIwMTgzfSx7IngiOjk1MiwieSI6MTA4LjE5OTk5Njk0ODI0MjE5fSx7IngiOjg1NiwieSI6MTA4LjE5OTk5Njk0ODI0MjE5fSx7IngiOjY2NCwieSI6MTA4LjE5OTk5Njk0ODI0MjE5fSx7IngiOjQ3MiwieSI6MTA4LjE5OTk5Njk0ODI0MjE5fSx7IngiOjI4MCwieSI6MTA4LjE5OTk5Njk0ODI0MjE5fSx7IngiOjE4NCwieSI6MTA4LjE5OTk5Njk0ODI0MjE5fSx7IngiOjE4NCwieSI6ODUuNTgzMzMwNzkwMjAxODN9LHsieCI6MTY0LCJ5Ijo4NS41ODMzMzA3OTAyMDE4M31d" data-look="neo" marker-end="url(#diagram-4ba4f84971_flowchart-v2-pointEnd-margin)"/></g><g class="edgeLabels"/><g class="nodes"><g class="node default" id="diagram-4ba4f84971-flowchart-caller-0" data-look="neo" transform="translate(88, 79.14999771118164)"><rect class="basic label-container" x="-76" y="-29.299999237060547" width="152" height="58.599998474121094"/><g class="label" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">caller</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> thread</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">limits.get(..)</tspan></tspan></text></g></g></g><g class="node default" id="diagram-4ba4f84971-flowchart-kernel-1" data-look="neo" transform="translate(280, 50.099998474121094)"><rect class="basic label-container" x="-76" y="-38.099998474121094" width="152" height="76.19999694824219"/><g class="label" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">kernel</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">copies</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> the</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">request</tspan></tspan></text></g></g></g><g class="node default" id="diagram-4ba4f84971-flowchart-receiver-3" data-look="neo" transform="translate(472, 50.099998474121094)"><rect class="basic label-container" x="-76" y="-29.299999237060547" width="152" height="58.599998474121094"/><g class="label" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">receiving</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> thread</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">of</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> the</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> server</tspan></tspan></text></g></g></g><g class="node default" id="diagram-4ba4f84971-flowchart-check-5" data-look="neo" transform="translate(664, 50.099998474121094)"><rect class="basic label-container" x="-76" y="-38.099998474121094" width="152" height="76.19999694824219"/><g class="label" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">decode</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">operation</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> and</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">length</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> checked</tspan></tspan></text></g></g></g><g class="node default" id="diagram-4ba4f84971-flowchart-handler-7" data-look="neo" transform="translate(856, 50.099998474121094)"><rect class="basic label-container" x="-76" y="-29.299999237060547" width="152" height="58.599998474121094"/><g class="label" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">your</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> handler</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">fn</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> get</tspan></tspan></text></g></g></g><g class="node default" id="diagram-4ba4f84971-flowchart-reply-9" data-look="neo" transform="translate(1048, 79.14999771118164)"><rect class="basic label-container" x="-76" y="-29.299999237060547" width="152" height="58.599998474121094"/><g class="label" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">exactly</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> one</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">reply</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="diagram-4ba4f84971-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="diagram-4ba4f84971-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="diagram-4ba4f84971-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg></figure>
+<p><em>A caller's request is copied by the kernel to the server's receiving thread, checked and
+decoded, handed to your handler, and answered with exactly one reply.</em></p>
+<h2 id="quick-start">Quick start</h2>
+<p>Three files in the BSP's <code>app/</code> directory: the interface, defined once, and two programs
+that each hold one end of it.</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>app/speed_limit_interface.rs</code></td>
+<td>the interface: service name, operations, payloads</td>
+</tr>
+<tr>
+<td><code>app/speed_limit_server/src/main.rs</code></td>
+<td>the server that holds a speed limit per wheel</td>
+</tr>
+<tr>
+<td><code>app/drive_setup/src/main.rs</code></td>
+<td>a client that sets one limit and reads it back</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-interface-defined-once">The interface, defined once</h3>
+<pre><code class="language-rust">// app/speed_limit_interface.rs
+
+// Each program uses part of this file: the server the trait, the client the client.
+#![allow(dead_code)]
+
+use aperiodic::{interface, ErrorKind};
+use wire_plain::WirePlain;
+
+/// The name the service registers under and clients resolve.
+pub const SPEED_LIMIT_SERVICE: &amp;str = &quot;speed_limit&quot;;
+
+pub const OP_SET: u64 = 1;
+pub const OP_GET: u64 = 2;
+
+#[derive(Clone, Copy, Debug, WirePlain)]
+#[repr(C)]
+pub struct SetLimit {
+    /// Wheel index, 0..=3.
+    pub wheel: u32,
+    /// Largest wheel speed allowed [mrad/s].
+    pub max_mrad_s: u32,
+}
+
+#[derive(Clone, Copy, Debug, WirePlain)]
+#[repr(C)]
+pub struct GetLimit {
+    /// Wheel index, 0..=3.
+    pub wheel: u32,
+}
+
+#[derive(Clone, Copy, Debug, WirePlain)]
+#[repr(C)]
+pub struct Limit {
+    /// Largest wheel speed allowed [mrad/s].
+    pub max_mrad_s: u32,
+}
+
+/// Per-wheel speed limits.
+#[interface(name = SPEED_LIMIT_SERVICE)]
+pub trait SpeedLimit {
+    /// Set one wheel's limit. Answers with nothing.
+    #[op(OP_SET, reply = ())]
+    fn set(&amp;self, args: SetLimit) -&gt; Result&lt;(), ErrorKind&gt;;
+
+    /// Read one wheel's limit.
+    #[op(OP_GET, reply = Limit)]
+    fn get(&amp;self, args: GetLimit) -&gt; Result&lt;Limit, ErrorKind&gt;;
+}
+</code></pre>
+<p>From this one declaration <code>#[interface]</code> generates:</p>
+<table>
+<thead>
+<tr>
+<th>Generated</th>
+<th>For</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>the trait <code>SpeedLimit</code>, as you wrote it</td>
+<td>the server, which implements it</td>
+</tr>
+<tr>
+<td><code>SpeedLimitClient</code>, with <code>connect()</code>, <code>set(SetLimit)</code> and <code>get(GetLimit)</code></td>
+<td>every caller</td>
+</tr>
+<tr>
+<td>the module <code>speed_limit_ops</code>, with a marker type <code>GetOp</code></td>
+<td>the server, when it answers <code>get</code> later (see <a href="#deferred-replies">Deferred replies</a>)</td>
+</tr>
+</tbody>
+</table>
+<p>Both programs compile the same file, so they cannot disagree on an operation number or a
+payload type: change one and both sides change together.</p>
+<h3 id="the-server">The server</h3>
+<pre><code class="language-rust">// app/speed_limit_server/src/main.rs
+#[path = &quot;../../speed_limit_interface.rs&quot;]
+mod speed_limit_interface;
+
+use std::sync::atomic::{AtomicU32, Ordering};
+
+use aperiodic::{aperiodic, ErrorKind, Lifecycle, LogTag};
+use speed_limit_interface::{GetLimit, Limit, SetLimit, SpeedLimit};
+
+struct SpeedLimitService {
+    max_mrad_s: [AtomicU32; 4],
+}
+
+impl Lifecycle for SpeedLimitService {
+    fn start(_log: LogTag) -&gt; Result&lt;Self, ErrorKind&gt; {
+        Ok(Self { max_mrad_s: Default::default() })
+    }
+}
+
+#[aperiodic(tag = &quot;speed_limit&quot;)]
+impl SpeedLimit for SpeedLimitService {
+    fn set(&amp;self, args: SetLimit) -&gt; Result&lt;(), ErrorKind&gt; {
+        let wheel = self.max_mrad_s.get(args.wheel as usize).ok_or(ErrorKind::InvalidInput)?;
+        wheel.store(args.max_mrad_s, Ordering::Relaxed);
+        Ok(())
+    }
+
+    fn get(&amp;self, args: GetLimit) -&gt; Result&lt;Limit, ErrorKind&gt; {
+        let wheel = self.max_mrad_s.get(args.wheel as usize).ok_or(ErrorKind::InvalidInput)?;
+        Ok(Limit { max_mrad_s: wheel.load(Ordering::Relaxed) })
+    }
+}
+</code></pre>
+<p><code>#[aperiodic]</code> writes <code>main</code>. It builds the handler with <code>Lifecycle::start</code>, registers the
+name <code>speed_limit</code>, records <code>service ready</code> in the system log under the tag <code>speed_limit</code>,
+and then serves requests until the process ends. Each handler returns a <code>Result</code>: <code>Ok</code>
+becomes the reply, <code>Err(kind)</code> becomes the caller's <code>Err(kind)</code>.</p>
+<h3 id="the-client">The client</h3>
+<pre><code class="language-rust">// app/drive_setup/src/main.rs
+#[path = &quot;../../speed_limit_interface.rs&quot;]
+mod speed_limit_interface;
+
+use speed_limit_interface::{GetLimit, SetLimit, SpeedLimitClient};
+
+fn main() -&gt; Result&lt;(), aperiodic::ErrorKind&gt; {
+    let limits = SpeedLimitClient::connect()?;
+    limits.set(SetLimit { wheel: 0, max_mrad_s: 12_000 })?;
+    let limit = limits.get(GetLimit { wheel: 0 })?;
+    println!(&quot;wheel 0 limited to {} mrad/s&quot;, limit.max_mrad_s);
+    Ok(())
+}
+</code></pre>
+<p><code>connect()</code> resolves the name, waiting for the server to register if it has not yet. Each
+method sends one request and blocks the calling thread until the reply arrives. The caller
+writes no operation number, no byte packing and no reply decoding.</p>
+<h3 id="build-and-run">Build and run</h3>
+<p>Add <code>/usr/bin/speed_limit_server=speed_limit_server</code> and
+<code>/usr/bin/drive_setup=drive_setup</code> to the <code>[disk]</code> section of the BSP's <code>tail.build</code>, then
+run <code>./make-disk.sh</code>. See
+<a href="/docs/raspberry-pi-3/#add-your-own-programs">Installing TAIL OS on Raspberry Pi 3</a>.
+<code>aperiodic</code>, <code>wire_plain</code> and <code>log</code> are libraries of the SDK, so a program names them with
+a <code>use</code> and nothing more.</p>
+<p>On the booted image, start them in either order: <code>speed_limit_server &amp;</code>, then
+<code>drive_setup</code>. If the client starts first, <code>connect()</code> waits for the name.</p>
+<p><strong>In a cargo workspace the interface is a library crate instead</strong>, depending on <code>aperiodic</code>
+and <code>wire_plain</code>; the server and every client list it in their <code>Cargo.toml</code>. The server
+also lists <code>log</code>, because the generated <code>main</code> creates its log tag. The interface crate's
+public signatures name <code>ErrorKind</code> and <code>CallerIdentity</code>, which reach it through <code>std</code>; put
+<code>#![allow(exported_private_dependencies)]</code> on the module that declares the trait to silence
+the resulting lint.</p>
+<h2 id="declaring-an-interface">Declaring an interface</h2>
+<p><code>#[interface(name = &lt;&amp;str constant&gt;)]</code> goes on a trait. Every method of the trait is one
+operation, and carries <code>#[op(..)]</code>:</p>
+<pre><code class="language-rust">#[op(OP_GET, reply = Limit)]
+fn get(&amp;self, args: GetLimit) -&gt; Result&lt;Limit, ErrorKind&gt;;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OP_GET</code></td>
+<td>the operation number, a <code>u64</code> constant. Two operations with the same number fail to build</td>
+</tr>
+<tr>
+<td><code>reply = Limit</code></td>
+<td>the reply type; <code>reply = ()</code> for an operation that answers with nothing</td>
+</tr>
+<tr>
+<td><code>&amp;self</code></td>
+<td>always <code>&amp;self</code>. <code>&amp;mut self</code> is refused with a message that says where mutable state goes</td>
+</tr>
+<tr>
+<td><code>args: GetLimit</code></td>
+<td>the request payload, always present. An operation with nothing to send takes a payload with one reserved field</td>
+</tr>
+<tr>
+<td>a third parameter <code>caller: CallerIdentity</code></td>
+<td>optional: the kernel-stamped identity of the calling process (see <a href="#who-is-calling">Who is calling</a>)</td>
+</tr>
+<tr>
+<td>return type</td>
+<td><code>Result&lt;Reply, ErrorKind&gt;</code>, matching <code>reply = ..</code></td>
+</tr>
+</tbody>
+</table>
+<p>Further keys on <code>#[op]</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>defer</code></td>
+<td>the handler answers later, through a reply token; see <a href="#deferred-replies">Deferred replies</a></td>
+</tr>
+<tr>
+<td><code>trailing</code></td>
+<td>the request is the payload followed by a run of bytes; see <a href="#bulk-data-trailing">Bulk data</a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="payloads">Payloads</h3>
+<p>A request payload is a <code>#[repr(C)]</code> struct that derives <code>WirePlain</code>, the same derive the
+periodic framework uses for topic payloads. The derive proves at the definition that any
+bytes another process sends form a valid value: fields are fixed-width integers, floats,
+arrays of them or other such structs, and the struct has no padding. Declare a reply type
+the same way: the client builds it from bytes the server sent.</p>
+<p>The service checks each request's <strong>length</strong> against the declared payload, and its
+operation number against the interface. It does not compare layouts beyond that, so build
+both programs from the same interface definition.</p>
+<h3 id="what-the-build-refuses">What the build refuses</h3>
+<table>
+<thead>
+<tr>
+<th>You write</th>
+<th>The build says</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a request payload over 32 bytes</td>
+<td><code>request payload `X` exceeds the register fastpath bound (&lt;= 32 bytes)</code></td>
+</tr>
+<tr>
+<td>a reply type over 32 bytes</td>
+<td><code>reply type `X` exceeds the register fastpath bound (&lt;= 32 bytes)</code></td>
+</tr>
+<tr>
+<td>two operations with one number</td>
+<td><code>`b` declares the same discriminant value as `a`; the second is unreachable</code></td>
+</tr>
+<tr>
+<td>a method without <code>#[op]</code></td>
+<td><code>every method of an `#[interface]` trait declares an operation: ..</code></td>
+</tr>
+<tr>
+<td>a payload that does not derive <code>WirePlain</code></td>
+<td>an unsatisfied <code>WirePlain</code> bound on the payload</td>
+</tr>
+<tr>
+<td><code>#[aperiodic]</code> without <code>tag</code></td>
+<td><code>`#[aperiodic]` needs the subsystem its records are filed under, ..</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="writing-a-server">Writing a server</h2>
+<p>A server is a type that implements <code>Lifecycle</code> and the interface trait, with
+<code>#[aperiodic(tag = &quot;..&quot;)]</code> on the trait's <code>impl</code>. The tag names the subsystem the server's
+log records are filed under.</p>
+<h3 id="start-up">Start-up</h3>
+<figure class="diagram"><svg id="diagram-2afd69dc36" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="flowchart" viewBox="4 4 168 585.2000122070312" aria-roledescription="flowchart-v2" aria-describedby="chart-desc-diagram-2afd69dc36" aria-labelledby="chart-title-diagram-2afd69dc36" width="168" role="img"><title id="chart-title-diagram-2afd69dc36">The order a server starts in</title><desc id="chart-desc-diagram-2afd69dc36">Lifecycle start builds the handler, before_register maps hardware and spawns threads, the name is registered, after_register publishes other signals, the service ready record is written, and the server then serves requests.</desc><g><marker id="diagram-2afd69dc36_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath"/></marker><marker id="diagram-2afd69dc36_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath"/></marker><marker id="diagram-2afd69dc36_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath"/></marker><marker id="diagram-2afd69dc36_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath"/></marker><marker id="diagram-2afd69dc36_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-2afd69dc36_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-2afd69dc36_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-2afd69dc36_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath"/></marker><marker id="diagram-2afd69dc36_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath"/></marker><marker id="diagram-2afd69dc36_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath"/></marker><marker id="diagram-2afd69dc36_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath"/></marker><marker id="diagram-2afd69dc36_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath"/></marker><g class="root"><g class="clusters"/><g class="edges edgePaths"><path d="M88,70.5999984741211L88,106.5999984741211" id="diagram-2afd69dc36-L_start_before_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_start_before_0" data-points="W3sieCI6ODgsInkiOjcwLjU5OTk5ODQ3NDEyMTF9LHsieCI6ODgsInkiOjExMC41OTk5OTg0NzQxMjExfV0=" data-look="neo" marker-end="url(#diagram-2afd69dc36_flowchart-v2-pointEnd-margin)"/><path d="M88,186.79999542236328L88,222.79999542236328" id="diagram-2afd69dc36-L_before_register_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_before_register_0" data-points="W3sieCI6ODgsInkiOjE4Ni43OTk5OTU0MjIzNjMyOH0seyJ4Ijo4OCwieSI6MjI2Ljc5OTk5NTQyMjM2MzI4fV0=" data-look="neo" marker-end="url(#diagram-2afd69dc36_flowchart-v2-pointEnd-margin)"/><path d="M88,285.3999938964844L88,321.3999938964844" id="diagram-2afd69dc36-L_register_after_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_register_after_0" data-points="W3sieCI6ODgsInkiOjI4NS4zOTk5OTM4OTY0ODQ0fSx7IngiOjg4LCJ5IjozMjUuMzk5OTkzODk2NDg0NH1d" data-look="neo" marker-end="url(#diagram-2afd69dc36_flowchart-v2-pointEnd-margin)"/><path d="M88,401.59999084472656L88,437.59999084472656" id="diagram-2afd69dc36-L_after_ready_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_after_ready_0" data-points="W3sieCI6ODgsInkiOjQwMS41OTk5OTA4NDQ3MjY1Nn0seyJ4Ijo4OCwieSI6NDQxLjU5OTk5MDg0NDcyNjU2fV0=" data-look="neo" marker-end="url(#diagram-2afd69dc36_flowchart-v2-pointEnd-margin)"/><path d="M88,500.19998931884766L88,536.1999893188477" id="diagram-2afd69dc36-L_ready_serve_0" class="edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" data-edge="true" data-et="edge" data-id="L_ready_serve_0" data-points="W3sieCI6ODgsInkiOjUwMC4xOTk5ODkzMTg4NDc2Nn0seyJ4Ijo4OCwieSI6NTQwLjE5OTk4OTMxODg0Nzd9XQ==" data-look="neo" marker-end="url(#diagram-2afd69dc36_flowchart-v2-pointEnd-margin)"/></g><g class="edgeLabels"/><g class="nodes"><g class="node default" id="diagram-2afd69dc36-flowchart-start-0" data-look="neo" transform="translate(88, 41.29999923706055)"><rect class="basic label-container" x="-76" y="-29.299999237060547" width="152" height="58.599998474121094"/><g class="label" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">Lifecycle::start</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">build</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> the</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> handler</tspan></tspan></text></g></g></g><g class="node default" id="diagram-2afd69dc36-flowchart-before-1" data-look="neo" transform="translate(88, 148.6999969482422)"><rect class="basic label-container" x="-76" y="-38.099998474121094" width="152" height="76.19999694824219"/><g class="label" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">before_register</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">map</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> hardware,</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">spawn</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> threads</tspan></tspan></text></g></g></g><g class="node default" id="diagram-2afd69dc36-flowchart-register-3" data-look="neo" transform="translate(88, 256.0999946594238)"><rect class="basic label-container" x="-76" y="-29.299999237060547" width="152" height="58.599998474121094"/><g class="label" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">the</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> name</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> is</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">registered</tspan></tspan></text></g></g></g><g class="node default" id="diagram-2afd69dc36-flowchart-after-5" data-look="neo" transform="translate(88, 363.49999237060547)"><rect class="basic label-container" x="-76" y="-38.099998474121094" width="152" height="76.19999694824219"/><g class="label" transform="translate(0, -26.099998474121094)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">after_register</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">publish</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> other</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="2.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">signals</tspan></tspan></text></g></g></g><g class="node default" id="diagram-2afd69dc36-flowchart-ready-7" data-look="neo" transform="translate(88, 470.8999900817871)"><rect class="basic label-container" x="-76" y="-29.299999237060547" width="152" height="58.599998474121094"/><g class="label" transform="translate(0, -17.299999237060547)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">record:</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> service</tspan></tspan><tspan class="text-outer-tspan row" x="0" y="1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">ready</tspan></tspan></text></g></g></g><g class="node default" id="diagram-2afd69dc36-flowchart-serve-9" data-look="neo" transform="translate(88, 560.6999893188477)"><rect class="basic label-container" x="-76" y="-20.5" width="152" height="41"/><g class="label" transform="translate(0, -8.5)"><rect/><g><rect class="background"/><text y="-10.1"><tspan class="text-outer-tspan row" x="0" y="-0.1em" dy="1.1em"><tspan font-style="normal" class="text-inner-tspan" font-weight="normal">serve</tspan><tspan font-style="normal" class="text-inner-tspan" font-weight="normal"> requests</tspan></tspan></text></g></g></g></g></g></g><defs><filter id="diagram-2afd69dc36-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><defs><filter id="diagram-2afd69dc36-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"/></filter></defs><linearGradient id="diagram-2afd69dc36-gradient" gradientUnits="objectBoundingBox" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="hsl(0, 0%, 83.3333333333%)" stop-opacity="1"/><stop offset="100%" stop-color="hsl(0, 0%, 88.9215686275%)" stop-opacity="1"/></linearGradient></svg></figure>
+<p><em>The handler is built, prepared before its name exists, registered, given a step after
+registration, announced as ready, and then serves.</em></p>
+<table>
+<thead>
+<tr>
+<th>Hook</th>
+<th>Runs</th>
+<th>Use it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fn start(log: LogTag) -&gt; Result&lt;Self, ErrorKind&gt;</code></td>
+<td>first, before anything is logged or registered</td>
+<td>building the handler. Required</td>
+</tr>
+<tr>
+<td><code>fn before_register(&amp;mut self, log: LogTag) -&gt; Result&lt;(), Unavailable&gt;</code></td>
+<td>before the name exists, so no client can reach the service</td>
+<td>mapping hardware, attaching interrupts, spawning helper threads. Default: nothing</td>
+</tr>
+<tr>
+<td><code>fn after_register(&amp;mut self, log: LogTag) -&gt; Result&lt;(), Unavailable&gt;</code></td>
+<td>after the name exists; clients that arrive now wait in the queue</td>
+<td>publishing a second readiness signal that must not appear before the name. Default: nothing</td>
+</tr>
+</tbody>
+</table>
+<p>A hook stops start-up by returning an error:</p>
+<table>
+<thead>
+<tr>
+<th>Returned</th>
+<th>Recorded</th>
+<th>The process</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Err(ErrorKind)</code> from <code>start</code></td>
+<td><code>startup failed: &lt;kind&gt;</code>, at error</td>
+<td>exits 1; the name is never registered</td>
+</tr>
+<tr>
+<td><code>Err(Unavailable::Failed(kind))</code></td>
+<td><code>startup failed: &lt;kind&gt;</code>, at error</td>
+<td>exits 1</td>
+</tr>
+<tr>
+<td><code>Err(Unavailable::NotPresent)</code></td>
+<td><code>not present on this board</code>, at info</td>
+<td>exits 0: a board without the device is not a fault</td>
+</tr>
+</tbody>
+</table>
+<p><code>?</code> works inside a hook on any <code>Result&lt;_, ErrorKind&gt;</code>: an <code>ErrorKind</code> converts into
+<code>Unavailable::Failed</code>.</p>
+<p>The hooks take <code>&amp;mut self</code>. The handler methods take <code>&amp;self</code>, and the handler type must be
+<code>Sync</code>, because it is shared with the thread that receives requests. Keep state you set up
+once in plain fields; put state that requests change behind a <code>Mutex</code> or atomics, as the
+quick start's <code>AtomicU32</code> limits are.</p>
+<h3 id="one-request-at-a-time">One request at a time</h3>
+<p>Each service is served by one receiving thread, so its handler runs one request at a time.
+While a handler works, every other caller of that service waits. A handler that must wait
+for something slow — a device, an event, another program's action — <strong>defers</strong> its reply
+instead of blocking.</p>
+<h3 id="logging">Logging</h3>
+<p><code>LogTag</code> is <code>Copy</code>. Keep the one <code>start</code> receives in a field and log through it:</p>
+<pre><code class="language-rust">self.log.warning(format_args!(&quot;wheel {} limit cut to {}&quot;, args.wheel, args.max_mrad_s));
+</code></pre>
+<p>Its levels are <code>start</code>, <code>success</code>, <code>info</code>, <code>warning</code>, <code>error</code> and <code>trace</code>. Records go to the
+process's log ring under the server's tag, alongside the framework's own; read them with
+<code>logview</code>.</p>
+<h3 id="who-is-calling">Who is calling</h3>
+<p>An operation that declares a third parameter <code>caller: CallerIdentity</code> receives the calling
+process's identity. The kernel stamps it, so a client cannot claim to be another process.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>caller.pid()</code></td>
+<td>the process id, for looking a process up or logging</td>
+</tr>
+<tr>
+<td><code>caller.generation()</code></td>
+<td>which occupant of that process slot this is</td>
+</tr>
+</tbody>
+</table>
+<p>Key per-client state on the whole <code>CallerIdentity</code>, not on <code>pid()</code>. A pid is a reused slot:
+state keyed on it alone passes to whatever process takes the slot next, while an identity
+does not match a later process. <code>CallerIdentity</code> is <code>Copy</code>, <code>Eq</code> and <code>Hash</code>, and prints as
+<code>pid 7 gen 1</code>.</p>
+<h2 id="deferred-replies">Deferred replies</h2>
+<p>An operation declared <code>defer</code> receives the request's <code>ClientId</code> and returns an <code>Outcome</code>.
+It either answers now or takes a <strong>reply token</strong> and answers later, from any thread.</p>
+<pre><code class="language-rust">// app/start_gate_interface.rs
+#![allow(dead_code)]
+
+use aperiodic::{interface, ClientId, ErrorKind, Outcome};
+use wire_plain::WirePlain;
+
+pub const OP_WAIT: u64 = 1;
+pub const OP_OPEN: u64 = 2;
+
+#[derive(Clone, Copy, Debug, WirePlain)]
+#[repr(C)]
+pub struct Wait { pub reserved: u32 }
+
+#[derive(Clone, Copy, Debug, WirePlain)]
+#[repr(C)]
+pub struct Open { pub mission: u32 }
+
+#[derive(Clone, Copy, Debug, WirePlain)]
+#[repr(C)]
+pub struct Opened { pub mission: u32 }
+
+#[interface(name = &quot;start_gate&quot;)]
+pub trait StartGate {
+    /// Answers once the operator opens the gate.
+    #[op(OP_WAIT, reply = Opened, defer)]
+    fn wait(&amp;self, args: Wait, client: ClientId) -&gt; Outcome;
+
+    /// Open the gate, answering every waiting caller.
+    #[op(OP_OPEN, reply = ())]
+    fn open(&amp;self, args: Open) -&gt; Result&lt;(), ErrorKind&gt;;
+}
+</code></pre>
+<pre><code class="language-rust">// app/start_gate_server/src/main.rs
+#[path = &quot;../../start_gate_interface.rs&quot;]
+mod start_gate_interface;
+
+use std::sync::Mutex;
+
+use aperiodic::{aperiodic, ClientId, ErrorKind, Lifecycle, LogTag, Outcome, Reply, ReplyToken};
+use start_gate_interface::{start_gate_ops::WaitOp, Open, Opened, StartGate, Wait};
+
+const MAX_WAITERS: usize = 8;
+
+struct StartGateService {
+    waiters: Mutex&lt;Vec&lt;ReplyToken&lt;WaitOp&gt;&gt;&gt;,
+}
+
+impl Lifecycle for StartGateService {
+    fn start(_log: LogTag) -&gt; Result&lt;Self, ErrorKind&gt; {
+        Ok(Self { waiters: Mutex::new(Vec::with_capacity(MAX_WAITERS)) })
+    }
+}
+
+#[aperiodic(tag = &quot;start_gate&quot;)]
+impl StartGate for StartGateService {
+    fn wait(&amp;self, _args: Wait, client: ClientId) -&gt; Outcome {
+        let mut waiters = self.waiters.lock().unwrap();
+        if waiters.len() == MAX_WAITERS {
+            return client.reply(Reply::err(ErrorKind::ResourceBusy));
+        }
+        let (outcome, token) = client.defer::&lt;WaitOp&gt;();
+        waiters.push(token);
+        outcome
+    }
+
+    fn open(&amp;self, args: Open) -&gt; Result&lt;(), ErrorKind&gt; {
+        for token in self.waiters.lock().unwrap().drain(..) {
+            let _ = token.reply(Opened { mission: args.mission });
+        }
+        Ok(())
+    }
+}
+</code></pre>
+<p>The caller sees no difference: <code>StartGateClient::wait(Wait { .. })</code> blocks and returns
+<code>Ok(Opened { .. })</code> once the gate opens. The server keeps serving other requests while
+callers wait.</p>
+<p><code>ClientId</code> is the caller of one request:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>client.reply(reply)</code></td>
+<td>answers now; <code>reply</code> is <code>Reply::ok()</code>, <code>Reply::err(kind)</code> or <code>Reply::of::&lt;Op&gt;(value)</code></td>
+</tr>
+<tr>
+<td><code>client.defer::&lt;Op&gt;()</code></td>
+<td>returns <code>(Outcome, ReplyToken&lt;Op&gt;)</code>; return the <code>Outcome</code>, keep the token. <code>Op</code> is the operation's marker in <code>&lt;interface&gt;_ops</code></td>
+</tr>
+<tr>
+<td><code>client.defer_untyped()</code></td>
+<td>the same with an untyped token, for an operation declared <code>reply = ()</code> (which has no marker)</td>
+</tr>
+<tr>
+<td><code>client.identity()</code>, <code>client.pid()</code></td>
+<td>the caller, as in <a href="#who-is-calling">Who is calling</a></td>
+</tr>
+</tbody>
+</table>
+<p>Each of <code>reply</code> and <code>defer</code> consumes the <code>ClientId</code>, so a request cannot be answered twice:
+the second attempt does not compile.</p>
+<p>A <code>ReplyToken</code> is <code>Send</code>, so it can move to another thread — one that waits on an interrupt,
+for example. Every way of ending it sends exactly one reply:</p>
+<table>
+<thead>
+<tr>
+<th>Ending</th>
+<th>The caller gets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>token.reply(value)</code></td>
+<td><code>Ok(value)</code>; <code>value</code> must be the operation's declared reply type</td>
+</tr>
+<tr>
+<td><code>token.fail(kind)</code></td>
+<td><code>Err(kind)</code></td>
+</tr>
+<tr>
+<td><code>token.abandon(kind)</code></td>
+<td><code>Err(kind)</code>; the way to cancel on purpose, for example when the waiter's owner is gone</td>
+</tr>
+<tr>
+<td>the token is dropped</td>
+<td><code>Err(ConnectionAborted)</code>, and the server logs an error naming the caller: a dropped token is a bug in the server</td>
+</tr>
+</tbody>
+</table>
+<p><code>reply</code> and <code>fail</code> return the transport's result. <code>Err(NotFound)</code> means the caller is no
+longer waiting — it exited or was killed — and there is nothing more to do. A failure is
+already logged under the service's tag, so <code>let _ =</code> loses no evidence.</p>
+<h2 id="calling-a-service">Calling a service</h2>
+<table>
+<thead>
+<tr>
+<th>Constructor</th>
+<th>Waits for the name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SpeedLimitClient::connect()</code></td>
+<td>up to 100 attempts, 20 ms apart: at most about 2 s</td>
+</tr>
+<tr>
+<td><code>SpeedLimitClient::connect_bounded(attempts, backoff)</code></td>
+<td><code>attempts</code> times, <code>backoff</code> apart; <code>connect_bounded(1, Duration::ZERO)</code> checks once and never sleeps</td>
+</tr>
+</tbody>
+</table>
+<p>Both return <code>Err(NotFound)</code> when the name is still not registered. The client is <code>Copy</code>:
+connect once and hand a copy to each thread that calls.</p>
+<p>A call has <strong>no timeout</strong>. It returns when the server answers or when the server's process
+ends. Design a service so that every request is answered: answer at once, or defer and
+answer when the awaited event happens or is abandoned.</p>
+<h3 id="priority">Priority</h3>
+<p>A request is served at the caller's priority. When the kernel hands a request to the
+receiving thread it raises that thread to at least the caller's priority, and it ends the
+raise at the reply. An idle receiving thread runs at the default thread priority, 31. A
+high-priority caller is therefore not served at a lower server's priority, and a server
+need not be started at the priority of its most urgent client.</p>
+<h2 id="errors-a-caller-sees">Errors a caller sees</h2>
+<p>Every error is an <code>ErrorKind</code>, carried unchanged from where it arose:</p>
+<table>
+<thead>
+<tr>
+<th><code>Err(..)</code></th>
+<th>Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>the kind the handler returned</td>
+<td>the server refused the request: <code>InvalidInput</code>, <code>ResourceBusy</code>, <code>PermissionDenied</code>, or any other kind it chose</td>
+</tr>
+<tr>
+<td><code>NotFound</code></td>
+<td>from <code>connect</code>: the name was not registered in time. From a call: the service ended before answering — its process exited or crashed</td>
+</tr>
+<tr>
+<td><code>Unsupported</code></td>
+<td>the server has no such operation: the two programs were built from different interface versions</td>
+</tr>
+<tr>
+<td><code>InvalidInput</code></td>
+<td>the request's length is not the declared payload's: likewise a version mismatch, unless the handler returned it</td>
+</tr>
+<tr>
+<td><code>ConnectionAborted</code></td>
+<td>the server dropped the token for this deferred request</td>
+</tr>
+<tr>
+<td><code>WouldBlock</code></td>
+<td>the service already has 16 requests waiting, or a message over 256 bytes found no free buffer in the kernel's message pool. Nothing was done; the call may be repeated</td>
+</tr>
+<tr>
+<td><code>ArgumentListTooLong</code></td>
+<td>the request is longer than the server accepts (see <a href="#message-sizes">Message sizes</a>)</td>
+</tr>
+</tbody>
+</table>
+<p>A panic in a handler ends the server process. Every caller waiting on it receives
+<code>NotFound</code>.</p>
+<h2 id="message-sizes">Message sizes</h2>
+<table>
+<thead>
+<tr>
+<th>Message</th>
+<th>Limit</th>
+<th>Checked</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a request payload</td>
+<td>32 bytes</td>
+<td>at build time</td>
+</tr>
+<tr>
+<td>a reply value</td>
+<td>32 bytes</td>
+<td>at build time</td>
+</tr>
+<tr>
+<td>a <code>trailing</code> request: payload plus bytes</td>
+<td>256 KiB</td>
+<td>at the call: <code>ArgumentListTooLong</code></td>
+</tr>
+</tbody>
+</table>
+<p>The kernel carries a message of up to 32 bytes in registers. Up to 256 bytes it copies the
+message through the two threads' own buffers, which no other traffic can exhaust. A longer
+message travels through a shared message pool of 4 KiB, 64 KiB and 256 KiB buffers, so
+only messages over 256 bytes can meet the pool's <code>WouldBlock</code>.</p>
+<h3 id="bulk-data-trailing">Bulk data: <code>trailing</code></h3>
+<p>An operation declared <code>trailing</code> carries a fixed payload followed by any number of bytes.
+The handler takes them as its next parameter:</p>
+<pre><code class="language-rust">#[op(OP_WRITE, reply = Written, trailing)]
+fn write(&amp;self, args: WriteHeader, data: &amp;[u8]) -&gt; Result&lt;Written, ErrorKind&gt;;
+</code></pre>
+<p>The generated client method takes the bytes beside the payload and returns the reply as
+bytes, which <code>aperiodic::decode</code> turns back into the reply type:</p>
+<pre><code class="language-rust">let bytes = storage.write(WriteHeader { handle, data_len: block.len() as u64 }, &amp;block)?;
+let written: Written = aperiodic::decode(&amp;bytes)?;
+</code></pre>
+<p>A service with a <code>trailing</code> operation gives its receiving thread a 256 KiB request buffer,
+because such a request may be that long. A service without one sizes the buffer to its
+largest declared payload.</p>
+<h2 id="several-services-in-one-process">Several services in one process</h2>
+<p><code>#[aperiodic(tag = &quot;..&quot;, no_main)]</code> generates everything but <code>main</code>. Your own <code>main</code> then
+does its own preparation and ends in <code>aperiodic::run::&lt;StatusService&gt;(log::log_tag!(&quot;status&quot;))</code>,
+which never returns.</p>
+<p>To serve a second service in the same process, give it a thread of its own.
+<code>aperiodic::bind::&lt;H&gt;(log)</code> builds and registers one service and returns a <code>Bound&lt;H&gt;</code>;
+<code>aperiodic::serve(bound)</code> serves it for good. A <code>Bound</code> cannot move between threads, so bind
+and serve on the same thread. A process registers at most 16 services; a seventeenth bind
+fails with <code>OutOfMemory</code>, and registering a name that is already taken fails with
+<code>AlreadyExists</code>.</p>
+<h2 id="the-enum-form">The enum form</h2>
+<p>An interface may instead be declared as an enum, one variant per operation. Device drivers
+that match on the request directly use this form:</p>
+<pre><code class="language-rust">#[interface(name = BEEPER_SERVICE)]
+pub enum BeeperRequest {
+    #[op(OP_BEEP, reply = ())]
+    Beep(BeepArgs),
+}
+</code></pre>
+<p>It generates <code>BeeperClient</code> with <code>connect()</code> and <code>beep(BeepArgs)</code>. The server implements
+<code>aperiodic::Handler</code>, whose <code>dispatch(&amp;self, request: BeeperRequest, client: ClientId) -&gt; Outcome</code> matches on the decoded enum and answers through the <code>ClientId</code> exactly as a
+deferring operation does. Its <code>main</code> names the service at run time:</p>
+<pre><code class="language-rust">fn main() -&gt; ! {
+    aperiodic::run_instance(BEEPER_SERVICE, log::log_tag!(&quot;beeper&quot;), Dispatcher::new(Beeper::new()))
+}
+</code></pre>
+<p>The enum form also accepts <code>#[op(.., pool = MAX)]</code> for an operation whose reply is longer
+than 32 bytes: the payload type implements <code>aperiodic::FramedRequest</code>, the handler answers
+with <code>Reply::framed::&lt;Op&gt;(header, tail)</code>, and the client method takes and returns bytes, at
+most <code>MAX</code> and never more than 256 KiB.</p>
+<h2 id="what-the-framework-guarantees">What the framework guarantees</h2>
+<ul>
+<li><strong>Exactly one reply per request</strong> while the server lives. A handler's <code>Ok</code> and <code>Err</code>, a
+decode failure, an unknown operation and every ending of a reply token each send one
+reply. Answering twice does not compile.</li>
+<li><strong>The name appears only when the server is ready.</strong> No client reaches the service before
+<code>before_register</code> has returned. A client that arrives during <code>after_register</code> waits in
+the queue.</li>
+<li><strong>A request is checked before your code sees it.</strong> An unknown operation is answered
+<code>Unsupported</code> and a payload of the wrong length <code>InvalidInput</code>, without calling the
+handler.</li>
+<li><strong>A dead server releases its callers.</strong> When the server process ends, for any reason,
+every waiting caller returns <code>NotFound</code>.</li>
+<li><strong>The caller's identity is the kernel's</strong>, never a value the client sent.</li>
+</ul>
+<h2 id="what-you-must-not-do">What you must not do</h2>
+<ul>
+<li><strong>Do not block in a handler.</strong> The service's other callers wait behind it. Defer the
+reply, and answer when the event happens.</li>
+<li><strong>Do not call your own service from its handler</strong>, directly or through another service
+that calls back: the only receiving thread is busy with you, and the call never returns.</li>
+<li><strong>Do not drop a reply token to cancel.</strong> Call <code>abandon(kind)</code>. A dropped token answers
+<code>ConnectionAborted</code> and logs a server bug.</li>
+<li><strong>Do not hold more tokens than you have bounded.</strong> Refuse past your limit with an error
+reply, as the start gate does with <code>ResourceBusy</code>.</li>
+<li><strong>Do not key ownership on <code>pid()</code>.</strong> Use the whole <code>CallerIdentity</code>.</li>
+<li><strong>Do not mix interface versions.</strong> Rebuild every program that uses an interface when the
+interface changes.</li>
+</ul>
+
+<footer class="doc-src">
+  <span>Generated from <span class="mono">framework/aperiodic/doc/aperiodic_framework_public.md</span> in the TAIL OS repository.</span>
+</footer>
+</article>
+<nav class="toc" aria-label="On this page">
+  <span class="toc-h">On this page</span>
+  <ul>
+    <li><a href="#quick-start">Quick start</a></li>
+    <li><a href="#declaring-an-interface">Declaring an interface</a></li>
+    <li><a href="#writing-a-server">Writing a server</a></li>
+    <li><a href="#deferred-replies">Deferred replies</a></li>
+    <li><a href="#calling-a-service">Calling a service</a></li>
+    <li><a href="#errors-a-caller-sees">Errors a caller sees</a></li>
+    <li><a href="#message-sizes">Message sizes</a></li>
+    <li><a href="#several-services-in-one-process">Several services in one process</a></li>
+    <li><a href="#the-enum-form">The enum form</a></li>
+    <li><a href="#what-the-framework-guarantees">What the framework guarantees</a></li>
+    <li><a href="#what-you-must-not-do">What you must not do</a></li>
+  </ul>
+</nav>
+</div>
+</main>
+</div>
+<footer class="ftr">
+  <span>TAIL OS &mdash; real-time OS in Rust</span>
+  <span class="ftr-sep">/</span>
+  <span class="mono">v0.9.0</span>
+</footer>
+
+</body>
+</html>

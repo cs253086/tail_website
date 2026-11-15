@@ -4,8 +4,11 @@
   <url><loc>https://tail-os.com/docs/</loc><changefreq>weekly</changefreq></url>
   <url><loc>https://tail-os.com/docs/quick-start/</loc><changefreq>weekly</changefreq></url>
   <url><loc>https://tail-os.com/docs/installation/</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://tail-os.com/docs/robotics-overview/</loc><changefreq>weekly</changefreq></url>
   <url><loc>https://tail-os.com/docs/periodic-framework-rust/</loc><changefreq>weekly</changefreq></url>
   <url><loc>https://tail-os.com/docs/periodic-framework-python/</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://tail-os.com/docs/aperiodic-framework-rust/</loc><changefreq>weekly</changefreq></url>
+  <url><loc>https://tail-os.com/docs/device-framework-rust/</loc><changefreq>weekly</changefreq></url>
   <url><loc>https://tail-os.com/docs/qemu/</loc><changefreq>weekly</changefreq></url>
   <url><loc>https://tail-os.com/docs/raspberry-pi-3/</loc><changefreq>weekly</changefreq></url>
   <url><loc>https://tail-os.com/docs/shell-tools/</loc><changefreq>weekly</changefreq></url>
