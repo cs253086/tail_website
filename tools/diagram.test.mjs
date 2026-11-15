@@ -64,6 +64,17 @@ describe('renderDiagrams', () => {
   }, 60000);
 });
 
+describe('diagram roles', () => {
+  it('keeps the role an author marked on a box, so the stylesheet can colour it', async () => {
+    const source = 'flowchart TB\n  a("lidar"):::prog --> t(["sensor/range"]):::chan --> b{{"server"}}:::svc\n  classDef prog fill:#f00\n';
+    const svg = (await renderDiagrams([source], { cache: freshCache() })).get(source);
+    expect(svg).toMatch(/class="node default prog/);
+    expect(svg).toMatch(/class="node default chan/);
+    expect(svg).toMatch(/class="node default svc/);
+    expect(svg).not.toMatch(/<style|\sstyle=|fill:#f00/);
+  }, 60000);
+});
+
 describe('the markdown fence rule', () => {
   const md = new MarkdownIt();
   const markdown = '```mermaid\ngraph LR\n  a-->b\n```\n\n```rust\nfn main() {}\n```\n';

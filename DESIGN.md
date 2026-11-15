@@ -522,6 +522,31 @@ style attributes are removed after drawing: the stylesheet styles the same class
 the theme tokens, so a diagram follows light and dark with the page. Labels are SVG text,
 never HTML, because HTML labels size themselves with inline style.
 
+**Roles.** A box's role is a class the author puts on it, `a("lidar"):::prog`. Each role has
+its own shape in the source and its own colour in the stylesheet, so a reader who cannot
+tell the colours apart still reads the shape:
+
+| Role | Shape | Colour | Means |
+|---|---|---|---|
+| `prog` | rounded box | blue | a periodic node, or code you write |
+| `chan` | pill | green | a topic |
+| `svc` | hexagon | purple | a service or server |
+| `hw` | slanted box | amber | a device or driver |
+| `kern` | box with side bars | grey, heavy | the kernel |
+| `ext` | dashed rounded box | none | not written here |
+| none | rounded box | grey | any other step or tool |
+
+Rules for a diagram's author:
+
+1. Mark every box with a role and use that role's shape.
+2. The first line of a label is the name. Put detail after `<br/>`, at most three lines of about 50 characters.
+3. Draw a topic as a `chan` pill between its publisher and its readers.
+4. A dashed arrow, `-.->`, means a reply or a repeat, and nothing else.
+5. Never write `classDef`, `style` or `linkStyle`: they become inline style and are removed.
+6. Use eight boxes or fewer and one direction of flow. Choose `TB` when `LR` would run past about four boxes.
+7. A `subgraph` is for a real boundary only, one level deep, with a short label.
+8. Give every diagram `accTitle` and `accDescr`, and add no legend. Check the drawing at its natural width: the column holds 722px.
+
 Two rules keep the figure honest. A diagram that cannot be drawn fails the build; the source
 is never shown as if it were the figure. And the drawing is not the only statement of what it
 shows: a diagram declares `accTitle` and `accDescr`, which become its accessible name and

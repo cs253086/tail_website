@@ -26,11 +26,13 @@ const FONT_FAMILY = 'Arial, Helvetica, sans-serif';
 
 const MERMAID_CONFIG = {
   theme: 'neutral',
+  // Mermaid 12 draws a hand-sketched "neo" look by default; the stylesheet styles plain paths.
+  look: 'classic',
   fontFamily: FONT_FAMILY,
   themeVariables: { fontFamily: FONT_FAMILY, fontSize: '16px' },
   securityLevel: 'strict',
   htmlLabels: false,
-  flowchart: { htmlLabels: false },
+  flowchart: { htmlLabels: false, nodeSpacing: 28, rankSpacing: 44, padding: 14, wrappingWidth: 460, curve: 'basis' },
 };
 
 const CHROME_CANDIDATES = ['/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser'];

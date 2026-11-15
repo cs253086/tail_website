@@ -582,21 +582,61 @@ img, svg { display: block; max-width: 100%; }
 /* Diagrams. Drawn at build time by tools/diagram.mjs, which removes mermaid's
    own styling because the Content-Security-Policy would drop it; these rules
    style the class names it emits. Colours come from the theme tokens, so a
-   diagram follows light and dark with the rest of the page. */
+   diagram follows light and dark with the rest of the page.
+
+   A box's role is a class the author puts on it (`a("x"):::prog`). Each role has
+   its own shape in the source AND its own colour here, so a reader who cannot
+   tell the colours apart still reads the shape:
+     prog  rounded box        blue    a periodic node, your program
+     chan  pill               green   a topic
+     svc   hexagon            purple  a service or server
+     hw    slanted box        amber   a device or driver
+     kern  box with side bars grey    the kernel
+     ext   dashed rounded box none    not written here
+     (none) rounded box       grey    any other step or tool */
 .doc figure.diagram {
-  margin: 0 0 18px; padding: 18px; overflow-x: auto;
+  margin: 0 0 18px; padding: 22px 18px; overflow-x: auto;
   background: var(--bg-soft); border: 1px solid var(--border); border-radius: var(--radius);
 }
 .diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; font-family: Arial, Helvetica, sans-serif; }
-.diagram .node rect, .diagram .node polygon, .diagram .node circle, .diagram .node ellipse, .diagram .node path.basic {
-  fill: var(--bg-sunken); stroke: var(--border-strong); stroke-width: 1px;
+/* On a phone a wide drawing keeps its own size and scrolls, rather than shrinking
+   its 16px labels below what can be read. */
+@media (max-width: 600px) {
+  .doc figure.diagram { padding: 14px 12px; }
+  .diagram svg { max-width: none; margin: 0; }
 }
-.diagram .cluster rect { fill: var(--accent-soft); stroke: var(--accent-line); stroke-width: 1px; }
+
+/* A box: tinted fill, solid outline of the role colour, one weight throughout. */
+.diagram .node .label-container, .diagram .node rect.basic { fill: var(--text-mute); fill-opacity: 0.1; stroke: var(--text-mute); stroke-width: 1.5px; stroke-dasharray: none; rx: 10px; ry: 10px; }
+.diagram .node .label rect { fill: none; stroke: none; }
+.diagram .node.prog .label-container { fill: var(--accent); stroke: var(--accent); }
+.diagram .node.svc .label-container { fill: var(--code-fg); stroke: var(--code-fg); }
+.diagram .node.hw .label-container { fill: var(--warn-bar); stroke: var(--warn-bar); }
+.diagram .node.kern .label-container { fill: var(--text-dim); fill-opacity: 0.16; stroke: var(--text-dim); stroke-width: 2px; }
+.diagram .node.ext .label-container { fill: none; stroke: var(--text-mute); stroke-dasharray: 6 4; }
+/* A pill is two paths in mermaid: the fill, then the outline. */
+.diagram .node.chan .label-container path:first-child { fill: var(--cite); fill-opacity: 0.12; stroke: none; }
+.diagram .node.chan .label-container path:last-child { fill: none; stroke: var(--cite); stroke-width: 1.5px; stroke-dasharray: none; }
+
+/* A group of boxes: a quiet panel, so the boxes in it stay the loudest thing. */
+.diagram .cluster rect { fill: var(--text-mute); fill-opacity: 0.07; stroke: var(--border-strong); stroke-width: 1px; rx: 14px; ry: 14px; }
+.diagram .cluster-label text { fill: var(--text-mute); font-size: 13px; font-weight: 600; letter-spacing: 0.02em; }
+
+/* An arrow: a plain line with a small head. Dashed means a reply or a repeat. */
 .diagram .edgePaths path, .diagram .flowchart-link { fill: none; stroke: var(--text-mute); stroke-width: 1.5px; }
+.diagram .edge-pattern-dotted, .diagram .edge-pattern-dashed { stroke-dasharray: 5 4; }
+.diagram .edge-thickness-thick { stroke-width: 2.5px; }
 .diagram marker path, .diagram .arrowMarkerPath { fill: var(--text-mute); stroke: var(--text-mute); }
-.diagram text, .diagram .nodeLabel, .diagram .edgeLabel { fill: var(--text); font-size: 16px; }
-.diagram .label text, .diagram .cluster-label text, .diagram .edgeLabel text { text-anchor: middle; }
-.diagram .edgeLabel rect, .diagram .edgeLabel .background { fill: var(--bg-soft); stroke: none; opacity: 0.9; }
+
+/* Text: the first line of a box is its name, the lines under it say more. All one
+   size: mermaid spaces a box's lines by that size, and a smaller second line would
+   sit on top of the first. */
+.diagram text { fill: var(--text); font-size: 16px; }
+.diagram .node text tspan.row:first-child .text-inner-tspan { font-weight: 600; }
+.diagram .node text tspan.row:not(:first-child) { fill: var(--text-dim); }
+.diagram .label text, .diagram .edgeLabel text { text-anchor: middle; }
+.diagram .edgeLabel text { fill: var(--text-dim); }
+.diagram .edgeLabel rect, .diagram .edgeLabel .background { fill: var(--bg-soft); stroke: none; opacity: 1; }
 
 /* Copy buttons, added by copy.js. The wrapper rather than the <pre> positions the
    button, so it stays in the corner while a wide block scrolls sideways. Code blocks
