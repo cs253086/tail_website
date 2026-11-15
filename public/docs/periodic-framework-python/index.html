@@ -12,13 +12,13 @@
 <meta property="og:url" content="https://tail-os.com/docs/periodic-framework-python/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/05200f10c760/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/2cdc062180f4/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/05200f10c760/css/style.css">
-<script type="module" src="/assets/05200f10c760/js/copy.js"></script>
-<script type="module" src="/assets/05200f10c760/js/reveal.js"></script>
+<link rel="stylesheet" href="/assets/2cdc062180f4/css/style.css">
+<script type="module" src="/assets/2cdc062180f4/js/copy.js"></script>
+<script type="module" src="/assets/2cdc062180f4/js/reveal.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -81,6 +81,7 @@
       <a class="nav-link" href="/docs/periodic-framework-python/" aria-current="page">Python Guide</a>
       <ul class="nav-sections">
         <li><a href="/docs/periodic-framework-python/#quick-start">Quick start</a></li>
+        <li><a href="/docs/periodic-framework-python/#your-first-nodes">Your first nodes</a></li>
         <li><a href="/docs/periodic-framework-python/#declaring-a-node">Declaring a node</a></li>
         <li><a href="/docs/periodic-framework-python/#run-time-parameters">Run-time parameters</a></li>
         <li><a href="/docs/periodic-framework-python/#actions">Actions</a></li>
@@ -92,7 +93,7 @@
         <li><a href="/docs/periodic-framework-python/#cost">Cost</a></li>
         <li><a href="/docs/periodic-framework-python/#errors">Errors</a></li>
         <li><a href="/docs/periodic-framework-python/#init-has-no-equivalent-and-does-not-need-one">init has no equivalent, and does not need one</a></li>
-        <li><a href="/docs/periodic-framework-python/#what-was-verified-and-where">What was verified, and where</a></li>
+        <li><a href="/docs/periodic-framework-python/#what-is-verified">What is verified</a></li>
       </ul>
     </li>
     <li class="nav-page">
@@ -137,27 +138,69 @@ run-time parameters an operator tunes from the shell while it runs, serves at mo
 <a href="#actions">action</a> -- a goal a client sends it, which takes many releases -- and publishes
 as many topics as its body has outputs, each on the releases the body chooses.</p>
 <h2 id="quick-start">Quick start</h2>
+<p>One file, one node. <code>counter</code> runs every 100 ms, counts its releases, and publishes the
+count:</p>
+<pre><code class="language-python"># counter.py
+
+from periodic import periodic, publish, run, now, Payload, Skip, Topic
+
+# What the counter publishes on every release: releases run so far, and when this one ran.
+Releases = Payload(&quot;count:u64 stamp_ns:u64&quot;, &quot;Releases&quot;)
+
+# The counter's releases, published by the counter alone.
+COUNTER_RELEASES = Topic(&quot;counter/releases&quot;, Releases, lane=&quot;kernel&quot;)
+
+count = 0
+
+
+@periodic(every=&quot;100ms&quot;, on_overrun=Skip)
+def counter(releases=publish(COUNTER_RELEASES)):
+    global count
+    count += 1
+    releases.publish(Releases.instance(count=count, stamp_ns=now()))
+
+
+run()
+</code></pre>
+<p><code>@periodic</code> turns the function into a node, and <code>run()</code> runs it: the framework owns the
+loop, the timing and the publish, so the file has no loop and no sleep. The node's output
+is the parameter <code>releases=publish(COUNTER_RELEASES)</code>; whatever the body hands
+<code>releases.publish(..)</code> is published on <code>counter/releases</code> when the body returns. <code>count</code>
+lives at module level, which is how a Python node keeps state between releases.
+<code>Releases</code> is a payload of this program's own, laid out exactly as the same struct in Rust.</p>
+<h3 id="run-and-check-it">Run and check it</h3>
+<p>Python and the <code>periodic</code> module are on the disk image of the
+<a href="/docs/qemu/">QEMU download</a>; there is nothing to install. On the booted
+image, write the file with <code>vi /counter.py</code>, start it in the background and look at it:</p>
+<pre><code class="language-text">tsh&gt; python /counter.py &amp;
+tsh&gt; node list
+counter  pid 9  python
+tsh&gt; topic echo -n 3 --as &quot;count:u64 stamp_ns:u64&quot; counter/releases
+# counter/releases: kernel lane, --as, 16 B, layout 0x79e81151
+count=2 stamp_ns=3888115504
+count=3 stamp_ns=3988053776
+count=4 stamp_ns=4088056880
+</code></pre>
+<p>A Python node takes a few seconds to start, while the interpreter loads, so give it a
+moment before <code>node list</code>. <code>node list</code> shows every running node: its name, its process and
+its program; the pid and the counts on your system differ. The layout identity is the Rust
+quick start's, because the two <code>Releases</code> declarations have the same fields. <code>topic echo</code> reads the node's topic as any other program would; <code>--as</code> tells
+it the payload's fields, since <code>Releases</code> is not one of the standard payloads it decodes on
+its own. Each count is one more release. The
+<a href="/docs/shell-tools/">shell tools</a> page describes both tools.</p>
+<h2 id="your-first-nodes">Your first nodes</h2>
 <p>Four programs: a node that only publishes, a node that reads one topic, a node that
 reads two, and a node that publishes two. None writes a loop or a sleep, and none declares a payload: each imports the
 standard ones from <code>tail_messages</code>, which the build prints from the Rust crate
-<code>robot_messages</code>, so a Python node and a Rust or C node hold one definition.</p>
-<p>These run on TAIL OS, under its own Python. The <code>periodic</code> module comes with it: there is
-nothing to install, and <code>import periodic</code> loads it from <code>/usr/lib/python314.zip</code>.
-<code>tail_messages</code> is a file of its own on the image, <code>/usr/lib/python3.14/tail_messages.py</code>,
-printed by the image build. Python is on the disk image of the
-<a href="/docs/qemu/">QEMU download</a>; the Raspberry Pi 3 image built from the BSP
-does not include Python.</p>
-<p><strong>These are the tested examples.</strong> Each is a file under
-<code>framework/periodic/python/examples/</code>, shown here without its docstring. Every file there
-is executed on the host by <code>framework/periodic/python/test/test_examples.py</code>, which fails
-if a file is added without a test. <code>publisher.py</code> and <code>subscriber.py</code> are also compiled
-into <code>test/integration_test/tests/periodic_python_pair</code> with <code>include_str!</code> and <code>drive.py</code>
-into <code>periodic_python_two_inputs</code>, and run on QEMU <code>raspi3b</code>, each against Rust peers.
-<code>balance.py</code> (<a href="#run-time-parameters">Run-time parameters</a>) is compiled the same way into
-<code>periodic_python_parameters</code> and run there as well. <code>steer.py</code>, the node with two outputs,
-is run on the host only. Every example was rewritten for outputs on parameters and has
-passed on the host since; none has run on QEMU in that form yet.
-Nothing here ran on real hardware.</p>
+<code>robot_messages</code>, so a Python node and a Rust node hold one definition.</p>
+<p><code>import periodic</code> loads the module from <code>/usr/lib/python314.zip</code>, and <code>tail_messages</code> is a
+file of its own on the image, <code>/usr/lib/python3.14/tail_messages.py</code>, printed by the image
+build. The Raspberry Pi 3 image built from the BSP does not include Python.</p>
+<p><strong>These are tested examples.</strong> Each runs on the development host in the project's tests,
+and <code>publisher.py</code>, <code>subscriber.py</code>, <code>drive.py</code> and <code>balance.py</code>
+(<a href="#run-time-parameters">Run-time parameters</a>) also run on the emulated Raspberry Pi 3,
+each against Rust nodes, and so does <code>steer.py</code>, the node with two outputs. Nothing here
+ran on real hardware.</p>
 <h3 id="a-topic">A topic</h3>
 <pre><code class="language-python">from tail_messages import Range
 
@@ -564,8 +607,8 @@ ordinary:</p>
           quality: u32 }
   16 bytes                  4 bytes
 </code></pre>
-<p>The node <code>test/integration_test/tests/periodic_python_pilot</code> writes to the disk and runs
-on QEMU, between a Rust publisher and a Rust subscriber:</p>
+<p>This node runs on the emulated Raspberry Pi 3 in the project's tests, between a Rust
+publisher and a Rust subscriber:</p>
 <pre><code class="language-python">from periodic import periodic, publish, run, subscribe, Skip, Payload, Topic
 
 Range = Payload(&quot;stamp:u64 range_mm:u32 quality:u32&quot;, &quot;Range&quot;)        # 16 bytes
@@ -690,7 +733,7 @@ is in the interpreter, may be faulted in from the file system on the release tha
 its first request. A Python node is Quality Managed for the reason <a href="#safety">Safety</a>
 gives, and this is one more release whose time it does not bound.</li>
 <li><strong>Any program can set a parameter</strong>, within its declared range, by writing the request
-topic, as any program can publish any kernel-lane topic today (TAIL-632).</li>
+topic, as any program can publish any kernel-lane topic today.</li>
 </ul>
 <p>A declaration that breaks a rule is refused at decoration, naming the function, the
 parameter and the rule:</p>
@@ -728,8 +771,8 @@ parameter and the rule:</p>
 </tr>
 </tbody>
 </table>
-<p>The whole list, with a range that is empty, a bound that is not finite, an <code>int</code> that does
-not fit 64 bits and a seventeenth parameter, is in <code>periodic_python_design.md</code> §5.5.6.</p>
+<p>The node also refuses a range that is empty, a bound that is not finite, an <code>int</code> that does
+not fit 64 bits, and a seventeenth parameter, each with its own message.</p>
 <h2 id="actions">Actions</h2>
 <p>A request that takes many releases -- &quot;drive to (2.0, 0.5)&quot;, &quot;home the arm&quot;, &quot;dock&quot; -- is
 an action. A client sends a goal; the node accepts or refuses it at once, reports feedback
@@ -746,9 +789,8 @@ written in either.</p>
           ◄──────── status: cancelled ────── (the stop was published before this status)
 </code></pre>
 <p>The programs below are written for this page and show the whole surface; they are not
-among the tested example files. The Python programs <code>periodic_python_action</code> runs on QEMU,
-a server and a client of every form shown here, are that test's fixtures,
-<code>test/integration_test/tests/periodic_python_action/fixtures/</code>.</p>
+compiled or run as shown. A server and a client of every form shown here run on the
+emulated Raspberry Pi 3 in the project's tests.</p>
 <p><strong>Define the action once</strong>, in a module the server and its clients import. Its name and
 its three payloads -- the goal, the feedback, the result -- belong to it, and a Rust or C
 definition of the same action is compared with this one, payload by payload, when its
@@ -952,7 +994,7 @@ the slowest client's period.</li>
 the old ends <code>'preempted'</code>, the new one runs from the same release with no stop between --
 and a goal from any other process is refused <code>'busy'</code>. There is no queue.</li>
 <li><strong>Any program can forge a client's keep-alive or cancel</strong>, as any program can write any
-kernel-lane topic today (TAIL-632). A forged keep-alive keeps an abandoned goal alive; the
+kernel-lane topic today. A forged keep-alive keeps an abandoned goal alive; the
 device's own lease stays the safety stop.</li>
 <li><strong>A served goal is recorded.</strong> The node's release journal holds the goal every release
 ran and whether it arrived, so a replay hands each release its recorded <code>goal.active()</code>
@@ -1030,7 +1072,6 @@ declaration that breaks a rule is a <code>NodeError</code> where it is written, 
 </tr>
 </tbody>
 </table>
-<p>The whole list is in <code>periodic_python_design.md</code> §5.5.6.</p>
 <p><strong>What it costs.</strong> Two kernel-lane topics per served action, <code>&lt;action&gt;/__goal</code> and
 <code>&lt;action&gt;/__status</code>: count them in the image's topic budget. At every release, inside
 <code>run()</code>'s wait and the cycle the overrun accounting measures, the C layer reads at most
@@ -1042,25 +1083,24 @@ nothing.</p>
 <p>Record a run, then run one node of it again, offline, through its own body, handing each
 release exactly what that release was handed live:</p>
 <pre><code class="language-text">tsh&gt; topic record -o /rec/py_replay.mcap &amp;              FIRST: before the nodes
-tsh&gt; periodic_python_replay publish-commands &amp;          the Twist on replay/cmd, every 20 ms
-tsh&gt; replay_lidar &amp; python replay_py_watch.py &amp;
+tsh&gt; twist_publisher &amp;                                  any program publishing a Twist on replay/cmd
+tsh&gt; lidar &amp; python replay_py_watch.py &amp;
      ... the run; then stop the nodes, then the recorder ...
 tsh&gt; python replay_py_watch.py --replay /rec/py_replay.mcap
 replay: replay_py_watch life 1: 497 releases, 496 compared, identical
 facts: replay/range: 19 releases without an arrival, 245 missed, 0 rejected; replay/cmd: 0, 1, 0; 1 overruns
 replay: running release 496, the life's last; its output is in no record
 </code></pre>
-<p>The lines are the ones a Rust or C node's replay prints, from the same code; the counts here
-are illustrative. <code>replay_py_watch.py</code> is the node of the integration test
-<code>periodic_python_replay</code>, one of its fixtures
-(<code>test/integration_test/tests/periodic_python_replay/fixtures/</code>), and <strong>nothing in it was
-written for replay beyond leaving the trailing arguments alone</strong>: its own reading of
+<p>The lines are the ones a Rust node's replay prints, from the same code; the program names
+and counts here are illustrative. <code>replay_py_watch.py</code> is a node that reads <code>replay/range</code>
+and <code>replay/cmd</code>, and <strong>nothing in it was written for replay beyond leaving the trailing
+arguments alone</strong>: its own reading of
 <code>sys.argv[1]</code> takes <code>--replay</code> there as no word (<a href="#writing-a-node-that-replays">Writing a node that
 replays</a>). A node journals and replays as it is, and so does
 every example on this page that publishes. <code>python drive.py --replay /rec/run.mcap</code> replays
-the quick start's <code>drive</code>.</p>
-<p><code>periodic_python_replay publish-commands</code> is that test's own program started as the node's
-command publisher. The node reads <code>replay/cmd</code> on the safe lane, and <code>run()</code> waits up to ten
+the <code>drive</code> of <a href="#your-first-nodes">your first nodes</a>.</p>
+<p><code>twist_publisher</code> stands for whatever publishes the node's commands. The node reads
+<code>replay/cmd</code> on the safe lane, and <code>run()</code> waits up to ten
 seconds for a safe-lane input's publisher (<a href="#run"><code>run()</code></a>): without one, <code>run()</code> raises
 <code>OSError</code> and nothing is recorded. Any program that publishes a <code>Twist</code> on <code>replay/cmd</code>
 serves.</p>
@@ -1563,7 +1603,7 @@ kernel lane: a publisher of another payload is refused when it opens.</p>
 <p><strong><code>overruns()</code> is the node's, not an input's.</strong> Every input's cycle of one release carries
 the same number. Read it from one of them: adding them up counts each overrun once per
 input. A node with no input has no <code>Cycle</code> to read it from, and an overrun is not written
-to the system log on this surface (TAIL-449): under <code>Skip</code> or <code>CatchUp</code> a Python node
+to the system log on this surface: under <code>Skip</code> or <code>CatchUp</code> a Python node
 that only publishes cannot observe its overruns at all.</p>
 <p><strong><code>get()</code> borrows.</strong> It returns the same object every cycle with its fields rewritten,
 which mirrors Rust's <code>get() -&gt; Option&lt;&amp;T&gt;</code>. A body that keeps it and reads it next cycle
@@ -1659,7 +1699,7 @@ several inputs.</p>
 </tbody>
 </table>
 <p>That last row matters to a system integrator: a Python node is not ready for seconds after
-it is spawned. It is interpreter startup, not this framework — TAIL-326 — and the
+it is spawned. It is interpreter startup, not this framework, and the
 framework's admission wait already spans it, which is why a Python subscriber may still be
 started before its Rust publisher.</p>
 <p><strong>What the framework does about the collector</strong>, so you do not have to:</p>
@@ -1785,8 +1825,7 @@ supervisor can tell a node that never started from one that stopped cleanly.</p>
 </tr>
 </tbody>
 </table>
-<p><strong>A node that cannot start names the topic.</strong> The fixture
-<code>test/integration_test/tests/periodic_python_two_inputs/fixtures/never_appears_node.py</code>
+<p><strong>A node that cannot start names the topic.</strong> This node, from the project's tests,
 declares two inputs, the second on a topic nobody creates, and catches what <code>run()</code>
 raises:</p>
 <pre><code class="language-python">try:
@@ -1838,91 +1877,47 @@ it:</p>
 </code></pre>
 <p>A method decorated inside its class body is refused: its first parameter is <code>self</code>, which
 no topic feeds. The message gives the bound form above.</p>
-<h2 id="what-was-verified-and-where">What was verified, and where</h2>
+<h2 id="what-is-verified">What is verified</h2>
 <table>
 <thead>
 <tr>
-<th></th>
-<th></th>
+<th>Where</th>
+<th>What</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Host, <code>make ci-python-test</code></td>
-<td>239 tests: payload layout and identity against the layouts and identities rustc produces; nesting and named values; every refusal at declaration and decoration, the whole text of each, every <code>param(...)</code> and action refusal among them; <code>run()</code> against a stand-in for the built-in module, the values of run-time parameters handed in signature order and the argument tuple built at the first release and rebuilt only on a release the built-in flags, never after a set of the values already in force, and no value read before the first release; the whole of <code>sys.argv</code> handed to the open as file-system bytes, a non-ASCII and an undecodable argument among them; <code>sys.stdout</code> and <code>sys.stderr</code> flushed before the open and before every release, one that is <code>None</code> skipped, and a failed flush raised before anything is opened; <code>now()</code> 0 before <code>run()</code> and the built-in's reading for the running node, never <code>monotonic_ns()</code>; a serving node's <code>Goal</code> handed in its place, what its body hands back crossing with its release, and nothing kept over 400 serving releases; a client's every call against scripted goal states; outputs: two published in declaration order whatever order the body hands them over in, one withheld, <code>None</code>, one object rewritten every release, a second publish refused, a raise after a publish publishing nothing, a returned value refused, a refused publish going on and publishing the outputs after it, an output that is also an input, and a node with two outputs keeping nothing per release; every file under <code>examples/</code> executed, <code>steer.py</code> among them, importing the <code>tail_messages</code> the build printed</td>
+<td>On the development host</td>
+<td>the Python layer: payload layouts and identities equal to what Rust computes, nesting and named values; every refusal at declaration and decoration, with its whole text, the run-time parameter and action refusals among them; <code>run()</code> against a stand-in for the built-in module, with parameter values handed in signature order, the command line handed to the node, standard output and error flushed before the node opens and before every release, and <code>now()</code>. Every example on this page that is a file runs there</td>
 </tr>
 <tr>
-<td>QEMU <code>raspi3b</code>, <code>periodic_python_pair</code></td>
-<td><code>publisher.py</code> read by a Rust subscriber, its stamps climbing and never ahead of the clock; <code>subscriber.py</code> reading a Rust publisher, both on the standard <code>Range</code></td>
-</tr>
-<tr>
-<td>QEMU <code>raspi3b</code>, <code>robot_messages_exchange</code></td>
-<td>a Python node importing <code>tail_messages</code> reads a Rust <code>Range</code> and a C <code>Twist</code> and publishes <code>Odometry</code> on the fast lane; every field checked by the Rust pilot</td>
-</tr>
-<tr>
-<td>QEMU <code>raspi3b</code>, <code>periodic_python_pilot</code></td>
-<td>the converting node above, between two Rust nodes</td>
-</tr>
-<tr>
-<td>QEMU <code>raspi3b</code>, <code>periodic_python_two_inputs</code></td>
-<td><code>drive.py</code> beside two Rust publishers; a node with three inputs on two lanes that reports what each <code>Cycle</code> said on every release; a node whose second topic never appears; a node stopped by <code>Fault</code>; a publisher of another payload size on a kernel-lane topic, refused at open and told the shape the topic carries</td>
-</tr>
-<tr>
-<td>QEMU <code>raspi3b</code>, <code>periodic_python_action</code></td>
-<td>a Python node serving an action to Rust clients: 25 feedbacks of consecutive releases, a cancel in force at the release the status names, <code>Busy</code>, a refusal by content with its code, a success at the fifth release with its result, and a killed client's goal abandoned within L + 2T and an allowance; then Python clients of a Rust node: iterated feedback, <code>cancel()</code>, <code>GoalError('refused', 7)</code>, a started goal polled to <code>Progress.Running</code> and cancelled by releasing its handle, <code>'busy'</code>, and a killed Python client's goal abandoned within the same bound. Every verdict read by release index from the node's releases and the action's statuses</td>
-</tr>
-<tr>
-<td>QEMU <code>raspi3b</code>, <code>periodic_python_parameters</code></td>
-<td>a probe node with a <code>float</code>, an <code>int</code> whose range is the whole 64 bits and a <code>bool</code>, publishing on every release which release it is and the values it was handed, beside a Rust reader of every publication: <code>param list</code> prints its three parameters; each set is handed to the body from the release <code>param set</code> reports and not before, the <code>int</code> at its 64-bit minimum among them; <code>kp 250</code> is refused with its line and changes nothing; three values of three kinds land whole at one release; each value arrives as its own Python type. Then <code>balance.py</code>, listed and set as shown above. No overrun is measured: each <code>param</code> run starts a process</td>
-</tr>
-<tr>
-<td>QEMU <code>raspi3b</code>, <code>periodic_python_replay</code></td>
-<td><strong>Not yet run: pending the gate.</strong> <code>topic record</code> started first, then <code>replay_lidar</code>, a <code>Twist</code> publisher and <code>replay_py_watch.py</code> for 10 s, each output read live, every publication. From <code>topic dump</code> of the journal: record 0 with outcome 0 and zero shares; every later record's outcome bits and its two output shares equal to what the reader saw published at the release before, a declined tally as zeros; the overruns as read live; each <code>stamp_ns</code>, taken from <code>now()</code>, within one tick of its record's clock reading. Then six replays: identical, exit 0, with at least 400 releases, nothing on standard error and nothing received by any reader; <code>altered</code>, its first divergence at release 50 on <code>replay/py_tally</code> byte 0 and the count of differing releases; <code>replay_py_watch_reordered.py</code>, its two inputs in the other order, refused as another declaration; <code>--life 9</code> refused; <code>print</code> through a pipe, every body's line present, release N-2's before the verdict and release N-1's after it; <code>early</code>, ending with &quot;the program ended before release 61&quot;. Declares <code>timing = &quot;icount&quot;</code></td>
-</tr>
-<tr>
-<td>QEMU <code>raspi3b</code>, <code>periodic_python_two_outputs</code></td>
-<td><code>steer.py</code>, its second output declined while the robot moves and once its odometry is stale; a node publishing two outputs at two cadences, every publication read, and nothing allocated between releases 300 and 500; a node reading <code>near</code> (70 ms) and <code>far</code> (310 ms) between two outputs: each input's own <code>since_received()</code> on the release it first reads stale is over its bound and at most the bound plus one period plus a 200 ms band, and the output declared first carries exactly the releases whose report shows one input usable. The first two ran in the gates of TAIL-470's several-outputs change, merged 2026-11-04, the third at <code>periodic_framework_requirement.md</code> revision 1.7</td>
+<td>On the emulated Raspberry Pi 3, beside Rust nodes</td>
+<td>the <a href="#quick-start">quick start</a>'s <code>counter</code>, shown by <code>node list</code> and its count seen climbing by <code>topic echo</code>; the publisher and the subscriber; a node importing <code>tail_messages</code> that reads Rust payloads and publishes on the fast lane; the converting node; <code>drive.py</code> with two inputs, a node whose second topic never appears, a node stopped by <code>Fault</code>, and a payload of another size refused at open with the shape the topic carries; an action served to Rust clients, and Python clients of a Rust server, with feedback, cancels, refusals and a killed client's goal abandoned within its lease; run-time parameters set by <code>param</code>, each in force from the release it reports; a recording, and its replays: identical, divergent at the release changed, and refused for another declaration; two outputs at two cadences, with each input's staleness</td>
 </tr>
 </tbody>
 </table>
-<p>Each test that came before recording and replay was seen to fail: 44 defects injected into
-a private copy of <code>periodic.py</code> or of an example each turned a host test red, as did 31 more injected into <code>periodic.py</code> and
-<code>balance.py</code> for run-time parameters; and 15 injected into the built-in module or
-<code>periodic.py</code> each turned <code>periodic_python_two_inputs</code> red on QEMU for the reason expected,
-and 2 more each turned <code>periodic_python_parameters</code> red: the argument tuple rebuilt one release late, red at <code>kp 45.5</code>'s reported release, and an <code>int</code> read back through 32 bits, red at <code>limit</code>'s.
-For actions, 7 more injected into <code>periodic.py</code> each turned a host test red, and 5 injected
-into the built-in module or <code>periodic.py</code> each turned <code>periodic_python_action</code> red on QEMU.</p>
+<p>Defects were injected to prove the checks fire: 82 into the Python layer and its examples,
+each turning a host test red, and 22 into the built-in module or the Python layer, each
+turning an on-target test red for the reason expected.</p>
 <p>No staleness transition is asserted at a bound. The node's own <code>since_received()</code> on the
 release it first read stale was 79.7 to 80.7 ms for the 70 ms input and 319.5 to 320.4 ms
 for the 310 ms input, over six runs; the window asserted is over the bound and at most the
 bound plus one period plus a 200 ms band.</p>
-<p>The interpreter the QEMU rows ran on was rebuilt with the outputs built-in, and every
-Python test above, as it stood then, ran on QEMU with outputs on parameters in the gates of
-TAIL-470's several-outputs change, merged 2026-11-04.</p>
 <p>Not verified:</p>
 <ul>
 <li>Nothing ran on real hardware, and the Raspberry Pi 3 image carries no interpreter.</li>
-<li>Recording and replay have not run on target: <code>periodic_python_replay</code> is pending the gate,
-and the interpreter must be rebuilt for it. No defect has been injected to prove it
-fires.</li>
-<li>The host tests added or changed with recording and replay have not been seen to fail on
-an injected defect: <code>sys.argv</code> handed to the open; the three of the flushes, before the
-open and every release, one stream <code>None</code>, a failed flush; the two of <code>now()</code>; no value
-read before the first release; and the argument tuple built at the first release.</li>
+<li>No defect has been injected to prove the recording-and-replay checks fire, and the host
+checks of the command line handed to the open, the flushes, <code>now()</code>, no value read before
+the first release, and the arguments built at the first release have not been seen to
+fail.</li>
 <li>That one <code>PYTHONHASHSEED</code> exported for both runs makes a <code>set</code>'s order repeat is not
 checked on any interpreter build.</li>
-<li>The built-in module has no host test: it is compiled into the target interpreter only.
-<code>periodic_python_two_inputs</code> is what gates it, <code>periodic_python_parameters</code> for run-time
-parameters, and <code>periodic_python_action</code> for actions.</li>
+<li>The built-in module has no host test: it is compiled into the target's interpreter only,
+and only the on-target checks exercise it.</li>
 <li>No defect has been injected to prove the action tests fire, as was done for the others.</li>
 <li><code>estimator.py</code> runs on the host only.</li>
 <li>Two inputs of one payload type and equal bounds, bound to each other's topics in a body
 that treats them alike, are seen by no test.</li>
-<li>After an edit to <code>periodic.py</code> or to the built-in module, the next image build
-(<code>make build-release</code>, or any suite target) rebuilds the interpreter before it puts it on
-the image (<code>periodic_python_design.md</code> §5.10.4). The host tests see the edit at once, and
-the target sees it at that build. A toolchain (<code>std</code>) rebuild is outside that rule and
-has its own procedure there.</li>
 </ul>
 
 <footer class="doc-src">
@@ -1933,6 +1928,7 @@ has its own procedure there.</li>
   <span class="toc-h">On this page</span>
   <ul>
     <li><a href="#quick-start">Quick start</a></li>
+    <li><a href="#your-first-nodes">Your first nodes</a></li>
     <li><a href="#declaring-a-node">Declaring a node</a></li>
     <li><a href="#run-time-parameters">Run-time parameters</a></li>
     <li><a href="#actions">Actions</a></li>
@@ -1944,7 +1940,7 @@ has its own procedure there.</li>
     <li><a href="#cost">Cost</a></li>
     <li><a href="#errors">Errors</a></li>
     <li><a href="#init-has-no-equivalent-and-does-not-need-one">init has no equivalent, and does not need one</a></li>
-    <li><a href="#what-was-verified-and-where">What was verified, and where</a></li>
+    <li><a href="#what-is-verified">What is verified</a></li>
   </ul>
 </nav>
 </div>
