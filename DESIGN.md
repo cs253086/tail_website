@@ -408,18 +408,18 @@ question therefore navigates to `/ask/` rather than re-skinning `/` in place, so
 each route has exactly one layout.
 
 **Navigation.** The hierarchy is data, not markup. Each allowlist entry names its place
-with `nav`, a path of group labels — `["Guides"]`, `["Boards"]`, or
+with `nav`, a path of group labels — `["Developer Guides"]`, `["Boards"]`, or
 none for a page at the top level — and allowlist order is navigation order: a group
 appears where its first document does. A group exists only because a document is in it,
 so an empty group cannot be built and nothing guards against one. `navTitle` names a page
-within its group, so a leaf reads *Guides → Rust Guide* rather than repeating its ancestors
-as *Guides → Periodic Framework (Rust)*.
+within its group, so a leaf reads *Developer Guides → Rust Guide* rather than repeating its ancestors
+as *Developer Guides → Periodic Framework (Rust)*.
 
 The groups follow the reader's journey, not the repository: **Get started** (run it),
-**Guides** (build with it), **Boards** (put it on hardware), **Reference** (look something up), then the License Guide at the
+**Developer Guides** (build with it: the language guides, the service and device frameworks, the shell tools), **Boards** (put it on hardware), then the License Guide at the
 top level. Each group holds one kind of page, and a group is added only when its first real
 page exists, so no section is ever an empty promise. Rust and Python are separate pages in
-Guides; the site covers no other language.
+Developer Guides; the site covers no other language. A Reference group (API lookup pages, as opposed to guides that teach) is added when the first such page exists.
 
 Only the page being read lists its sections. With every document's sections expanded at
 once the sidebar was already long at four documents; grouped, it would bury the groups

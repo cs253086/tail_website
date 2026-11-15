@@ -73,7 +73,7 @@
       "title": "Periodic Framework (Rust)",
       "summary": "Declare a period and let the framework own the timing loop, admission, freshness and the publish.",
       "nav": [
-        "Guides"
+        "Developer Guides"
       ],
       "navTitle": "Rust Guide",
       "questions": [
@@ -89,7 +89,7 @@
       "title": "Periodic Framework (Python)",
       "summary": "Write periodic nodes in Python, with the same keys as the Rust API and on the same topics.",
       "nav": [
-        "Guides"
+        "Developer Guides"
       ],
       "navTitle": "Python Guide",
       "questions": [
@@ -102,7 +102,7 @@
       "title": "Aperiodic Framework (Rust)",
       "summary": "Write a driver or service as a trait and one generated main, with clients that connect by name.",
       "nav": [
-        "Guides"
+        "Developer Guides"
       ],
       "navTitle": "Service Framework (Rust)",
       "questions": [
@@ -115,11 +115,25 @@
       "title": "Device Framework (Rust)",
       "summary": "Use GPIO, I2C, PWM and stepper devices by class and name, without touching board registers.",
       "nav": [
-        "Guides"
+        "Developer Guides"
       ],
       "navTitle": "Device Framework (Rust)",
       "questions": [
         "How do I drive a PWM or stepper device?"
+      ]
+    },
+    {
+      "path": "utility/doc/shell_tools_public.md",
+      "slug": "shell-tools",
+      "title": "Shell Tools",
+      "summary": "Inspect and tune a running robot from the TAIL OS shell: topics, nodes, parameters and logs.",
+      "nav": [
+        "Developer Guides"
+      ],
+      "navTitle": "Shell Tools",
+      "questions": [
+        "How do I record and replay a topic?",
+        "How do I list the running nodes?"
       ]
     },
     {
@@ -141,20 +155,6 @@
         "Boards"
       ],
       "navTitle": "Raspberry Pi 3"
-    },
-    {
-      "path": "utility/doc/shell_tools_public.md",
-      "slug": "shell-tools",
-      "title": "Shell Tools",
-      "summary": "Inspect and tune a running robot from the TAIL OS shell: topics, nodes, parameters and logs.",
-      "nav": [
-        "Reference"
-      ],
-      "navTitle": "Shell Tools",
-      "questions": [
-        "How do I record and replay a topic?",
-        "How do I list the running nodes?"
-      ]
     },
     {
       "path": "doc/license_guide_public.md",
