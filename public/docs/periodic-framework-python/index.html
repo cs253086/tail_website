@@ -12,13 +12,13 @@
 <meta property="og:url" content="https://tail-os.com/docs/periodic-framework-python/">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
-<link rel="icon" type="image/svg+xml" href="/assets/cb68b6b03060/img/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="/assets/0b2dad144c9f/img/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/assets/cb68b6b03060/css/style.css">
-<script type="module" src="/assets/cb68b6b03060/js/copy.js"></script>
-<script type="module" src="/assets/cb68b6b03060/js/reveal.js"></script>
+<link rel="stylesheet" href="/assets/0b2dad144c9f/css/style.css">
+<script type="module" src="/assets/0b2dad144c9f/js/copy.js"></script>
+<script type="module" src="/assets/0b2dad144c9f/js/reveal.js"></script>
 </head>
 <body class="page-shell">
 <header class="hdr">
@@ -240,8 +240,8 @@ returns nothing. <code>count</code> lives at module level, which is one way
 a Python node keeps state between cycles; <a href="#init-has-no-equivalent-and-does-not-need-one">below</a>
 is why Python needs no <code>init</code> for that. <code>monotonic_ns()</code> is the stamp clock: nanoseconds
 since boot on the counter the node's releases are placed on, the clock every <code>stamp_ns</code>
-field is in, and the same one <code>periodic::monotonic_ns()</code> reads in Rust and
-<code>tail_periodic_monotonic_ns()</code> in C. <code>RANGE_INFRARED</code> is one of <code>Range</code>'s named values,
+field is in, and the same one <code>periodic::monotonic_ns()</code> reads in Rust.
+<code>RANGE_INFRARED</code> is one of <code>Range</code>'s named values,
 generated beside it.</p>
 <p>There are two ways to read that clock, and they differ in a
 <a href="#recording-and-replay">replay</a>:</p>
@@ -269,7 +269,7 @@ generated beside it.</p>
 </tr>
 </tbody>
 </table>
-<p><code>now()</code> is <code>periodic::now()</code> in Rust and <code>tail_periodic_now_ns(node)</code> in C. A process is
+<p><code>now()</code> is <code>periodic::now()</code> in Rust. A process is
 one node, so it takes none. Call it from the body: from a thread you started it raises
 <code>RuntimeError</code>.</p>
 <h3 id="a-python-subscriber">A Python subscriber</h3>
@@ -326,7 +326,7 @@ def drive(command=subscribe(CMD_VELOCITY, stale_after=&quot;310ms&quot;),
 
 run()
 </code></pre>
-<p><code>Twist</code> nests two <code>Vector3</code>s, read as <code>twist.linear.x</code>, the name Rust and C use; a nested
+<p><code>Twist</code> nests two <code>Vector3</code>s, read as <code>twist.linear.x</code>, the name Rust uses; a nested
 payload is built from instances of the payloads it nests.</p>
 <p>Two inputs on two lanes, each with its own bound, and one output. The body is called with
 one <code>Cycle</code> per input and one <code>Out</code> per output, in the order the parameters are written.</p>
@@ -424,7 +424,7 @@ now, with the declaration rewritten (<a href="#a-declaration-in-the-earlier-gram
 <p>The lane has no default. A topic written without one can be constructed and cannot be
 used: <code>subscribe</code> and <code>publish</code> refuse it, saying where to write it.</p>
 <p><strong>Define a topic in a module both programs import</strong>, so its two ends cannot be written
-differently. Two definitions written separately, or one in Python and one in Rust or C,
+differently. Two definitions written separately, or one in Python and one in Rust,
 are compared by the payload's size and by the identity of its layout (see
 <a href="#payloads">Payloads</a>), so a payload with two fields exchanged is refused. The lane is not
 compared. <em>Failing case:</em> a Python reader that says <code>lane=&quot;kernel&quot;</code> for a topic its Rust
@@ -710,8 +710,8 @@ release its recorded values (<a href="#recording-and-replay">Recording and repla
 </ul>
 <p>What it costs and what it takes:</p>
 <ul>
-<li><strong>One non-blocking read per release</strong>, of the node's request topic, made by the C layer
-inside <code>run()</code>'s wait for the release, inside the cycle the overrun accounting measures.
+<li><strong>One non-blocking read per release</strong>, of the node's request topic, made by <code>run()</code>
+inside its wait for the release, inside the cycle the overrun accounting measures.
 A release that finds a request also checks at most 16 values and publishes the node's
 state.</li>
 <li><strong>The body's arguments are one tuple</strong>, built at the first release and built again only
@@ -722,7 +722,7 @@ parameters does none of this, and is handed its arguments as before.</li>
 <li><strong>Two kernel-lane topics per node with parameters</strong>, <code>&lt;node&gt;/__params</code> and
 <code>&lt;node&gt;/__param_set</code>, named after the decorated function: count them in the image's topic
 budget. When they cannot be opened -- the topic storage is used up, say -- the node runs
-on its defaults, which nothing can set, and says so once on the console, in the C layer's
+on its defaults, which nothing can set, and says so once on the console, in this
 record:</li>
 </ul>
 <pre><code>balance: no parameter topics (topic storage full); runs with its defaults
@@ -777,10 +777,10 @@ not fit 64 bits, and a seventeenth parameter, each with its own message.</p>
 <p>A request that takes many releases -- &quot;drive to (2.0, 0.5)&quot;, &quot;home the arm&quot;, &quot;dock&quot; -- is
 an action. A client sends a goal; the node accepts or refuses it at once, reports feedback
 on every release, and ends it with a result. The client can cancel it, and the node stops
-it on its own when the client is gone. It is the same mechanism as the Rust and C ones
+it on its own when the client is gone. It is the same mechanism as the Rust one
 (<a href="/docs/periodic-framework-rust/#actions">the Rust page's Actions</a>), and any client may talk
-to any server: a Python node serves Rust and C clients, and a Python client sends to a node
-written in either.</p>
+to any server: a Python node serves Rust clients, and a Python client sends to a node
+written in Rust.</p>
 <pre><code>  client                                     node, every 20 ms
   DRIVE_TO.send(goal) ──── SEND ───────────► release k: goal.active() is the goal, arrived()
           ◄──────── status, feedback ─────── release k, k+1, ...: active.feedback(...)
@@ -792,7 +792,7 @@ written in either.</p>
 compiled or run as shown. A server and a client of every form shown here run on the
 emulated Raspberry Pi 3 in the project's tests.</p>
 <p><strong>Define the action once</strong>, in a module the server and its clients import. Its name and
-its three payloads -- the goal, the feedback, the result -- belong to it, and a Rust or C
+its three payloads -- the goal, the feedback, the result -- belong to it, and a Rust
 definition of the same action is compared with this one, payload by payload, when its
 topics are opened: two that disagree are refused, never misread.</p>
 <pre><code class="language-python"># robot_actions.py
@@ -1074,7 +1074,7 @@ declaration that breaks a rule is a <code>NodeError</code> where it is written, 
 </table>
 <p><strong>What it costs.</strong> Two kernel-lane topics per served action, <code>&lt;action&gt;/__goal</code> and
 <code>&lt;action&gt;/__status</code>: count them in the image's topic budget. At every release, inside
-<code>run()</code>'s wait and the cycle the overrun accounting measures, the C layer reads at most
+<code>run()</code>'s wait and the cycle the overrun accounting measures, <code>run()</code> reads at most
 eight requests and publishes one status after your outputs, idle releases included. The
 <code>Goal</code>, its <code>ActiveGoal</code> and the goal's object are built once, before the heap is frozen,
 and a release keeps nothing for the action; a client's poll that takes no feedback makes
@@ -1116,9 +1116,9 @@ handled a parameter request and read the action's requests:</p>
 </code></pre>
 <p>Record k holds release k's index and clock reading, the overruns, each input's facts and
 reading, the parameter values and the goal release k was handed, and the value each output
-published at release k-1, or zeros where it published none. It is the record a C or Rust
+published at release k-1, or zeros where it published none. It is the record a Rust
 node of the same declaration publishes (<a href="/docs/periodic-framework-rust/#the-release-journal">the Rust page's release
-journal</a>), and the C layer beneath writes
+journal</a>), and <code>run()</code> writes
 it.</p>
 <p>What it costs and what it takes: <strong>one kernel-lane publish per release</strong>, of at most
 4096 B, inside <code>run()</code>'s wait and the cycle the overrun accounting measures, and <strong>one topic
@@ -1139,7 +1139,7 @@ once on the console:</p>
 pick a later life (the node started again begins life 2):</p>
 <pre><code>python node.py [ARGS...] --replay FILE [--life N]
 </code></pre>
-<p><code>run()</code> hands the whole of <code>sys.argv</code> to the C layer, which reads only that trailing part.
+<p><code>run()</code> reads only that trailing part of <code>sys.argv</code>.
 The module's code runs as in a live run; then <code>run()</code>:</p>
 <table>
 <thead>
@@ -1307,8 +1307,8 @@ the trailing part stays the framework's:</p>
         return None
 </code></pre>
 <p><strong>A refused replay ends the process inside <code>run()</code></strong>, before any topic is opened, with one
-line on standard error: exit 2 for a malformed <code>--replay ...</code> tail, 1 for every other. They
-are the C layer's lines, <code>replay_py_watch</code> being the node's function:</p>
+line on standard error: exit 2 for a malformed <code>--replay ...</code> tail, 1 for every other. The
+lines are these, <code>replay_py_watch</code> being the node's function:</p>
 <table>
 <thead>
 <tr>
@@ -1371,10 +1371,10 @@ axis; <code>Odometry</code>'s <code>pose</code> is <code>base_link</code> in <co
 inversion, a rotation from roll, pitch and yaw) and frame sets with their lookup are Rust
 only in this release
 (<a href="/docs/periodic-framework-rust/#frames-and-transforms">Frames and transforms</a>); they will reach
-Python through the same bindings as C, calling the Rust code, never as a pure-Python copy.
+Python as bindings that call the Rust code, never as a pure-Python copy.
 Until then a Python node computes them by hand, against these conventions.</p>
 <p><strong>Declare a payload of your own</strong> when no standard one fits. A payload crosses shared
-memory to a peer that may be written in Rust or C, so its layout is <code>repr(C)</code>'s. Declare
+memory to a peer that may be written in Rust, so its layout is that of a Rust <code>#[repr(C)]</code> struct. Declare
 the fields and the framework computes it:</p>
 <pre><code class="language-python">Gate = Payload(&quot;stamp_ns:u64 state:u32=OPEN:0|CLOSED:1 reserved:u32&quot;, &quot;Gate&quot;)
 Gate.size       # 16 -- the same as the Rust struct
