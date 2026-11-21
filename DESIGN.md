@@ -606,7 +606,7 @@ headers move to `public/_headers`.
 |---|---|
 | Documentation model | AI-first over generated pages; no hand-maintained documentation. |
 | Hosting | Cloudflare Pages and Pages Functions. Bluehost retired after cutover. |
-| Domain | `tailrobotics.com` (registered 2026-11-21 at Cloudflare) is the site's address. `tail-os.com` (Network Solutions, auto-renew off) stays attached to the Pages project until it lapses on 2027-08-27, because shipped BSP license files and the Quick start `curl` command use it; `support@` and `hello@` mail links stay on it until `tailrobotics.com` mail routing exists. |
+| Domain | `tailrobotics.com` (registered 2026-11-21 at Cloudflare) is the site's address. `tail-os.com` (Network Solutions, auto-renew off) stays attached to the Pages project until it lapses on 2027-08-27, because shipped BSP license files and the Quick start `curl` command use it. `support@` and `hello@` tailrobotics.com forward through Cloudflare Email Routing to the account owner's inbox. |
 | Model provider | Gemini Flash free tier, behind the `answer()` interface in §8. No billing enabled anywhere. |
 | Quota protection | Answer cache, per-IP limit, and global daily ceiling — all degrading to retrieval results. |
 | Initial allowlist | `get_started.md`, `install_rpi3.md`, `install_qemu.md`. |
