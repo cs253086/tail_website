@@ -1,7 +1,7 @@
 {
   "sourceRoot": "../tailos",
   "_origin_comment": "The public site. Every canonical URL, Open Graph URL and sitemap entry is this plus a root-relative path.",
-  "origin": "https://tail-os.com",
+  "origin": "https://tailrobotics.com",
   "version": "v0.9.0",
   "_comment": "The complete set of tailos files that may become public. Nothing outside this list is ever read or published. Questions live with the document that answers them, so removing a document also removes its suggestions.",
   "_redact_comment": "TAIL OS is not a public project. These patterns are stripped from every document before rendering, and the build fails if one survives into the output.",
@@ -25,7 +25,7 @@
       "doc": "quick-start",
       "commands": [
         "sudo apt-get install -y qemu-system-arm qemu-utils",
-        "curl -O https://tail-os.com/downloads/run_tailos_qemu.sh",
+        "curl -O https://tailrobotics.com/downloads/run_tailos_qemu.sh",
         "chmod +x run_tailos_qemu.sh",
         "./run_tailos_qemu.sh"
       ],

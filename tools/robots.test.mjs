@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { RobotError, loadRobots, validateRobot } from './robots.mjs';
 import { renderRobotPage, renderRobotsIndex } from './render.mjs';
 
-const site = { origin: 'https://tail-os.com', version: 'v0.9.0', assets: '/assets/abc', buildId: 'abc' };
+const site = { origin: 'https://tailrobotics.com', version: 'v0.9.0', assets: '/assets/abc', buildId: 'abc' };
 
 const listing = (overrides = {}) => ({
   slug: 'line-follower',

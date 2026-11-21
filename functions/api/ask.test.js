@@ -66,7 +66,7 @@ function fakeKv() {
 }
 
 const ask = (question, env = {}) => onRequestPost({
-  request: new Request('https://tail-os.com/api/ask', {
+  request: new Request('https://tailrobotics.com/api/ask', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'cf-connecting-ip': '203.0.113.7' },
     body: JSON.stringify({ question }),
@@ -389,7 +389,7 @@ describe('POST /api/ask', () => {
   it('rejects a missing or malformed question', async () => {
     expect((await ask('   ')).status).toBe(400);
     const bad = await onRequestPost({
-      request: new Request('https://tail-os.com/api/ask', { method: 'POST', body: 'not json' }),
+      request: new Request('https://tailrobotics.com/api/ask', { method: 'POST', body: 'not json' }),
       env: {},
     });
     expect(bad.status).toBe(400);

@@ -35,7 +35,7 @@ function fakeBucket(objects = { [NAME]: BYTES }) {
 const STATIC_SITE = new Response('static site');
 
 const serve = ({ name = NAME, method = 'GET', headers = {}, bucket = fakeBucket() } = {}) => onRequest({
-  request: new Request(`https://tail-os.com/downloads/${name}`, { method, headers }),
+  request: new Request(`https://tailrobotics.com/downloads/${name}`, { method, headers }),
   env: { DOWNLOADS: bucket },
   params: { name },
   next: () => STATIC_SITE,

@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "tail-os.com — AI-first documentation site generated from the tailos repository",
+  "description": "tailrobotics.com — AI-first documentation site generated from the tailos repository",
   "scripts": {
     "build": "node tools/generate.mjs",
     "test": "vitest run",

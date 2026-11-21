@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderAsk, renderDoc, renderDocsIndex, renderHome, renderNotFound, renderRedirects } from './render.mjs';
 
-const site = { origin: 'https://tail-os.com', version: 'v0.9.0', assets: '/assets/abc', buildId: 'abc' };
+const site = { origin: 'https://tailrobotics.com', version: 'v0.9.0', assets: '/assets/abc', buildId: 'abc' };
 const docs = [{ slug: 'qemu', title: 'Running TAIL OS in QEMU', summary: 'Boot under QEMU.', sections: [] }];
 
 describe('renderHome', () => {
@@ -90,7 +90,7 @@ describe('copy buttons', () => {
   it('gives the home command box its bare commands to copy, without the prompts it shows', () => {
     const commands = [
       'sudo apt-get install -y qemu-system-arm qemu-utils',
-      'curl -sSL https://tail-os.com/downloads/run_tailos_qemu.sh | bash',
+      'curl -sSL https://tailrobotics.com/downloads/run_tailos_qemu.sh | bash',
     ];
     const quickstart = { title: 'Quick start', doc: 'quick-start', commands, note: 'Exit with Ctrl-A then X.' };
     const html = renderHome({ site, docs, questions: [], home: { quickstart } });

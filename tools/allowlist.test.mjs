@@ -138,11 +138,11 @@ describe('rewriteLink', () => {
 
 describe('validateOrigin', () => {
   it('accepts a bare https origin', () => {
-    expect(validateOrigin('https://tail-os.com')).toBe('https://tail-os.com');
+    expect(validateOrigin('https://tailrobotics.com')).toBe('https://tailrobotics.com');
   });
 
   it('normalises away a trailing slash, so paths are never doubled', () => {
-    expect(validateOrigin('https://tail-os.com/')).toBe('https://tail-os.com');
+    expect(validateOrigin('https://tailrobotics.com/')).toBe('https://tailrobotics.com');
   });
 
   it('rejects a missing origin rather than emitting undefined URLs', () => {
@@ -151,16 +151,16 @@ describe('validateOrigin', () => {
   });
 
   it('rejects a non-URL', () => {
-    expect(() => validateOrigin('tail-os.com')).toThrow(/not a URL/);
+    expect(() => validateOrigin('tailrobotics.com')).toThrow(/not a URL/);
   });
 
   it('rejects http, which would publish canonical URLs the site cannot serve', () => {
-    expect(() => validateOrigin('http://tail-os.com')).toThrow(/must be https/);
+    expect(() => validateOrigin('http://tailrobotics.com')).toThrow(/must be https/);
   });
 
   it('rejects an origin carrying a path', () => {
-    expect(() => validateOrigin('https://tail-os.com/docs')).toThrow(/bare scheme and host/);
-    expect(() => validateOrigin('https://tail-os.com/?a=1')).toThrow(/bare scheme and host/);
+    expect(() => validateOrigin('https://tailrobotics.com/docs')).toThrow(/bare scheme and host/);
+    expect(() => validateOrigin('https://tailrobotics.com/?a=1')).toThrow(/bare scheme and host/);
   });
 });
 

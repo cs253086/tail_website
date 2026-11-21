@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /ask/
 
-Sitemap: https://tail-os.com/sitemap.xml
+Sitemap: https://tailrobotics.com/sitemap.xml

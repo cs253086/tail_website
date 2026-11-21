@@ -13,9 +13,9 @@ describe('textToCopy', () => {
 
   it('copies data-copy instead when the block shows more than should be pasted', () => {
     const block = {
-      dataset: { copy: 'curl -sSL https://tail-os.com/downloads/run_tailos_qemu.sh | bash' },
-      textContent: '$ curl -sSL https://tail-os.com/downloads/run_tailos_qemu.sh | bash',
+      dataset: { copy: 'curl -sSL https://tailrobotics.com/downloads/run_tailos_qemu.sh | bash' },
+      textContent: '$ curl -sSL https://tailrobotics.com/downloads/run_tailos_qemu.sh | bash',
     };
-    expect(textToCopy(block)).toBe('curl -sSL https://tail-os.com/downloads/run_tailos_qemu.sh | bash');
+    expect(textToCopy(block)).toBe('curl -sSL https://tailrobotics.com/downloads/run_tailos_qemu.sh | bash');
   });
 });

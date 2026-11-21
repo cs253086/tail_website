@@ -234,7 +234,7 @@ is 1.7 GB. None of them is large: the images are in R2, so a publish reads docum
 and a script, and the generator still refuses a download that turns out to be a Git LFS
 pointer rather than a file. The workflow then generates, runs the full test suite, records the tailos
 commit, commits `public/` and `generated/`, deploys with `wrangler pages deploy`, and
-checks that tail-os.com serves the new build id. If the website repo's main moved during
+checks that tailrobotics.com serves the new build id. If the website repo's main moved during
 the build, the publish started by that push deploys instead.
 
 | Secret | Repository | Grants |
@@ -427,7 +427,7 @@ under headings from pages nobody has opened.
 
 **Aliases.** An allowlist entry may name an `alias`, an address that something outside
 the site already cites. The licence notice at the top of every TAIL OS source file points
-readers to `https://tail-os.com/license-guide/`, and those files ship in the BSP, where
+readers to `https://tailrobotics.com/license-guide/`, and those files ship in the BSP, where
 the site cannot change them. The page still has one home under `/docs/`; the alias is a
 301 redirect to it, written to `_redirects` with and without the trailing slash. An alias
 may not begin with a path the site serves itself (`/docs/`, `/ask/`, `/api/`,
@@ -606,7 +606,7 @@ headers move to `public/_headers`.
 |---|---|
 | Documentation model | AI-first over generated pages; no hand-maintained documentation. |
 | Hosting | Cloudflare Pages and Pages Functions. Bluehost retired after cutover. |
-| Domain | `tail-os.com` is registered separately from Bluehost hosting; cancelling hosting is safe. |
+| Domain | `tailrobotics.com` (registered 2026-11-21 at Cloudflare) is the site's address. `tail-os.com` (Network Solutions, auto-renew off) stays attached to the Pages project until it lapses on 2027-08-27, because shipped BSP license files and the Quick start `curl` command use it; `support@` and `hello@` mail links stay on it until `tailrobotics.com` mail routing exists. |
 | Model provider | Gemini Flash free tier, behind the `answer()` interface in §8. No billing enabled anywhere. |
 | Quota protection | Answer cache, per-IP limit, and global daily ceiling — all degrading to retrieval results. |
 | Initial allowlist | `get_started.md`, `install_rpi3.md`, `install_qemu.md`. |

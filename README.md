@@ -7,7 +7,7 @@ robotics and safety-critical systems.
 `content/allowlist.json` carries redaction rules that strip private repository URLs
 out of every document before it is rendered. The build fails if one survives.
 
-Live at [tail-os.com](https://tail-os.com).
+Live at [tailrobotics.com](https://tailrobotics.com).
 
 ## What this is
 
