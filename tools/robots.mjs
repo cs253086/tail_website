@@ -11,6 +11,9 @@ import { join } from 'node:path';
 
 export const CATEGORIES = ['Mobile', 'Arms', 'Sensors', 'Drones', 'Education'];
 export const SAFETY_LEVELS = ['low', 'caution', 'hazard'];
+// What every robot ships with, besides its build steps. A listing states each
+// one, so the store can promise all of them on its front page.
+export const INCLUDE_KINDS = ['print', 'manual', 'parts', 'software'];
 export const ICON_COLORS = ['blue', 'brown', 'green', 'violet'];
 const SLUG = /^[a-z0-9][a-z0-9-]*$/;
 const IMAGE = /^[a-z0-9][a-z0-9-]*\.(svg|png|jpg|webp)$/;
@@ -49,6 +52,12 @@ export function validateRobot(robot, file) {
   for (const step of robot.steps) {
     if (!text(step?.title) || !text(step?.body)) fail('each step needs a title and a body');
   }
+
+  if (!robot.includes || typeof robot.includes !== 'object') fail(`includes must state ${INCLUDE_KINDS.join(', ')}`);
+  for (const kind of INCLUDE_KINDS) {
+    if (!text(robot.includes[kind])) fail(`includes.${kind} is required`);
+  }
+  if (robot.price !== undefined && !text(robot.price)) fail('price must be text such as "Free plans" or "About $175"');
 
   if (robot.buildMinutes !== undefined && !(Number.isInteger(robot.buildMinutes) && robot.buildMinutes > 0)) {
     fail('buildMinutes must be a positive whole number');

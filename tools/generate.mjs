@@ -17,7 +17,7 @@ import { assertRedacted, compileRules, redact } from './redact.mjs';
 import { buildIndex } from './bm25.mjs';
 import { chunkMarkdown } from './chunk.mjs';
 import { diagramFenceRule, diagramSources, renderDiagrams } from './diagram.mjs';
-import { renderAsk, renderDoc, renderDocsIndex, renderHome, renderNotFound, renderRedirects, renderRobotPage, renderRobotsIndex } from './render.mjs';
+import { renderAsk, renderDoc, renderDocsIndex, renderHome, renderNotFound, renderRedirects, renderRobotPage, renderStoreHome } from './render.mjs';
 import { loadRobots } from './robots.mjs';
 import { sectionsFrom } from './sections.mjs';
 
@@ -178,12 +178,16 @@ for (const doc of docs) {
 // Robot listings are read and checked before any page is written. Only listed
 // robots are returned; a draft is validated but never published.
 const robots = loadRobots(join(ROOT, 'content', 'robots'));
-write(join(PUBLIC, 'index.html'), renderHome({ site, docs, questions, robots, home: allowlist.home ?? {} }));
+// With the store on, the store is the home page; the documentation home is
+// what the site shows until a robot is ready to be listed.
+write(
+  join(PUBLIC, 'index.html'),
+  storeEnabled ? renderStoreHome({ site, robots }) : renderHome({ site, docs, questions, home: allowlist.home ?? {} }),
+);
 write(join(PUBLIC, '404.html'), renderNotFound({ site, docs }));
 write(join(PUBLIC, 'ask', 'index.html'), renderAsk({ site, docs, questions }));
 write(join(PUBLIC, 'docs', 'index.html'), renderDocsIndex({ site, docs }));
 if (storeEnabled) {
-  write(join(PUBLIC, 'robots', 'index.html'), renderRobotsIndex({ site, robots }));
   for (const robot of robots) {
     write(join(PUBLIC, 'robots', robot.slug, 'index.html'), renderRobotPage({ site, robot }));
   }
@@ -220,7 +224,7 @@ write(
   }),
 );
 
-const urls = ['/', '/docs/', ...docs.map((doc) => `/docs/${doc.slug}/`), ...(storeEnabled && robots.length ? ['/robots/'] : []), ...(storeEnabled ? robots.map((robot) => `/robots/${robot.slug}/`) : [])];
+const urls = ['/', '/docs/', ...docs.map((doc) => `/docs/${doc.slug}/`), ...(storeEnabled ? robots.map((robot) => `/robots/${robot.slug}/`) : [])];
 write(
   join(PUBLIC, 'sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>

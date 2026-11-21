@@ -3,12 +3,12 @@
   "name": "Line follower",
   "developer": "Example developer",
   "summary": "A two-wheel robot that follows a black tape line on white paper.",
+  "featured": true,
   "category": "Mobile",
   "board": "Raspberry Pi 3B",
   "tailosVersion": "0.9",
   "buildMinutes": 120,
   "color": "blue",
-  "featured": true,
   "image": "line-follower.svg",
   "safety": [
     {
@@ -52,5 +52,11 @@
       "body": "Hold it over white paper, press Enter, then over the black line."
     }
   ],
-  "status": "draft"
+  "status": "draft",
+  "includes": {
+    "print": "Printable chassis and sensor mount, with print settings.",
+    "manual": "Assembly and wiring manual, with a tape-line test track.",
+    "parts": "Parts list: motor driver, line sensors and a Raspberry Pi 3B.",
+    "software": "TAIL OS image and the line-following program."
+  }
 }

@@ -39,5 +39,11 @@
       "body": "Start the test script with the rover raised. Each wheel should turn once, in turn."
     }
   ],
-  "status": "draft"
+  "status": "draft",
+  "includes": {
+    "print": "Printable chassis and wheel hubs, with print settings.",
+    "manual": "Assembly and wiring manual, with the bench test script.",
+    "parts": "Parts list: motor driver, four geared motors and a Raspberry Pi 3B.",
+    "software": "TAIL OS image and the drive program."
+  }
 }

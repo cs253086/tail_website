@@ -39,5 +39,11 @@
       "body": "Run the logger from the shell. It writes one line a minute to the card."
     }
   ],
-  "status": "draft"
+  "status": "draft",
+  "includes": {
+    "print": "Printable mast and sensor shield, with print settings.",
+    "manual": "Assembly and wiring manual.",
+    "parts": "Parts list: environmental sensor and a Raspberry Pi 3B.",
+    "software": "TAIL OS image and the logging program."
+  }
 }

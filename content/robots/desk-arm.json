@@ -43,5 +43,11 @@
       "body": "Move the arm by hand into each pose and press the button to save it."
     }
   ],
-  "status": "draft"
+  "status": "draft",
+  "includes": {
+    "print": "Printable base, shoulder and link parts, with print settings.",
+    "manual": "Assembly manual with the servo centring steps.",
+    "parts": "Parts list: three hobby servos, a Raspberry Pi 3B and a separate servo supply.",
+    "software": "TAIL OS image and the pose-saving program."
+  }
 }

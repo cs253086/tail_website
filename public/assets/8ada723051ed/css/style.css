@@ -764,6 +764,12 @@ div.code-block > pre { padding-right: 52px; }
   .strip { grid-template-columns: minmax(0, 1fr); }
   .hero { padding-top: 56px; }
 }
+@media (max-width: 560px) {
+  /* The version badge and a wide search box pushed the nav off a phone screen. */
+  .ver { display: none; }
+  .hdr-search { min-width: 0; }
+  .hdr-search input { width: 100%; }
+}
 
 /* ---------- Apple layer: global nav, hero, cards, documentation headings ---------- */
 .hdr {
@@ -809,10 +815,6 @@ div.code-block > pre { padding-right: 52px; }
 .doc pre { border-radius: var(--radius-sm); }
 .idx-t { font-size: 19px; font-weight: 600; }
 .idx-t a { color: var(--text); }
-.robots-link { margin: 40px 0 0; text-align: center; font-size: 17px; }
-.robots-link a { color: var(--accent); text-decoration: none; font-weight: 500; }
-.robots-link a::after { content: " \203a"; }
-.robots-link a:hover { text-decoration: underline; }
 
 /* Robot store and motion, as apple.com uses it. */
 .page-store {
@@ -823,15 +825,31 @@ div.code-block > pre { padding-right: 52px; }
   --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   background: var(--bg); color: var(--text); font-family: var(--sans);
 }
-.store { max-width: 1040px; margin: 0 auto; padding: 24px 20px 110px; display: grid; gap: 40px; }
-.store-banner {
-  position: relative; border-radius: 24px; overflow: hidden; color: #fff; min-height: 260px;
-  padding: 32px; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; text-decoration: none;
+.store { max-width: 1040px; margin: 0 auto; padding: 24px 20px 40px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; }
+.store-hero {
+  border-radius: 24px; overflow: hidden; padding: 40px; min-height: 280px; color: #fff;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 32px; align-items: center;
   background: linear-gradient(135deg, #1d1d1f 0%, #0066cc 60%, #2997ff 100%);
 }
-.store-banner .kicker { font: 500 13px/1 var(--mono); opacity: 0.85; letter-spacing: 0.04em; text-transform: uppercase; }
-.store-banner strong { font-size: clamp(28px, 4vw, 38px); font-weight: 700; letter-spacing: -0.02em; max-width: 18ch; line-height: 1.1; }
-.store-banner span:last-child { opacity: 0.9; max-width: 46ch; }
+.store-hero-text { display: grid; gap: 12px; justify-items: start; }
+.store-hero .kicker { font: 500 13px/1 var(--mono); opacity: 0.85; letter-spacing: 0.04em; text-transform: uppercase; }
+.store-hero h1 { margin: 0; font-size: clamp(30px, 5vw, 48px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.08; max-width: 16ch; }
+.store-hero p { margin: 0; opacity: 0.92; max-width: 46ch; font-size: 17px; }
+.store-hero .robot-get { background: #fff; color: #1d1d1f; margin-top: 8px; }
+.store-hero-art, .robot-picture.store-hero-art { width: 220px; height: 220px; border-radius: 28px; font-size: 72px; }
+.robot-soon { scroll-snap-align: start; display: grid; gap: 4px; align-content: center; min-height: 120px; padding: 18px; border: 1px dashed var(--border-strong); border-radius: 14px; color: var(--s-ink-3); font-size: 14px; }
+.robot-soon strong { color: var(--s-ink-2); font-size: 16px; font-weight: 600; }
+.robot-meta { color: var(--s-ink-2); font-size: 14px; font-weight: 500; }
+.store-includes h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 12px; }
+.store-includes ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.store-includes li { display: grid; gap: 4px; align-content: start; background: var(--s-surface); border-radius: 14px; padding: 16px 18px; }
+.store-includes strong { font-size: 16px; font-weight: 600; }
+.store-includes span { color: var(--s-ink-2); font-size: 14px; }
+.store-dev { color: var(--s-ink-3); text-align: center; }
+.store-dev a { color: var(--s-action); }
+.store-foot { max-width: 1040px; margin: 0 auto; padding: 0 20px 60px; display: flex; flex-wrap: wrap; gap: 6px 22px; justify-content: center; font-size: 14px; }
+.store-foot a { color: var(--s-ink-3); }
+.robot-box li { flex-wrap: wrap; }
 .robot-row h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; margin: 0 0 12px; }
 .robot-scroll { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 240px); gap: 16px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x mandatory; }
 .robot-card { scroll-snap-align: start; display: grid; gap: 4px; align-content: start; color: var(--s-ink); text-decoration: none; }
@@ -878,8 +896,9 @@ div.code-block > pre { padding-right: 52px; }
 @media (max-width: 720px) {
   .robot-hero { grid-template-columns: 1fr; justify-items: start; }
   .robot-icon-lg, .robot-picture.robot-icon-lg { width: 110px; height: 110px; font-size: 38px; }
-  .store { padding-bottom: 96px; }
-  .store-banner { min-height: 220px; }
+  .store-hero { grid-template-columns: 1fr; padding: 28px 22px; min-height: 0; }
+  .store-hero-art, .robot-picture.store-hero-art { width: 120px; height: 120px; font-size: 40px; grid-row: 1; }
+  .store-foot { padding-bottom: 96px; }
   .store-tabs {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; display: flex; justify-content: space-around;
     background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(12px);

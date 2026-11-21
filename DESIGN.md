@@ -390,9 +390,18 @@ unchanged.
 
 ## 9. Site surface
 
+**What a listing must state.** Every robot's JSON names the four things it ships with
+(`includes.print`, `.manual`, `.parts`, `.software`) and at least one build step, and a
+listed robot also carries its safety block and review date. The home page may therefore
+say every robot includes all five, because the build fails otherwise. It makes no claim
+about simulation, delivered parts or a price: `price` is an optional text label, shown only when a
+listing has one, and "Get this robot" scrolls to the page's contents until there is something to buy.
+
 | Route | Content |
 |---|---|
 | `/` | Question box, a one-line description of TAIL OS, and links into the documents. No sidebar, and no repository link (§5.0). |
+| `/` with the store on | The robot store is the home page: a featured robot, one scrolling row per category (Mobile, Arms, Sensors, Drones, Education; an empty one reads "Coming soon"), then "Every robot includes" and a link into the documentation. The question box lives in the header. The store is off, and `/` is the page above, until `store.enabled` is true in the allowlist, which is set only once a real robot is listed. |
+| `/robots/<slug>/` | One page per listed robot: what it is, its safety notes before anything else, "What's in the box" (3D-printing files, manual, parts list, software, and the build steps), what you need, then the steps. A draft is validated but never built. There is no `/robots/` index: the home page is the listing. |
 | `/404.html` | The documentation shell with a route back in. Replaces the error document the retired Apache config provided. |
 | `/ask/?q=...` | Answer with inline citations, source cards linking into `/docs/`, keyword results below. Shareable URL. `noindex`, and disallowed in `robots.txt`. |
 | `/docs/` | Generated index of every published document, grouped by the same hierarchy as the sidebar. |

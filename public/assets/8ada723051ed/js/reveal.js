@@ -4,9 +4,9 @@
 
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const SELECTORS = [
-  '.card', '.robot-card', '.robot-row', '.robot-block', '.robots-link', '.quick-head',
+  '.card', '.robot-card', '.robot-row', '.robot-block', '.quick-head',
   '.idx > li', '.doc > h2', '.doc > p', '.doc > pre', '.doc > table', '.robot-facts',
-  '.robot-needs', '.robot-steps li', '.store-banner', '.src', '.ans > p', '.ans > pre',
+  '.robot-needs', '.robot-steps li', '.store-hero', '.store-includes', '.src', '.ans > p', '.ans > pre',
 ].join(', ');
 
 if (!reduced && 'IntersectionObserver' in window) {

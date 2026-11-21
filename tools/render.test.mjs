@@ -116,15 +116,7 @@ describe('motion and the store', () => {
     expect(renderHome({ site, docs, questions: [] })).toContain('/js/reveal.js');
   });
 
-  it('links to the store from the home page only once a robot is listed, and only when the store is on', () => {
-    const on = { ...site, store: true };
-    expect(renderHome({ site: on, docs, questions: [], robots: [] })).not.toContain('Robots built on TAIL OS');
-    expect(renderHome({ site: on, docs, questions: [], robots: [{ slug: 'x' }] })).toContain('href="/robots/"');
-    expect(renderHome({ site, docs, questions: [], robots: [{ slug: 'x' }] })).not.toContain('/robots/');
-  });
-
-  it('shows no Robots tab while the store is off', () => {
-    expect(renderHome({ site, docs, questions: [] })).not.toContain('href="/robots/"');
-    expect(renderHome({ site: { ...site, store: true }, docs, questions: [] })).toContain('href="/robots/">Robots</a>');
+  it('keeps the documentation home free of store links', () => {
+    expect(renderHome({ site: { ...site, store: true }, docs, questions: [] })).not.toContain('/robots/');
   });
 });

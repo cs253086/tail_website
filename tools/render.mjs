@@ -3,6 +3,7 @@
 // and every /docs/ page.
 
 import { buildNavTree } from './nav.mjs';
+import { CATEGORIES } from './robots.mjs';
 
 export function esc(text) {
   return String(text)
@@ -68,7 +69,6 @@ function header({ site, search = true }) {
           <span class="hdr-menu-sub mono">support@tailrobotics.com</span>
         </div>
       </details>
-      ${site.store ? '<a href="/robots/">Robots</a>' : ''}
     </nav>
   </div>
 </header>`;
@@ -132,7 +132,7 @@ function footer({ site }) {
 </footer>`;
 }
 
-export function renderHome({ site, docs, questions, robots = [], home = {} }) {
+export function renderHome({ site, docs, questions, home = {} }) {
   // Links, not submit buttons: a button named `q` inside a form whose input is
   // also named `q` submits both, and URLSearchParams.get() takes the first.
   const chips = questions.length
@@ -199,7 +199,7 @@ ${highlights}${quickstart}
   <section class="docs-cards" aria-label="Documentation">
       ${cards}
   </section>
-${site.store && robots.length ? '  <p class="robots-link"><a href="/robots/">Robots built on TAIL OS</a></p>\n' : ''}</main>
+</main>
 ${footer({ site })}
 </body>
 </html>`;
@@ -314,9 +314,11 @@ export function renderDocsIndex({ site, docs }) {
 }
 
 // Robot store pages. Text comes from reviewed JSON and is escaped like everything
-// else here. The layout follows the store's app-style pages: a banner, scrolling
-// rows, one main action per robot, and hazards shown before the steps.
+// else here. The store is the home page when it is on: a featured robot, one
+// scrolling row per category, one main action per robot, and hazards shown
+// before the steps.
 const LEVEL_LABEL = { low: 'Low risk', caution: 'Caution', hazard: 'Hazard' };
+const INCLUDE_LABELS = { print: '3D-printing files', manual: 'Manual', parts: 'Parts list', software: 'Software' };
 const ICON_CLASSES = ['icon-blue', 'icon-brown', 'icon-green', 'icon-violet'];
 
 // A fixed colour per robot, from its slug, so it never changes between builds.
@@ -341,8 +343,7 @@ function thumbnail(robot, size = '') {
 
 function storeNav(active) {
   const links = [
-    ['/', 'Home', 'home'],
-    ['/robots/', 'Robots', 'robots'],
+    ['/', 'Robots', 'home'],
     ['/docs/', 'Docs', 'docs'],
     ['/ask/', 'Ask', 'ask'],
   ];
@@ -360,9 +361,18 @@ ${header({ site })}
 <main class="store">
 ${main}
 </main>
+${storeFooter()}
 <nav class="store-tabs" aria-label="Sections">${storeNav(active)}</nav>
 </body>
 </html>`;
+}
+
+function storeFooter() {
+  return `<footer class="store-foot">
+  <a href="/docs/">Documentation</a>
+  <a href="mailto:support@tailrobotics.com">Support</a>
+  <a href="mailto:support@tailrobotics.com?subject=List%20a%20robot">List your robot</a>
+</footer>`;
 }
 
 function robotCard(robot) {
@@ -370,48 +380,70 @@ function robotCard(robot) {
         ${thumbnail(robot)}
         <strong>${esc(robot.name)}</strong>
         <span class="robot-dev">${esc(robot.developer)}</span>
-        <span class="robot-note">${esc(robot.summary)}</span>
+        <span class="robot-note">${esc(robot.summary)}</span>${robot.price ? `\n        <span class="robot-meta">${esc(robot.price)}</span>` : ''}
         <span class="robot-get-sm">Get plans</span>
       </a>`;
 }
 
 function robotRow(title, robots) {
   const id = `row-${title.toLowerCase().replace(/\s+/g, '-')}`;
+  const cards = robots.length
+    ? robots.map(robotCard).join('\n')
+    : `      <div class="robot-soon"><strong>Coming soon</strong><span>No ${esc(title)} robots are listed yet.</span></div>`;
   return `  <section class="robot-row" aria-labelledby="${esc(id)}">
     <h2 id="${esc(id)}">${esc(title)}</h2>
     <div class="robot-scroll">
-${robots.map(robotCard).join('\n')}
+${cards}
     </div>
   </section>`;
 }
 
-export function renderRobotsIndex({ site, robots }) {
-  const categories = [...new Set(robots.map((robot) => robot.category))];
-  const rows = robots.length
-    ? [robotRow('Newest', [...robots].sort((a, b) => b.reviewed.localeCompare(a.reviewed)))]
-        .concat(categories.map((category) => robotRow(category, robots.filter((robot) => robot.category === category))))
-        .join('\n')
-    : '  <p class="store-empty">No robots are listed yet.</p>';
+// What every robot includes. The four listed kinds are required of every
+// listing (see INCLUDE_KINDS), and the steps and safety block of a listed one.
+const EVERYTHING = [
+  ['3D-printing files', 'Print the frame and mounts at home.'],
+  ['Manual', 'Assembly and wiring, step by step.'],
+  ['Parts list', 'Every part named, with its spec.'],
+  ['Software', 'TAIL OS and the robot\u2019s own program.'],
+  ['Build steps', 'Safety notes first, then the build.'],
+];
+
+export function renderStoreHome({ site, robots }) {
   const featured = robots.find((robot) => robot.featured) ?? robots[0];
-  const banner = featured
-    ? `  <a class="store-banner" href="/robots/${esc(featured.slug)}/">
-    <span class="kicker">Featured</span>
-    <strong>${esc(featured.name)}</strong>
-    <span>${esc(featured.summary)}</span>
-  </a>`
-    : `  <div class="store-banner">
-    <span class="kicker">Robots built on TAIL OS</span>
-    <strong>Build a robot with the instructions</strong>
-    <span>Each robot lists its parts, its safety notes and its build steps.</span>
-  </div>`;
+  const hero = featured
+    ? `  <section class="store-hero" aria-labelledby="hero-title">
+    <div class="store-hero-text">
+      <span class="kicker">Featured robot</span>
+      <h1 id="hero-title">${esc(featured.name)}</h1>
+      <p>${esc(featured.summary)}</p>
+      <a class="robot-get" href="/robots/${esc(featured.slug)}/">Get this robot</a>
+    </div>
+    ${thumbnail(featured, 'store-hero-art')}
+  </section>`
+    : `  <section class="store-hero" aria-labelledby="hero-title">
+    <div class="store-hero-text">
+      <span class="kicker">Robots built on TAIL OS</span>
+      <h1 id="hero-title">Robots you can build yourself.</h1>
+      <p>Each robot comes with print files, a manual, a parts list, software and build steps. The first robots are coming soon.</p>
+      <a class="robot-get" href="/docs/">Read the documentation</a>
+    </div>
+  </section>`;
+  const rows = CATEGORIES.map((category) => robotRow(category, robots.filter((robot) => robot.category === category))).join('\n');
   return storeShell({
     site,
-    title: 'Robots built on TAIL OS — TAIL OS',
-    description: 'Robots built on TAIL OS, each with its parts list, safety notes and build steps.',
-    canonical: `${site.origin}/robots/`,
-    active: 'robots',
-    main: `${banner}
-${rows}`,
+    title: 'TAIL — robots you can build on TAIL OS',
+    description: 'Robots built on TAIL OS, each with print files, a manual, a parts list, software and build steps.',
+    canonical: `${site.origin}/`,
+    active: 'home',
+    main: `${hero}
+${rows}
+  <section class="store-includes" aria-labelledby="includes">
+    <h2 id="includes">Every robot includes</h2>
+    <ul>
+${EVERYTHING.map(([label, note]) => `      <li><strong>${esc(label)}</strong><span>${esc(note)}</span></li>`).join('\n')}
+    </ul>
+  </section>
+  <p class="store-dev">Developing for TAIL OS? <a href="/docs/">Read the documentation</a> or <a href="/ask/">ask a question</a>.</p>`,
   });
 }
 
@@ -433,7 +465,12 @@ ${robot.safety.map((item) => `      <li data-level="${esc(item.level)}"><strong>
     `Tested on: ${robot.board}`,
     `TAIL OS ${robot.tailosVersion} or later`,
     robot.buildMinutes ? `About ${robot.buildMinutes} minutes` : null,
+    robot.price ? `Price: ${robot.price}` : null,
   ].filter(Boolean).map((fact) => `<li>${esc(fact)}</li>`).join('');
+  const box = Object.entries(INCLUDE_LABELS)
+    .map(([kind, label]) => `      <li><span>${esc(label)}</span><b>${esc(robot.includes[kind])}</b></li>`)
+    .join('\n')
+    + `\n      <li><span>Build steps</span><b>${robot.steps.length} ${robot.steps.length === 1 ? 'step' : 'steps'}, safety notes first</b></li>`;
   const needs = robot.needs
     .map((need) => `      <li><span>${esc(need.item)}</span><b>${esc(need.spec)}</b></li>`)
     .join('\n');
@@ -453,7 +490,7 @@ ${robot.safety.map((item) => `      <li data-level="${esc(item.level)}"><strong>
       <h1>${esc(robot.name)}</h1>
       <p class="robot-dev">${esc(robot.developer)}</p>
       <ul class="robot-facts">${facts}</ul>
-      <div class="robot-actions"><a class="robot-get" href="#steps">Get the plans</a></div>
+      <div class="robot-actions"><a class="robot-get" href="#box">Get this robot</a></div>
     </div>
   </header>
 ${photos ? `  <div class="robot-photos">\n${photos}\n  </div>` : ''}
@@ -462,6 +499,12 @@ ${photos ? `  <div class="robot-photos">\n${photos}\n  </div>` : ''}
     <p>${esc(robot.summary)}</p>
   </section>
 ${safety}
+  <section class="robot-block robot-needs robot-box" id="box" aria-labelledby="box-title">
+    <h2 id="box-title">What&rsquo;s in the box</h2>
+    <ul>
+${box}
+    </ul>
+  </section>
   <section class="robot-block robot-needs" aria-labelledby="needs">
     <h2 id="needs">What you need</h2>
     <ul>
